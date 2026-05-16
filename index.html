@@ -32,7 +32,7 @@ html, body{
 }
 
 /* =========================
-   FORECAST PANEL (DESKTOP)
+   FORECAST PANEL CONTAINER
 ========================= */
 
 .forecast{
@@ -41,52 +41,45 @@ html, body{
     left:15px;
     z-index:1100;
     width:420px;
-    background:rgba(8,15,30,0.85);
+    background:rgba(8,15,30,0.88);
     backdrop-filter:blur(22px);
     border-radius:20px;
     border:1px solid rgba(255,255,255,0.06);
-    padding:14px;
+    padding:16px;
     color:white;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .forecast-title{
-    margin-top: 5px;
-    margin-bottom:10px;
     font-weight:700;
     text-align:center;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    color: #71f7ff;
 }
 
-/* Wrapper Utama Grafik */
+/* Tinggi bawaan desktop */
 .chart-container {
     position: relative;
     width: 100%;
-    height: 180px;
+    height: 200px; 
 }
 
 /* =========================
-   LEGENDA RADAR (DESKTOP)
+   LEGENDA RADAR STYLE
 ========================= */
 
 .legend{
     width: 100%;
     box-sizing: border-box;
-    padding: 0px 4px;
-    margin-bottom: 5px;
-}
-
-.legend-title{
-    font-weight:700;
-    text-align:center;
-    font-size:.8rem;
-    margin-bottom: 8px;
-    color: #71f7ff;
+    margin-top: 12px;
 }
 
 .gradient{
     width:100%;
-    height:12px;
+    height:10px;
     border-radius:999px;
     background:linear-gradient(
         to right,
@@ -100,71 +93,54 @@ html, body{
 .scale{
     display:flex;
     justify-content:space-between;
-    margin-top:6px;
+    margin-top:5px;
     font-size:.62rem;
     opacity: 0.9;
 }
 
 /* =========================
-   MOBILE UI RESPONSIVE (PAS DENGAN LEBAR FRAME)
+   MOBILE UI RESPONSIVE (GRAFIK MAKSIMAL)
 ========================= */
 
 @media(max-width:768px){
-
-    #map{
-        height:100dvh;
-    }
 
     .forecast{
         left:10px;
         right:10px;
         width:auto; 
         bottom:10px;
-        padding:12px 14px; /* Padding disesuaikan */
-        border-radius:16px;
-        z-index: 1100;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        padding:14px; 
+        border-radius:18px;
+        gap: 4px;
     }
 
     .forecast-title{
         font-size:.85rem;
-        margin-bottom: 2px;
+        margin-bottom: 6px;
         text-align: left;
-        padding-left: 4px; /* Sejajar dengan teks legenda */
     }
 
-    /* TINGGI GRAFIK MAKSIMAL & LEBAR FULL 100% */
+    /* DONGKRAK UKURAN GRAFIK MAKSIMAL DI HP */
     .chart-container {
         width: 100%;
-        height: 100px; /* Ditambah tingginya agar kurva makin puas dilihat */
-        margin-left: 0px;
-        margin-right: 0px;
+        height: 100px; /* Kita tinggikan jadi 260px agar grafik berdiri tegak dan besar */
+        margin-bottom: 5px;
     }
 
+    /* Legenda kita taruh paling bawah dengan layout ringkas */
     .legend{
-        padding: 0px 4px;
-    }
-    
-    .legend-title{
-        font-size: .8rem;
-        margin-bottom: 6px;
-        text-align: center;
+        margin-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding-top: 8px;
     }
 
-    .gradient {
-        width: 100%;
-    }
-    
     .scale {
-        width: 100%;
         font-size:.58rem;
     }
 
-    /* Sesuaikan posisi tombol zoom Leaflet agar tidak mentok */
+    /* Amankan tombol zoom Leaflet ke atas agar tidak menumpuk */
     .leaflet-control-zoom{
-        margin-bottom:350px !important;
+        margin-bottom:410px !important;
         transform:scale(.85);
     }
 
@@ -179,26 +155,24 @@ html, body{
 
 <div class="forecast">
     
-    <div class="legend">
-        <div class="legend-title">🛰 DATA SKALA RADAR AWAN</div>
-        <div class="gradient"></div>
-        <div class="scale">
-            <span>Awan Tipis</span>
-            <span>Berawan</span>
-            <span>Mendung</span>
-            <span>Pekat (Siaga)</span>
-        </div>
-    </div>
-    
-    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0; width: 100%;">
-
     <div class="forecast-title">
-        📈 Forecast Hujan 24 Jam
+        📈 Forecast Perubahan Cuaca Hujan 24 Jam
     </div>
     
     <div class="chart-container">
         <canvas id="forecastChart"></canvas>
     </div>
+
+    <div class="legend">
+        <div class="gradient"></div>
+        <div class="scale">
+            <span>🔵 Awan Tipis</span>
+            <span>🟢 Berawan</span>
+            <span>🟡 Mendung</span>
+            <span>🔴 Pekat (Siaga)</span>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -268,7 +242,7 @@ const heatmapLayer = new HeatmapOverlay(cfg);
 heatmapLayer.addTo(map);
 
 /* =========================
-   FORECAST CHART (CHART.JS SUDAH DI-STRETCH FULL-WIDTH)
+   FORECAST CHART (CHART.JS FULL WIDTH & STRETCH HEIGHT)
 ========================= */
 
 const ctx = document.getElementById('forecastChart');
@@ -281,7 +255,7 @@ const forecastChart = new Chart(ctx,{
             data:[],
             tension:0.4,
             borderColor:'#00ff88',
-            backgroundColor:'rgba(0,255,136,0.15)',
+            backgroundColor:'rgba(0,255,136,0.12)',
             fill:true,
             pointRadius: 2,
             pointHoverRadius: 5
@@ -292,8 +266,8 @@ const forecastChart = new Chart(ctx,{
         maintainAspectRatio:false,
         layout: {
             padding: { 
-                left: -5,  // Memaksa chart mepet ke dinding kiri kontainer
-                right: 0,  // Memaksa chart mepet ke dinding kanan kontainer
+                left: -8,  // Tarik mepet ke ujung kiri
+                right: 0,  // Tarik mepet ke ujung kanan
                 top: 5, 
                 bottom: 0 
             }
@@ -305,22 +279,22 @@ const forecastChart = new Chart(ctx,{
         scales:{
             x:{ 
                 ticks:{ 
-                    color:'white',
-                    font: { size: 9 },
+                    color:'rgba(255,255,255,0.85)',
+                    font: { size: 9, weight: 'bold' },
                     maxRotation: 0,
                     minRotation: 0,
                     autoSkip: true,
                     maxTicksLimit: 6
                 },
-                grid: { color: 'rgba(255, 255, 255, 0.04)' }
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
             },
             y:{ 
                 ticks:{ 
-                    color:'white',
-                    font: { size: 9 },
+                    color:'rgba(255,255,255,0.85)',
+                    font: { size: 9, weight: 'bold' },
                     beginAtZero: true
                 },
-                grid: { color: 'rgba(255, 255, 255, 0.04)' }
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
             }
         }
     }
@@ -361,7 +335,7 @@ async function loadData(){
         let activeIndex = times.findIndex(t => t.startsWith(jamSekarangISO.slice(0,13)));
         if (activeIndex === -1) activeIndex = 0;
 
-        /* UPDATE GRAFIK FORECAST */
+        /* UPDATE DATA GRAFIK FORECAST */
         forecastChart.data.labels = center.hourly.time.slice(0,24).map(t => {
             const jamMenit = t.split("T")[1];
             const bagian = jamMenit.split(":");
@@ -370,7 +344,7 @@ async function loadData(){
         forecastChart.data.datasets[0].data = center.hourly.rain.slice(0,24);
         forecastChart.update();
 
-        /* UPDATE MATRIKS RADAR AWAN ASIMETRIS */
+        /* UPDATE MATRIKS RADAR AWAN */
         let radarData = [];
         lats.forEach((gridLat, index) => {
             const item = responses[index];
