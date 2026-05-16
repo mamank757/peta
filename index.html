@@ -51,12 +51,14 @@ html, body{
 }
 
 .forecast-title{
+    margin-top: 5px;
     margin-bottom:10px;
     font-weight:700;
     text-align:center;
     font-size: 0.9rem;
 }
 
+/* Wrapper Utama Grafik */
 .chart-container {
     position: relative;
     width: 100%;
@@ -68,18 +70,10 @@ html, body{
 ========================= */
 
 .legend{
-    position:absolute;
-    bottom:15px;
-    right:15px;
-    z-index:1100;
-    width:240px;
-    background:rgba(8,15,30,0.85);
-    backdrop-filter:blur(18px);
-    color:white;
-    border-radius:16px;
-    padding:12px;
-    border:1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0px 4px;
+    margin-bottom: 5px;
 }
 
 .legend-title{
@@ -96,10 +90,10 @@ html, body{
     border-radius:999px;
     background:linear-gradient(
         to right,
-        rgba(0,140,255,0.15) 0%,   /* Tepi: Biru */
-        #00ff88 30%,              /* Hijau */
-        #ffd000 65%,              /* Kuning */
-        #ff0000 100%              /* Merah */
+        rgba(0,140,255,0.15) 0%,   
+        #00ff88 30%,              
+        #ffd000 65%,              
+        #ff0000 100%              
     );
 }
 
@@ -112,7 +106,7 @@ html, body{
 }
 
 /* =========================
-   MOBILE UI RESPONSIVE (OPTIMASI UKURAN GRAFIK)
+   MOBILE UI RESPONSIVE (PAS DENGAN LEBAR FRAME)
 ========================= */
 
 @media(max-width:768px){
@@ -121,49 +115,42 @@ html, body{
         height:100dvh;
     }
 
-    /* Satukan kontrol panel bawah agar tersusun rapi dari atas ke bawah */
     .forecast{
         left:10px;
         right:10px;
         width:auto; 
         bottom:10px;
-        padding:12px;
+        padding:12px 14px; /* Padding disesuaikan */
         border-radius:16px;
         z-index: 1100;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
     }
 
     .forecast-title{
         font-size:.85rem;
-        margin-bottom: 0px;
+        margin-bottom: 2px;
+        text-align: left;
+        padding-left: 4px; /* Sejajar dengan teks legenda */
     }
 
-    /* DONGKRAK TINGGI CANVAS DI HP AGAR GRAFIK LEBIH BESAR & JELAS */
+    /* TINGGI GRAFIK MAKSIMAL & LEBAR FULL 100% */
     .chart-container {
-        height: 170px; 
+        width: 100%;
+        height: 185px; /* Ditambah tingginya agar kurva makin puas dilihat */
+        margin-left: 0px;
+        margin-right: 0px;
     }
 
-    /* Legenda di dalam layout HP ditaruh di atas grafik secara rapi */
     .legend{
-        position: relative;
-        bottom: auto;
-        right: auto;
-        left: auto;
-        width: 100%;
-        background: transparent;
-        border: none;
-        backdrop-filter: none;
-        box-shadow: none;
         padding: 0px 4px;
-        box-sizing: border-box;
     }
     
     .legend-title{
-        font-size: .75rem;
+        font-size: .8rem;
         margin-bottom: 6px;
-        text-align: left;
+        text-align: center;
     }
 
     .gradient {
@@ -175,9 +162,9 @@ html, body{
         font-size:.58rem;
     }
 
-    /* Naikkan kontrol tombol zoom bawaan Leaflet agar tidak menghalangi panel bawah */
+    /* Sesuaikan posisi tombol zoom Leaflet agar tidak mentok */
     .leaflet-control-zoom{
-        margin-bottom:340px !important;
+        margin-bottom:350px !important;
         transform:scale(.85);
     }
 
@@ -203,7 +190,7 @@ html, body{
         </div>
     </div>
     
-    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 2px 0; width: 100%;" class="mobile-divider">
+    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0; width: 100%;">
 
     <div class="forecast-title">
         📈 Forecast Hujan 24 Jam
@@ -270,10 +257,10 @@ const cfg = {
     lngField:'lng',
     valueField:'count',
     gradient:{
-        0.15:'rgba(0,140,255,0.15)', /* Awan Sangat Tipis (Biru Transparan) */
-        0.35:'#00ff88',              /* Berawan / Mendung Ringan (Hijau) */
-        0.65:'#ffd000',              /* Mendung Tebal (Kuning) */
-        1.00:'#ff0000'               /* Puncak Mendung Pekat (Merah) */
+        0.15:'rgba(0,140,255,0.15)', 
+        0.35:'#00ff88',              
+        0.65:'#ffd000',              
+        1.00:'#ff0000'               
     }
 };
 
@@ -281,7 +268,7 @@ const heatmapLayer = new HeatmapOverlay(cfg);
 heatmapLayer.addTo(map);
 
 /* =========================
-   FORECAST CHART (CHART.JS) - OPTIMASI RENDERING DATA
+   FORECAST CHART (CHART.JS SUDAH DI-STRETCH FULL-WIDTH)
 ========================= */
 
 const ctx = document.getElementById('forecastChart');
@@ -304,7 +291,12 @@ const forecastChart = new Chart(ctx,{
         responsive:true,
         maintainAspectRatio:false,
         layout: {
-            padding: { left: 0, right: 10, top: 5, bottom: 0 }
+            padding: { 
+                left: -5,  // Memaksa chart mepet ke dinding kiri kontainer
+                right: 0,  // Memaksa chart mepet ke dinding kanan kontainer
+                top: 5, 
+                bottom: 0 
+            }
         },
         plugins:{
             legend:{ display: false },
@@ -344,7 +336,6 @@ async function loadData(){
         let lats = [];
         let lons = [];
 
-        // Square Grid Matrix
         for(let i=-3; i<=3; i++){
             for(let j=-3; j<=3; j++){
                 lats.push(parseFloat((lat + i*step).toFixed(4)));
@@ -405,10 +396,7 @@ async function loadData(){
     }
 }
 
-// Eksekusi Pemicu Awal
 loadData();
-
-/* AUTO REFRESH RADIUS RADAR TIAP 5 MENIT */
 setInterval(loadData,300000);
 
 </script>
