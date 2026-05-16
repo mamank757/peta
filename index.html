@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <title>Smart Farm Weather Map</title>
 
@@ -22,16 +22,18 @@ html, body{
     width:100%;
     height:100%;
     overflow:hidden;
-    font-family:Segoe UI, sans-serif;
-    background:#0b1220;
+    font-family:Segoe UI,sans-serif;
+    background:#08111f;
 }
 
 #map{
     width:100%;
-    height:100%;
+    height:100dvh;
 }
 
-/* HUD */
+/* =========================
+   HUD
+========================= */
 
 .hud{
     position:absolute;
@@ -41,19 +43,21 @@ html, body{
 
     width:320px;
 
-    background:rgba(10,15,25,0.85);
+    background:rgba(8,15,30,0.78);
 
-    backdrop-filter:blur(12px);
+    backdrop-filter:blur(18px);
 
-    border-radius:18px;
+    border-radius:20px;
 
-    border:1px solid rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.06);
 
     color:white;
 
     padding:16px;
 
-    box-shadow:0 10px 30px rgba(0,0,0,0.45);
+    box-shadow:
+    0 8px 32px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(255,255,255,0.03);
 }
 
 .title{
@@ -61,6 +65,7 @@ html, body{
     font-weight:800;
     margin-bottom:14px;
     color:#71f7ff;
+    text-align:center;
 }
 
 .grid{
@@ -70,13 +75,22 @@ html, body{
 }
 
 .card{
-    background:rgba(255,255,255,0.04);
-    border-radius:12px;
+
+    background:linear-gradient(
+        180deg,
+        rgba(255,255,255,0.06),
+        rgba(255,255,255,0.03)
+    );
+
+    border:1px solid rgba(255,255,255,0.04);
+
+    border-radius:14px;
+
     padding:10px;
 }
 
 .label{
-    font-size:.7rem;
+    font-size:.68rem;
     opacity:.7;
 }
 
@@ -89,14 +103,16 @@ html, body{
 .alert{
     margin-top:12px;
     padding:12px;
-    border-radius:12px;
+    border-radius:14px;
     background:rgba(255,180,0,0.12);
     border:1px solid rgba(255,180,0,0.2);
-    font-size:.82rem;
+    font-size:.8rem;
     line-height:1.5;
 }
 
-/* Layer buttons */
+/* =========================
+   LAYER BUTTONS
+========================= */
 
 .layers{
     position:absolute;
@@ -110,21 +126,32 @@ html, body{
 }
 
 .btn{
-    background:rgba(10,15,25,0.85);
+    background:rgba(8,15,30,0.82);
+
     color:white;
+
     border:none;
-    border-radius:12px;
+
+    border-radius:999px;
+
     padding:10px 14px;
+
     cursor:pointer;
-    backdrop-filter:blur(10px);
-    font-size:.78rem;
+
+    backdrop-filter:blur(12px);
+
+    font-size:.76rem;
+
+    border:1px solid rgba(255,255,255,0.06);
 }
 
 .btn:hover{
     background:#1d4ed8;
 }
 
-/* Forecast */
+/* =========================
+   FORECAST
+========================= */
 
 .forecast{
     position:absolute;
@@ -134,13 +161,13 @@ html, body{
 
     width:420px;
 
-    background:rgba(10,15,25,0.85);
+    background:rgba(8,15,30,0.78);
 
-    backdrop-filter:blur(12px);
+    backdrop-filter:blur(18px);
 
-    border-radius:18px;
+    border-radius:20px;
 
-    border:1px solid rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.06);
 
     padding:14px;
 
@@ -150,7 +177,12 @@ html, body{
 .forecast-title{
     margin-bottom:10px;
     font-weight:700;
+    text-align:center;
 }
+
+/* =========================
+   LEGEND
+========================= */
 
 .legend{
     position:absolute;
@@ -160,15 +192,15 @@ html, body{
 
     width:240px;
 
-    background:rgba(10,15,25,0.85);
+    background:rgba(8,15,30,0.78);
 
     color:white;
 
-    border-radius:14px;
+    border-radius:16px;
 
     padding:12px;
 
-    border:1px solid rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.06);
 }
 
 .gradient{
@@ -199,7 +231,9 @@ canvas{
     max-height:180px;
 }
 
-/* CB Pulse */
+/* =========================
+   CB ANIMATION
+========================= */
 
 .cb-alert{
     animation:pulseCB 1.5s infinite;
@@ -208,7 +242,7 @@ canvas{
 @keyframes pulseCB{
 
     0%{
-        box-shadow:0 0 0 0 rgba(255,0,0,0.5);
+        box-shadow:0 0 0 0 rgba(255,0,0,0.45);
     }
 
     70%{
@@ -221,19 +255,148 @@ canvas{
 
 }
 
+/* =========================
+   MOBILE UI
+========================= */
+
 @media(max-width:768px){
 
+    #map{
+        height:100dvh;
+    }
+
     .hud{
-        width:calc(100% - 30px);
+
+        top:10px;
+        left:10px;
+        right:10px;
+
+        width:auto;
+
+        padding:12px;
+
+        border-radius:16px;
+
+        max-height:46vh;
+
+        overflow-y:auto;
+
+    }
+
+    .title{
+
+        font-size:.9rem;
+
+        margin-bottom:10px;
+
+    }
+
+    .grid{
+
+        gap:8px;
+
+    }
+
+    .card{
+
+        padding:8px;
+
+    }
+
+    .label{
+
+        font-size:.62rem;
+
+    }
+
+    .value{
+
+        font-size:.86rem;
+
+    }
+
+    .alert{
+
+        font-size:.72rem;
+
+        padding:10px;
+
+    }
+
+    .layers{
+
+        top:auto;
+
+        bottom:12px;
+
+        left:10px;
+
+        right:10px;
+
+        overflow-x:auto;
+
+        flex-wrap:nowrap;
+
+        scrollbar-width:none;
+
+        z-index:1200;
+    }
+
+    .layers::-webkit-scrollbar{
+        display:none;
+    }
+
+    .btn{
+
+        flex:none;
+
+        white-space:nowrap;
+
+        font-size:.72rem;
+
+        padding:10px 14px;
+
     }
 
     .forecast{
-        width:calc(100% - 30px);
+
+        left:10px;
+        right:10px;
+
+        width:auto;
+
+        bottom:70px;
+
+        padding:10px;
+
+        border-radius:16px;
+
+    }
+
+    .forecast-title{
+
+        font-size:.8rem;
+
+    }
+
+    canvas{
+
+        max-height:120px;
+
     }
 
     .legend{
         display:none;
     }
+
+    .leaflet-control-zoom{
+
+        margin-bottom:120px !important;
+
+        transform:scale(.9);
+
+    }
+
 }
 
 </style>
@@ -247,7 +410,9 @@ canvas{
 
 <div class="hud">
 
-    <div class="title">🛰 SMART FARM WEATHER</div>
+    <div class="title">
+        🛰 SMART FARM WEATHER
+    </div>
 
     <div class="grid">
 
@@ -262,12 +427,12 @@ canvas{
         </div>
 
         <div class="card">
-            <div class="label">💨 Kecepatan Angin</div>
+            <div class="label">💨 Angin</div>
             <div class="value" id="wind">-</div>
         </div>
 
         <div class="card">
-            <div class="label">💧 Kelembapan Udara</div>
+            <div class="label">💧 Kelembapan</div>
             <div class="value" id="humid">-</div>
         </div>
 
@@ -284,20 +449,34 @@ canvas{
     </div>
 
     <div class="alert" id="statusBox">
-        Memuat analisis pertanian...
+        Memuat analisis cuaca...
     </div>
 
 </div>
 
-<!-- Layer Controls -->
+<!-- BUTTONS -->
 
 <div class="layers">
-    <button class="btn" onclick="setMode('rain')">🌧 Hujan</button>
-    <button class="btn" onclick="setMode('cloud')">☁ Awan</button>
-    <button class="btn" onclick="setMode('storm')">⚡ Petir</button>
-    <button class="btn" onclick="setMode('cb')">⛈  Awan CB</button> </div>
 
-<!-- Forecast -->
+    <button class="btn" onclick="setMode('rain')">
+        🌧 Hujan
+    </button>
+
+    <button class="btn" onclick="setMode('cloud')">
+        ☁ Awan
+    </button>
+
+    <button class="btn" onclick="setMode('storm')">
+        ⚡ Petir
+    </button>
+
+    <button class="btn" onclick="setMode('cb')">
+        ⛈ CB Cloud
+    </button>
+
+</div>
+
+<!-- FORECAST -->
 
 <div class="forecast">
 
@@ -309,7 +488,7 @@ canvas{
 
 </div>
 
-<!-- Legend -->
+<!-- LEGEND -->
 
 <div class="legend">
 
@@ -323,14 +502,6 @@ canvas{
         <span>Kuat</span>
     </div>
 
-    <div style="margin-top:10px;font-size:.72rem;line-height:1.5;opacity:.8">
-        ⛈ Mode CB mendeteksi potensi awan cumulonimbus berdasarkan:
-        <br>• CAPE tinggi
-        <br>• Kelembapan tinggi
-        <br>• Tutupan awan pekat
-        <br>• Curah hujan lokal
-    </div>
-
 </div>
 
 <script>
@@ -341,8 +512,11 @@ canvas{
 
 const urlParams = new URLSearchParams(window.location.search);
 
-const lat = parseFloat(urlParams.get('lat')) || -4.1200;
-const lon = parseFloat(urlParams.get('lon')) || 120.0300;
+const lat =
+parseFloat(urlParams.get('lat')) || -4.1200;
+
+const lon =
+parseFloat(urlParams.get('lon')) || 120.0300;
 
 /* =========================
    MAP
@@ -357,28 +531,34 @@ L.control.zoom({
 }).addTo(map);
 
 L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    {
-        attribution:'© OpenStreetMap'
-    }
+'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+{
+    attribution:'© OpenStreetMap'
+}
 ).addTo(map);
 
-/* Marker */
+/* MARKER */
 
 L.marker([lat, lon])
 .addTo(map)
-.bindPopup('📍 Lokasi Sawah');
+.bindPopup('📍 Lokasi');
 
 /* =========================
    CB CIRCLE
 ========================= */
 
 const cbCircle = L.circle([lat, lon],{
+
     radius:12000,
+
     color:'#ffaa00',
+
     fillColor:'#ff0000',
+
     fillOpacity:0.04,
+
     weight:1
+
 }).addTo(map);
 
 /* =========================
@@ -388,13 +568,19 @@ const cbCircle = L.circle([lat, lon],{
 let activeMode = "rain";
 
 const cfg = {
+
     radius:0.09,
+
     maxOpacity:0.75,
+
     scaleRadius:true,
+
     useLocalExtrema:false,
 
     latField:'lat',
+
     lngField:'lng',
+
     valueField:'count',
 
     gradient:{
@@ -405,32 +591,51 @@ const cfg = {
         0.85:'#ff0000',
         1.00:'#ff00ff'
     }
+
 };
 
-const heatmapLayer = new HeatmapOverlay(cfg);
+const heatmapLayer =
+new HeatmapOverlay(cfg);
+
 heatmapLayer.addTo(map);
 
 /* =========================
    CHART
 ========================= */
 
-const ctx = document.getElementById('forecastChart');
+const ctx =
+document.getElementById('forecastChart');
 
-const forecastChart = new Chart(ctx,{
+const forecastChart =
+new Chart(ctx,{
+
     type:'line',
+
     data:{
         labels:[],
         datasets:[{
+
             label:'Curah Hujan',
+
             data:[],
+
             tension:0.4,
+
             borderColor:'#00ff88',
+
             backgroundColor:'rgba(0,255,136,0.2)',
+
             fill:true
+
         }]
     },
+
     options:{
+
         responsive:true,
+
+        maintainAspectRatio:false,
+
         plugins:{
             legend:{
                 labels:{
@@ -438,15 +643,25 @@ const forecastChart = new Chart(ctx,{
                 }
             }
         },
+
         scales:{
+
             x:{
-                ticks:{ color:'white' }
+                ticks:{
+                    color:'white'
+                }
             },
+
             y:{
-                ticks:{ color:'white' }
+                ticks:{
+                    color:'white'
+                }
             }
+
         }
+
     }
+
 });
 
 /* =========================
@@ -511,64 +726,63 @@ async function loadData(){
         const current = center.current;
 
         const cape =
-            center.hourly.cape?.[0] || 0;
+        center.hourly.cape?.[0] || 0;
 
         const soil =
-            center.hourly.soil_temperature_0_to_10cm?.[0] || 0;
+        center.hourly.soil_temperature_0_to_10cm?.[0] || 0;
 
         /* HUD */
 
         document.getElementById('cloud').innerHTML =
-            current.cloud_cover + "%";
+        current.cloud_cover + "%";
 
         document.getElementById('rain').innerHTML =
-            current.rain.toFixed(1) + " mm";
+        current.rain.toFixed(1) + " mm";
 
         document.getElementById('wind').innerHTML =
-            current.wind_speed_10m + " km/j";
+        current.wind_speed_10m + " km/j";
 
         document.getElementById('humid').innerHTML =
-            current.relative_humidity_2m + "%";
+        current.relative_humidity_2m + "%";
 
         document.getElementById('cape').innerHTML =
-            Math.round(cape);
+        Math.round(cape);
 
         document.getElementById('soil').innerHTML =
-            soil.toFixed(1) + "°C";
+        soil.toFixed(1) + "°C";
 
         /* STATUS */
 
-        let status = "✅ Kondisi sawah relatif aman.";
+        let status =
+        "✅ Kondisi lahan relatif aman.";
 
         if(current.rain > 5){
 
             status =
-            "🌧 Hujan cukup tinggi. Tunda pemupukan.";
+            "🌧 Hujan tinggi. Tunda pemupukan.";
 
         }
 
         if(current.relative_humidity_2m > 88){
 
             status +=
-            "<br>⚠ Kelembapan tinggi. Risiko jamur/blast meningkat.";
+            "<br>⚠ Risiko jamur/blast meningkat.";
 
         }
 
         if(cape > 1200){
 
             status +=
-            "<br>⚡ Potensi badai lokal dan petir.";
+            "<br>⚡ Potensi badai lokal.";
 
         }
 
         if(current.wind_speed_10m > 24){
 
             status +=
-            "<br>💨 Angin kencang. Hindari penyemprotan.";
+            "<br>💨 Angin kencang.";
 
         }
-
-        /* CB ANALYSIS */
 
         if(
             cape > 1400 &&
@@ -576,17 +790,8 @@ async function loadData(){
             current.relative_humidity_2m > 82
         ){
 
-            status += `
-            <br><br>
-            <span style="color:#ff4d4d;font-weight:700;">
-            ⛈ POTENSI AWAN CUMULONIMBUS
-            </span>
-            <br>
-            Risiko hujan lebat,
-            petir,
-            angin turun,
-            badai lokal.
-            `;
+            status +=
+            "<br><br>⛈ POTENSI AWAN CUMULONIMBUS";
 
             cbCircle.setStyle({
                 fillOpacity:0.18,
@@ -602,24 +807,18 @@ async function loadData(){
 
         }
 
-        document.getElementById('statusBox').innerHTML = status;
+        document.getElementById('statusBox').innerHTML =
+        status;
 
         /* FORECAST */
 
-        const labels =
-            center.hourly.time.slice(0,24).map(t=>{
-
-                return t.split("T")[1];
-
-            });
-
-        const rainData =
-            center.hourly.rain.slice(0,24);
-
-        forecastChart.data.labels = labels;
+        forecastChart.data.labels =
+        center.hourly.time
+        .slice(0,24)
+        .map(t=>t.split("T")[1]);
 
         forecastChart.data.datasets[0].data =
-            rainData;
+        center.hourly.rain.slice(0,24);
 
         forecastChart.update();
 
@@ -632,23 +831,21 @@ async function loadData(){
             const item = responses[index];
 
             const cloud =
-                item.current.cloud_cover || 0;
+            item.current.cloud_cover || 0;
 
             const rain =
-                item.current.rain || 0;
+            item.current.rain || 0;
 
             const humidity =
-                item.current.relative_humidity_2m || 0;
+            item.current.relative_humidity_2m || 0;
 
             const wind =
-                item.current.wind_speed_10m || 0;
+            item.current.wind_speed_10m || 0;
 
             const cape =
-                item.hourly.cape?.[0] || 0;
+            item.hourly.cape?.[0] || 0;
 
             let value = 0;
-
-            /* RAIN */
 
             if(activeMode === "rain"){
 
@@ -656,15 +853,11 @@ async function loadData(){
 
             }
 
-            /* CLOUD */
-
             else if(activeMode === "cloud"){
 
                 value = cloud / 100;
 
             }
-
-            /* STORM */
 
             else if(activeMode === "storm"){
 
@@ -672,32 +865,37 @@ async function loadData(){
 
             }
 
-            /* CB CLOUD */
-
             else if(activeMode === "cb"){
 
                 value =
-                    (cloud / 100) * 0.35 +
-                    (humidity / 100) * 0.20 +
-                    (cape / 2500) * 0.35 +
-                    (rain / 10) * 0.07 +
-                    (wind / 40) * 0.03;
+                (cloud / 100) * 0.35 +
+                (humidity / 100) * 0.20 +
+                (cape / 2500) * 0.35 +
+                (rain / 10) * 0.07 +
+                (wind / 40) * 0.03;
 
             }
 
             value = Math.min(value,1);
 
             radarData.push({
+
                 lat:gridLat,
+
                 lng:lons[index],
+
                 count:value
+
             });
 
         });
 
         heatmapLayer.setData({
+
             max:1,
+
             data:radarData
+
         });
 
     }
@@ -712,7 +910,7 @@ async function loadData(){
 
 loadData();
 
-/* Auto refresh */
+/* AUTO REFRESH */
 
 setInterval(loadData,300000);
 
