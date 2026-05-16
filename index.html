@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<title>Smart Farm Weather Map</title>
+<title>Smart Farm Cloud Radar Map</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -32,31 +32,85 @@ html, body{
 }
 
 /* =========================
-   FORECAST PANEL (BAWAH)
+   FORECAST PANEL (KIRI BAWAH)
 ========================= */
 
 .forecast{
     position:absolute;
     bottom:15px;
     left:15px;
-    z-index:1000;
+    z-index:1100;
     width:420px;
-    background:rgba(8,15,30,0.78);
-    backdrop-filter:blur(18px);
+    background:rgba(8,15,30,0.82);
+    backdrop-filter:blur(22px);
     border-radius:20px;
     border:1px solid rgba(255,255,255,0.06);
     padding:14px;
     color:white;
+    box-sizing: border-box;
 }
 
 .forecast-title{
     margin-bottom:10px;
     font-weight:700;
     text-align:center;
+    font-size: 0.9rem;
 }
 
-canvas{
-    max-height:180px;
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+}
+
+/* =========================
+   LEGENDA RADAR (KANAN BAWAH)
+========================= */
+
+.legend{
+    position:absolute;
+    bottom:15px;
+    right:15px;
+    z-index:1100;
+    width:220px;
+    background:rgba(8,15,30,0.82);
+    backdrop-filter:blur(18px);
+    color:white;
+    border-radius:16px;
+    padding:12px;
+    border:1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.legend-title{
+    font-weight:700;
+    text-align:center;
+    font-size:.8rem;
+    margin-bottom: 8px;
+    color: #ffaa00;
+}
+
+.gradient{
+    width:100%;
+    height:12px;
+    border-radius:999px;
+    background:linear-gradient(
+        to right,
+        rgba(0,255,136,0.1) 0%,   
+        #c8ff00 20%,              
+        #ffd000 40%,              
+        #ff7b00 60%,              
+        #ff0000 80%,              
+        rgba(255,0,255,1) 100%    
+    );
+}
+
+.scale{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+    font-size:.62rem;
+    opacity: 0.9;
 }
 
 /* =========================
@@ -72,22 +126,39 @@ canvas{
     .forecast{
         left:10px;
         right:10px;
-        width:auto;
+        width:auto; 
         bottom:15px;
         padding:10px;
         border-radius:16px;
+        z-index: 1050;
     }
 
-    .forecast-title{
-        font-size:.8rem;
+    .chart-container {
+        height: 120px;
     }
 
-    canvas{
-        max-height:120px;
+    .legend{
+        bottom: 180px; 
+        left: 10px;
+        right: 10px;
+        width: auto;
+        padding: 8px;
+        display:flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .gradient {
+        width: 80%;
+    }
+    
+    .scale {
+        width: 85%;
+        font-size:.58rem;
     }
 
     .leaflet-control-zoom{
-        margin-bottom:180px !important;
+        margin-bottom:230px !important;
         transform:scale(.9);
     }
 
@@ -100,11 +171,24 @@ canvas{
 
 <div id="map"></div>
 
+<div class="legend">
+    <div class="legend-title">🛰 LEGENDA RADAR AWAN</div>
+    <div class="gradient"></div>
+    <div class="scale">
+        <span>Awan Tipis</span>
+        <span>Berawan</span>
+        <span>Mendung</span>
+        <span>Pekat (Siaga)</span>
+    </div>
+</div>
+
 <div class="forecast">
     <div class="forecast-title">
         📈 Forecast Hujan 24 Jam
     </div>
-    <canvas id="forecastChart"></canvas>
+    <div class="chart-container">
+        <canvas id="forecastChart"></canvas>
+    </div>
 </div>
 
 <script>
@@ -123,7 +207,7 @@ const lon = parseFloat(urlParams.get('lon')) || 120.0300;
 
 const map = L.map('map',{
     zoomControl:false
-}).setView([lat, lon], 10);
+}).setView([lat, lon], 12);
 
 L.control.zoom({
     position:'bottomright'
@@ -139,36 +223,36 @@ L.tileLayer(
 /* MARKER TITIK SAWAH */
 L.marker([lat, lon])
 .addTo(map)
-.bindPopup('📍 Titik Sawah Pengguna');
+.bindPopup('📍 Titik Lahan Sawah');
 
-/* LINGKARAN JANGKAUAN RADAR (RED CIRCLE EFFECT) */
-const cbCircle = L.circle([lat, lon],{
+/* LINGKARAN JANGKAUAN RADAR 12 KM */
+L.circle([lat, lon],{
     radius:12000,
-    color:'#ff4d4d',
-    fillColor:'#ff4d4d',
-    fillOpacity:0.08,
+    color:'#ffaa00',
+    fillColor:'#ffaa00',
+    fillOpacity:0.04,
     weight:1.5
 }).addTo(map);
 
 /* =========================
-   HEATMAP MATRIX LAYER
+   HEATMAP MATRIX LAYER (DIOPTIMASI AGAR ACAK & REALISTIS)
 ========================= */
 
 const cfg = {
-    radius:0.09,
-    maxOpacity:0.75,
+    radius:0.05, // DIKECILKAN: Agar efek blur antar titik tidak melebur jadi lingkaran sempurna
+    maxOpacity:0.6, 
     scaleRadius:true,
     useLocalExtrema:false,
     latField:'lat',
     lngField:'lng',
     valueField:'count',
     gradient:{
-        0.10:'#00ff88',
+        0.10:'rgba(0,255,136,0.1)',
         0.30:'#c8ff00',
         0.50:'#ffd000',
-        0.70:'#ff7b00',
-        0.85:'#ff0000',
-        1.00:'#ff00ff'
+        0.75:'#ff7b00',
+        0.90:'#ff0000',
+        1.00:'rgba(255,0,255,1)'
     }
 };
 
@@ -190,51 +274,60 @@ const forecastChart = new Chart(ctx,{
             tension:0.4,
             borderColor:'#00ff88',
             backgroundColor:'rgba(0,255,136,0.15)',
-            fill:true
+            fill:true,
+            pointRadius: 2,
+            pointHoverRadius: 5
         }]
     },
     options:{
         responsive:true,
         maintainAspectRatio:false,
+        layout: {
+            padding: { left: 5, right: 15, top: 5, bottom: 0 }
+        },
         plugins:{
-            legend:{
-                labels:{
-                    color:'white'
-                }
-            }
+            legend:{ display: false },
+            tooltip: { mode: 'index', intersect: false }
         },
         scales:{
-            x:{
-                ticks:{
-                    color:'white'
-                }
+            x:{ 
+                ticks:{ 
+                    color:'white',
+                    font: { size: 9 },
+                    maxRotation: 0,
+                    minRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 6
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
             },
-            y:{
-                ticks:{
-                    color:'white'
-                }
+            y:{ 
+                ticks:{ 
+                    color:'white',
+                    font: { size: 9 },
+                    beginAtZero: true
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.05)' }
             }
         }
     }
 });
 
 /* =========================
-   ASYNC FETCH DATA ATMOSFER
+   ASYNC FETCH DATA SATELIT AWAN
 ========================= */
 
 async function loadData(){
     try{
-        const step = 0.05;
+        const step = 0.04; // Kerapatan grid ditingkatkan sedikit
         let lats = [];
         let lons = [];
 
-        // Generate Grid Matrix Spasial di Sekitar Lokasi Utama
-        for(let i=-3;i<=3;i++){
-            for(let j=-3;j<=3;j++){
-                if(Math.abs(i)+Math.abs(j)<=4){
-                    lats.push(parseFloat((lat + i*step).toFixed(4)));
-                    lons.push(parseFloat((lon + j*step).toFixed(4)));
-                }
+        // PERBAIKAN: Gunakan Square Grid Matrix penuh tanpa pemotongan sudut matematika
+        for(let i=-3; i<=3; i++){
+            for(let j=-3; j<=3; j++){
+                lats.push(parseFloat((lat + i*step).toFixed(4)));
+                lons.push(parseFloat((lon + j*step).toFixed(4)));
             }
         }
 
@@ -242,49 +335,56 @@ async function loadData(){
         `https://api.open-meteo.com/v1/forecast?`+
         `latitude=${lats.join(',')}`+
         `&longitude=${lons.join(',')}`+
-        `&current=rain`+
-        `&hourly=rain`+
+        `&hourly=cloud_cover,rain`+ 
         `&timezone=auto`;
 
         const res = await fetch(api);
         const responses = await res.json();
+        
+        const sekarang = new Date();
+        const jamSekarangISO = sekarang.toISOString().slice(0, 13) + ":00"; 
+        
         const center = responses[0];
+        const times = center.hourly.time;
+        let activeIndex = times.findIndex(t => t.startsWith(jamSekarangISO.slice(0,13)));
+        if (activeIndex === -1) activeIndex = 0;
 
-        /* UPDATE GRAFIK 24 JAM */
-        forecastChart.data.labels = center.hourly.time.slice(0,24).map(t=>t.split("T")[1]);
+        /* UPDATE GRAFIK FORECAST */
+        forecastChart.data.labels = center.hourly.time.slice(0,24).map(t => {
+            const jamMenit = t.split("T")[1];
+            const bagian = jamMenit.split(":");
+            return `${bagian[0]}:${bagian[1]}`;
+        });
         forecastChart.data.datasets[0].data = center.hourly.rain.slice(0,24);
         forecastChart.update();
 
-        /* UPDATE MATRIKS GRADASI HEATMAP KELILING */
+        /* UPDATE MATRIKS RADAR AWAN SECARA REAl ASIMETRIS */
         let radarData = [];
-        lats.forEach((gridLat,index)=>{
+        lats.forEach((gridLat, index) => {
             const item = responses[index];
-            const rainVal = item.current.rain || 0;
+            const cloudVal = item.hourly.cloud_cover[activeIndex] || 0; 
             
-            let valNormalized = rainVal / 10;
-            valNormalized = Math.min(valNormalized,1);
+            let valNormalized = cloudVal / 100;
+            valNormalized = Math.min(valNormalized, 1);
 
             radarData.push({
-                lat:gridLat,
-                lng:lons[index],
-                count:valNormalized
+                lat: gridLat,
+                lng: lons[index],
+                count: valNormalized 
             });
         });
 
         heatmapLayer.setData({
-            max:1,
-            data:radarData
+            max: 1,
+            data: radarData
         });
 
     } catch(err){
-        console.error("Gagal memperbarui matriks radar cuaca:", err);
+        console.error("Gagal memperbarui radar spasial tutupan awan:", err);
     }
 }
 
-// Eksekusi Pemicu Awal
 loadData();
-
-/* AUTO REFRESH RADIUS RADAR TIAP 5 MENIT */
 setInterval(loadData,300000);
 
 </script>
