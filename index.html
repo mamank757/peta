@@ -104,7 +104,7 @@ html, body{
 }
 
 /* =========================
-   MOBILE UI RESPONSIVE (GRAFIK DIJAMIN BESAR)
+   MOBILE UI RESPONSIVE (GRAFIK DIJAMIN MELEDAK BESAR)
 ========================= */
 
 @media(max-width:768px){
@@ -114,7 +114,7 @@ html, body{
         right:10px;
         width:auto; 
         bottom:10px;
-        padding:14px 10px; /* Dipersempit padding kanan-kiri agar grafik melar */
+        padding:14px 10px; 
         border-radius:18px;
         gap: 6px;
     }
@@ -126,10 +126,10 @@ html, body{
         padding-left: 5px;
     }
 
-    /* PAKSA UKURAN BINGKAI GRAFIK BESAR DI HP */
+    /* PAKSA UKURAN BINGKAI GRAFIK MADING TINGGI DI HP */
     .chart-container {
         width: 100% !important;
-        height: 220px; /* Tinggi yang sangat pas untuk layar HP */
+        height: 250px; /* Ditambah ke 250px agar kurva berdiri tegak, besar, dan puas dilihat */
         margin: 0 auto;
     }
 
@@ -147,7 +147,7 @@ html, body{
 
     /* Amankan posisi kontrol tombol zoom Leaflet map */
     .leaflet-control-zoom{
-        margin-bottom:380px !important;
+        margin-bottom:410px !important;
         transform:scale(.85);
     }
 
@@ -271,6 +271,7 @@ const forecastChart = new Chart(ctx,{
     options:{
         responsive:true,
         maintainAspectRatio:false, // WAJIB: Agar chart mau ditarik memenuhi kontainer tinggi
+        aspectRatio: false,        // PERBAIKAN UTAMA: Paksa matikan rasio otomatis agar grafik melar tinggi sempurna di HP
         layout: {
             padding: { 
                 left: -6,  // Paksa nempel rata dinding kiri luar canvas
