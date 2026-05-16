@@ -2,198 +2,152 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-viewport-fit=cover">
+<title>Smart Farm Cloud Radar Map</title>
 
-<title>Radar Cuaca Smart Farm</title>
-
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js"></script>
-
 <script src="https://raw.githack.com/pa7/heatmap.js/master/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
-html,
-body{
+html, body{
     margin:0;
     padding:0;
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#08111f;
     font-family:Segoe UI,sans-serif;
+    background:#08111f;
 }
-
-/* =========================
-   MAP
-========================= */
 
 #map{
-    position:fixed;
-    inset:0;
     width:100%;
-    height:100vh;
     height:100dvh;
-    z-index:1;
+    z-index: 1;
 }
 
 /* =========================
-   FORECAST PANEL
+   FORECAST PANEL CONTAINER
 ========================= */
 
 .forecast{
-
     position:absolute;
-
-    left:15px;
-    right:auto;
     bottom:15px;
-
-    z-index:9999;
-
+    left:15px;
+    z-index:1100;
     width:420px;
-
     background:rgba(8,15,30,0.92);
-
-    -webkit-backdrop-filter:blur(20px);
-    backdrop-filter:blur(20px);
-
-    border-radius:24px;
-
+    backdrop-filter:blur(22px);
+    border-radius:20px;
     border:1px solid rgba(255,255,255,0.06);
-
     padding:16px;
-
-    box-sizing:border-box;
-
     color:white;
-
-    overflow:visible;
+    box-sizing: border-box;
 }
 
 .forecast-title{
-    font-size:1rem;
     font-weight:700;
-    color:#71f7ff;
-    margin-bottom:14px;
+    text-align:center;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    color: #71f7ff;
+}
+
+/* Bingkai grafik versi desktop */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 200px; 
 }
 
 /* =========================
-   IOS FIX BESAR
-========================= */
-
-.chart-container{
-
-    position:relative;
-
-    width:100%;
-
-    height:260px;
-
-    min-height:260px;
-
-    overflow:visible;
-}
-
-/* CANVAS PAKSA PENUH */
-
-#forecastChart{
-
-    position:absolute !important;
-
-    inset:0 !important;
-
-    width:100% !important;
-
-    height:100% !important;
-
-    display:block !important;
-}
-
-/* =========================
-   LEGEND
+   LEGENDA RADAR STYLE
 ========================= */
 
 .legend{
-    margin-top:14px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 12px;
 }
 
 .gradient{
     width:100%;
     height:10px;
-
     border-radius:999px;
-
     background:linear-gradient(
         to right,
-        rgba(0,140,255,0.15) 0%,
-        #00ff88 30%,
-        #ffd000 65%,
-        #ff0000 100%
+        rgba(0,140,255,0.15) 0%,   
+        #00ff88 30%,              
+        #ffd000 65%,              
+        #ff0000 100%              
     );
 }
 
 .scale{
     display:flex;
     justify-content:space-between;
-    margin-top:6px;
+    margin-top:5px;
     font-size:.62rem;
+    opacity: 0.9;
 }
 
 /* =========================
-   MOBILE IOS SUPER FIX
+   MOBILE UI RESPONSIVE - AMANDEMEN TOTAL IOS & ANDROID
 ========================= */
 
 @media(max-width:768px){
 
     .forecast{
-
         left:10px !important;
         right:10px !important;
-
-        width:auto !important;
-
+        width: calc(100% - 20px) !important; 
         bottom:10px !important;
-
-        padding:16px 14px !important;
-
-        border-radius:22px !important;
+        padding:14px 10px !important; 
+        border-radius:18px !important;
     }
 
     .forecast-title{
-
-        font-size:.92rem !important;
-
-        margin-bottom:12px !important;
+        font-size:.85rem !important;
+        margin-bottom: 8px !important;
+        text-align: left !important;
+        padding-left: 5px !important;
     }
 
-    /* INI YANG MEMPERBESAR CHART */
-
-    .chart-container{
-
-        height:38vh !important;
-
-        min-height:100px !important;
-
-        max-height:200px !important;
+    /* PAKSA TINGGI ABSOLUT DI LEVEL CSS MOBILE */
+    .chart-container {
+        width: 100% !important;
+        height: 250px !important; /* Kita naikkan ke 250px agar di iOS makin kelihatan menonjol */
+        display: block !important;
+        clear: both !important;
     }
 
-    .scale{
-        font-size:.55rem !important;
+    #forecastChart {
+        width: 100% !important;
+        height: 250px !important; /* Paksa tinggi canvas di Safari WebKit */
     }
 
+    .legend{
+        margin-top: 12px !important;
+        border-top: 1px solid rgba(255,255,255,0.08) !important;
+        padding-top: 8px !important;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    .scale {
+        font-size:.58rem !important;
+    }
+
+    /* Jarak aman tombol zoom Leaflet */
     .leaflet-control-zoom{
-        margin-bottom:430px !important;
+        margin-bottom:400px !important;
+        transform:scale(.85) !important;
     }
 
 }
@@ -206,26 +160,23 @@ body{
 <div id="map"></div>
 
 <div class="forecast">
-
+    
     <div class="forecast-title">
         📈 Forecast Perubahan Cuaca Hujan 24 Jam
     </div>
-
+    
     <div class="chart-container">
         <canvas id="forecastChart"></canvas>
     </div>
 
     <div class="legend">
-
         <div class="gradient"></div>
-
         <div class="scale">
-            <span>🔵 Tipis</span>
+            <span>🔵 Awan Tipis</span>
             <span>🟢 Berawan</span>
             <span>🟡 Mendung</span>
-            <span>🔴 Pekat</span>
+            <span>🔴 Pekat (Siaga)</span>
         </div>
-
     </div>
 
 </div>
@@ -233,19 +184,15 @@ body{
 <script>
 
 /* =========================
-   PARAMETER
+   LOCATION PARAMS
 ========================= */
 
 const urlParams = new URLSearchParams(window.location.search);
-
-const lat =
-parseFloat(urlParams.get('lat')) || -4.1200;
-
-const lon =
-parseFloat(urlParams.get('lon')) || 120.0300;
+const lat = parseFloat(urlParams.get('lat')) || -4.1200;
+const lon = parseFloat(urlParams.get('lon')) || 120.0300;
 
 /* =========================
-   MAP
+   LEAFLET MAP INITIALIZATION
 ========================= */
 
 const map = L.map('map',{
@@ -263,288 +210,185 @@ L.tileLayer(
 }
 ).addTo(map);
 
-/* =========================
-   MARKER
-========================= */
-
+/* MARKER TITIK SAWAH */
 L.marker([lat, lon])
 .addTo(map)
-.bindPopup('📍 Titik Sawah');
+.bindPopup('📍 Titik Lahan Sawah');
 
-/* =========================
-   CIRCLE
-========================= */
-
+/* LINGKARAN JANGKAUAN RADAR 12 KM */
 L.circle([lat, lon],{
-
     radius:12000,
-
-    color:'#71f7ff',
-
+    color:'#71f7ff', 
     fillColor:'#71f7ff',
-
     fillOpacity:0.02,
-
     weight:1.5
-
 }).addTo(map);
 
 /* =========================
-   HEATMAP
+   HEATMAP MATRIX LAYER (SKEMA WARNA BMKG)
 ========================= */
 
 const cfg = {
-
-    radius:0.05,
-
-    maxOpacity:0.65,
-
+    radius:0.05, 
+    maxOpacity:0.65, 
     scaleRadius:true,
-
     useLocalExtrema:false,
-
     latField:'lat',
-
     lngField:'lng',
-
     valueField:'count',
-
     gradient:{
-        0.15:'rgba(0,140,255,0.15)',
-        0.35:'#00ff88',
-        0.65:'#ffd000',
-        1.00:'#ff0000'
+        0.15:'rgba(0,140,255,0.15)', 
+        0.35:'#00ff88',              
+        0.65:'#ffd000',              
+        1.00:'#ff0000'               
     }
-
 };
 
-const heatmapLayer =
-new HeatmapOverlay(cfg);
-
+const heatmapLayer = new HeatmapOverlay(cfg);
 heatmapLayer.addTo(map);
 
 /* =========================
-   CHART
+   FORECAST CHART CONFIGURATION
 ========================= */
 
-const ctx =
-document.getElementById('forecastChart');
-
-const forecastChart =
-new Chart(ctx,{
-
+const ctx = document.getElementById('forecastChart').getContext('2d');
+const forecastChart = new Chart(ctx,{
     type:'line',
-
     data:{
         labels:[],
         datasets:[{
-
+            label:'Curah Hujan (mm)',
             data:[],
-
+            tension:0.4,
             borderColor:'#00ff88',
-
             backgroundColor:'rgba(0,255,136,0.12)',
-
             fill:true,
-
-            tension:0.45,
-
-            borderWidth:3,
-
-            pointRadius:2,
-
-            pointHoverRadius:6
-
+            pointRadius: 2,
+            pointHoverRadius: 5
         }]
     },
-
     options:{
-
         responsive:true,
-
-        maintainAspectRatio:false,
-
-        animation:false,
-
-        plugins:{
-
-            legend:{
-                display:false
+        maintainAspectRatio:false, // Dasar manipulasi tinggi
+        aspectRatio: false,
+        layout: {
+            padding: { 
+                left: -6,  
+                right: 4,  
+                top: 5, 
+                bottom: 0 
             }
-
         },
-
+        plugins:{
+            legend:{ display: false }, 
+            tooltip: { mode: 'index', intersect: false }
+        },
         scales:{
-
-            x:{
-
-                ticks:{
-                    color:'#fff',
-                    font:{
-                        size:10,
-                        weight:'bold'
-                    },
-                    maxRotation:0
+            x:{ 
+                ticks:{ 
+                    color:'rgba(255,255,255,0.85)',
+                    font: { size: 9, weight: 'bold' },
+                    maxRotation: 0,
+                    minRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 6
                 },
-
-                grid:{
-                    color:'rgba(255,255,255,0.05)'
-                }
-
+                grid: { color: 'rgba(255, 255, 255, 0.04)' }
             },
-
-            y:{
-
-                beginAtZero:true,
-
-                ticks:{
-                    color:'#fff',
-                    font:{
-                        size:10,
-                        weight:'bold'
-                    }
+            y:{ 
+                ticks:{ 
+                    color:'rgba(255,255,255,0.85)',
+                    font: { size: 9, weight: 'bold' },
+                    beginAtZero: true
                 },
-
-                grid:{
-                    color:'rgba(255,255,255,0.05)'
-                }
-
+                grid: { color: 'rgba(255, 255, 255, 0.04)' }
             }
-
         }
-
     }
-
 });
 
 /* =========================
-   LOAD DATA
+   ASYNC FETCH DATA SATELIT AWAN
 ========================= */
 
 async function loadData(){
-
     try{
-
-        const step = 0.04;
-
+        const step = 0.04; 
         let lats = [];
         let lons = [];
 
-        for(let i=-3;i<=3;i++){
-
-            for(let j=-3;j<=3;j++){
-
-                lats.push(
-                    parseFloat((lat+i*step).toFixed(4))
-                );
-
-                lons.push(
-                    parseFloat((lon+j*step).toFixed(4))
-                );
-
+        for(let i=-3; i<=3; i++){
+            for(let j=-3; j<=3; j++){
+                lats.push(parseFloat((lat + i*step).toFixed(4)));
+                lons.push(parseFloat((lon + j*step).toFixed(4)));
             }
-
         }
 
         const api =
         `https://api.open-meteo.com/v1/forecast?`+
         `latitude=${lats.join(',')}`+
         `&longitude=${lons.join(',')}`+
-        `&hourly=cloud_cover,rain`+
+        `&hourly=cloud_cover,rain`+ 
         `&timezone=auto`;
 
         const res = await fetch(api);
-
         const responses = await res.json();
-
+        
+        const sekarang = new Date();
+        const jamSekarangISO = sekarang.toISOString().slice(0, 13) + ":00"; 
+        
         const center = responses[0];
+        const times = center.hourly.time;
+        let activeIndex = times.findIndex(t => t.startsWith(jamSekarangISO.slice(0,13)));
+        if (activeIndex === -1) activeIndex = 0;
 
-        forecastChart.data.labels =
-        center.hourly.time.slice(0,24).map(t => {
-
-            return t.split("T")[1].slice(0,5);
-
+        /* UPDATE DATA GRAFIK FORECAST */
+        forecastChart.data.labels = center.hourly.time.slice(0,24).map(t => {
+            const jamMenit = t.split("T")[1];
+            const bagian = jamMenit.split(":");
+            return `${bagian[0]}:${bagian[1]}`;
         });
-
-        forecastChart.data.datasets[0].data =
-        center.hourly.rain.slice(0,24);
-
+        forecastChart.data.datasets[0].data = center.hourly.rain.slice(0,24);
+        
+        // TRIK iOS: Paksa matikan aspek rasio di level penulisan ulang data runtime
+        forecastChart.options.maintainAspectRatio = false;
+        forecastChart.options.aspectRatio = false;
+        
         forecastChart.update();
-
-        /* IOS FORCE */
-
-        setTimeout(()=>{
-
+        
+        // PAKSA RESIZE: Memaksa Safari WebKit iOS merender ulang tinggi canvas menjadi besar
+        setTimeout(() => {
             forecastChart.resize();
+        }, 150);
 
-            map.invalidateSize();
-
-        },400);
-
-        /* RADAR */
-
+        /* UPDATE MATRIKS RADAR AWAN ASIMETRIS */
         let radarData = [];
-
-        const activeIndex = 0;
-
-        lats.forEach((gridLat,index)=>{
-
+        lats.forEach((gridLat, index) => {
             const item = responses[index];
-
-            const cloudVal =
-            item.hourly.cloud_cover[activeIndex] || 0;
+            const cloudVal = item.hourly.cloud_cover[activeIndex] || 0; 
+            
+            let valNormalized = cloudVal / 100;
+            valNormalized = Math.min(valNormalized, 1);
 
             radarData.push({
-
-                lat:gridLat,
-
-                lng:lons[index],
-
-                count:cloudVal/100
-
+                lat: gridLat,
+                lng: lons[index],
+                count: valNormalized 
             });
-
         });
 
         heatmapLayer.setData({
-
-            max:1,
-
-            data:radarData
-
+            max: 1,
+            data: radarData
         });
 
+    } catch(err){
+        console.error("Gagal memperbarui radar spasial tutupan awan:", err);
     }
-
-    catch(err){
-
-        console.error(err);
-
-    }
-
 }
 
 loadData();
-
 setInterval(loadData,300000);
-
-/* =========================
-   IOS FINAL FORCE
-========================= */
-
-window.addEventListener('load',()=>{
-
-    setTimeout(()=>{
-
-        forecastChart.resize();
-
-        forecastChart.update();
-
-        map.invalidateSize();
-
-    },1000);
-
-});
 
 </script>
 
