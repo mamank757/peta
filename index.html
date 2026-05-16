@@ -8,7 +8,7 @@ content="width=device-width,
 initial-scale=1,
 viewport-fit=cover">
 
-<title>Smart Farm Cloud Radar Map</title>
+<title>Radar Cuaca Smart Farm</title>
 
 <link rel="stylesheet"
 href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -23,10 +23,6 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 
-/* =========================
-   RESET
-========================= */
-
 html,
 body{
     margin:0;
@@ -39,7 +35,7 @@ body{
 }
 
 /* =========================
-   MAP IOS FIX
+   MAP
 ========================= */
 
 #map{
@@ -56,52 +52,72 @@ body{
 ========================= */
 
 .forecast{
+
     position:absolute;
-    bottom:15px;
+
     left:15px;
-    z-index:1100;
+    right:auto;
+    bottom:15px;
+
+    z-index:9999;
 
     width:420px;
-    max-width:calc(100% - 20px);
-
-    box-sizing:border-box;
-
-    padding:16px;
-
-    border-radius:20px;
 
     background:rgba(8,15,30,0.92);
 
-    -webkit-backdrop-filter:blur(22px);
-    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(20px);
+    backdrop-filter:blur(20px);
+
+    border-radius:24px;
 
     border:1px solid rgba(255,255,255,0.06);
 
+    padding:16px;
+
+    box-sizing:border-box;
+
     color:white;
+
+    overflow:visible;
 }
 
 .forecast-title{
-    font-size:.95rem;
+    font-size:1rem;
     font-weight:700;
     color:#71f7ff;
-    margin-bottom:12px;
-    text-align:center;
+    margin-bottom:14px;
 }
 
 /* =========================
-   CHART IOS SAFE
+   IOS FIX BESAR
 ========================= */
 
 .chart-container{
+
     position:relative;
+
     width:100%;
-    height:220px;
-    min-height:220px;
+
+    height:260px;
+
+    min-height:260px;
+
+    overflow:visible;
 }
 
-canvas{
-    display:block;
+/* CANVAS PAKSA PENUH */
+
+#forecastChart{
+
+    position:absolute !important;
+
+    inset:0 !important;
+
     width:100% !important;
+
+    height:100% !important;
+
+    display:block !important;
 }
 
 /* =========================
@@ -109,14 +125,13 @@ canvas{
 ========================= */
 
 .legend{
-    width:100%;
     margin-top:14px;
-    box-sizing:border-box;
 }
 
 .gradient{
     width:100%;
     height:10px;
+
     border-radius:999px;
 
     background:linear-gradient(
@@ -131,55 +146,54 @@ canvas{
 .scale{
     display:flex;
     justify-content:space-between;
-    margin-top:5px;
+    margin-top:6px;
     font-size:.62rem;
-    opacity:.9;
 }
 
 /* =========================
-   MOBILE
+   MOBILE IOS SUPER FIX
 ========================= */
 
 @media(max-width:768px){
 
     .forecast{
+
         left:10px !important;
         right:10px !important;
-        bottom:10px !important;
 
         width:auto !important;
 
-        padding:14px 12px !important;
+        bottom:10px !important;
 
-        border-radius:18px !important;
+        padding:16px 14px !important;
+
+        border-radius:22px !important;
     }
 
     .forecast-title{
-        font-size:.85rem !important;
-        margin-bottom:8px !important;
 
-        text-align:left !important;
+        font-size:.92rem !important;
+
+        margin-bottom:12px !important;
     }
+
+    /* INI YANG MEMPERBESAR CHART */
 
     .chart-container{
-        height:180px !important;
-        min-height:180px !important;
-    }
 
-    .legend{
-        margin-top:12px !important;
-        padding-top:8px !important;
+        height:38vh !important;
 
-        border-top:1px solid rgba(255,255,255,0.08);
+        min-height:260px !important;
+
+        max-height:420px !important;
     }
 
     .scale{
-        font-size:.56rem !important;
+        font-size:.55rem !important;
     }
 
     .leaflet-control-zoom{
-        margin-bottom:340px !important;
-        transform:scale(.9);
+        margin-bottom:430px !important;
     }
 
 }
@@ -206,7 +220,7 @@ canvas{
         <div class="gradient"></div>
 
         <div class="scale">
-            <span>🔵 Awan Tipis</span>
+            <span>🔵 Tipis</span>
             <span>🟢 Berawan</span>
             <span>🟡 Mendung</span>
             <span>🔴 Pekat</span>
@@ -219,7 +233,7 @@ canvas{
 <script>
 
 /* =========================
-   URL PARAMS
+   PARAMETER
 ========================= */
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -255,18 +269,24 @@ L.tileLayer(
 
 L.marker([lat, lon])
 .addTo(map)
-.bindPopup('📍 Titik Lahan Sawah');
+.bindPopup('📍 Titik Sawah');
 
 /* =========================
-   RADAR RANGE
+   CIRCLE
 ========================= */
 
 L.circle([lat, lon],{
+
     radius:12000,
+
     color:'#71f7ff',
+
     fillColor:'#71f7ff',
+
     fillOpacity:0.02,
+
     weight:1.5
+
 }).addTo(map);
 
 /* =========================
@@ -308,10 +328,10 @@ heatmapLayer.addTo(map);
 ========================= */
 
 const ctx =
-document.getElementById('forecastChart')
-.getContext('2d');
+document.getElementById('forecastChart');
 
-const forecastChart = new Chart(ctx,{
+const forecastChart =
+new Chart(ctx,{
 
     type:'line',
 
@@ -319,11 +339,7 @@ const forecastChart = new Chart(ctx,{
         labels:[],
         datasets:[{
 
-            label:'Curah Hujan (mm)',
-
             data:[],
-
-            tension:0.4,
 
             borderColor:'#00ff88',
 
@@ -331,11 +347,13 @@ const forecastChart = new Chart(ctx,{
 
             fill:true,
 
+            tension:0.45,
+
+            borderWidth:3,
+
             pointRadius:2,
 
-            pointHoverRadius:5,
-
-            borderWidth:2
+            pointHoverRadius:6
 
         }]
     },
@@ -346,29 +364,12 @@ const forecastChart = new Chart(ctx,{
 
         maintainAspectRatio:false,
 
-        interaction:{
-            mode:'index',
-            intersect:false
-        },
-
-        layout:{
-            padding:{
-                left:0,
-                right:6,
-                top:6,
-                bottom:0
-            }
-        },
+        animation:false,
 
         plugins:{
 
             legend:{
                 display:false
-            },
-
-            tooltip:{
-                mode:'index',
-                intersect:false
             }
 
         },
@@ -378,19 +379,16 @@ const forecastChart = new Chart(ctx,{
             x:{
 
                 ticks:{
-                    color:'rgba(255,255,255,0.85)',
+                    color:'#fff',
                     font:{
-                        size:9,
+                        size:10,
                         weight:'bold'
                     },
-                    maxRotation:0,
-                    minRotation:0,
-                    autoSkip:true,
-                    maxTicksLimit:6
+                    maxRotation:0
                 },
 
                 grid:{
-                    color:'rgba(255,255,255,0.04)'
+                    color:'rgba(255,255,255,0.05)'
                 }
 
             },
@@ -400,15 +398,15 @@ const forecastChart = new Chart(ctx,{
                 beginAtZero:true,
 
                 ticks:{
-                    color:'rgba(255,255,255,0.85)',
+                    color:'#fff',
                     font:{
-                        size:9,
+                        size:10,
                         weight:'bold'
                     }
                 },
 
                 grid:{
-                    color:'rgba(255,255,255,0.04)'
+                    color:'rgba(255,255,255,0.05)'
                 }
 
             }
@@ -437,11 +435,11 @@ async function loadData(){
             for(let j=-3;j<=3;j++){
 
                 lats.push(
-                    parseFloat((lat + i*step).toFixed(4))
+                    parseFloat((lat+i*step).toFixed(4))
                 );
 
                 lons.push(
-                    parseFloat((lon + j*step).toFixed(4))
+                    parseFloat((lon+j*step).toFixed(4))
                 );
 
             }
@@ -459,38 +457,12 @@ async function loadData(){
 
         const responses = await res.json();
 
-        const sekarang = new Date();
-
-        const jamISO =
-        sekarang.toISOString().slice(0,13)+":00";
-
         const center = responses[0];
-
-        const times = center.hourly.time;
-
-        let activeIndex =
-        times.findIndex(t =>
-            t.startsWith(jamISO.slice(0,13))
-        );
-
-        if(activeIndex === -1){
-            activeIndex = 0;
-        }
-
-        /* =========================
-           UPDATE CHART
-        ========================= */
 
         forecastChart.data.labels =
         center.hourly.time.slice(0,24).map(t => {
 
-            const jam =
-            t.split("T")[1];
-
-            const parts =
-            jam.split(":");
-
-            return `${parts[0]}:${parts[1]}`;
+            return t.split("T")[1].slice(0,5);
 
         });
 
@@ -499,23 +471,21 @@ async function loadData(){
 
         forecastChart.update();
 
-        /* =========================
-           IOS FORCE RESIZE
-        ========================= */
+        /* IOS FORCE */
 
-        setTimeout(() => {
+        setTimeout(()=>{
 
             forecastChart.resize();
 
-            forecastChart.update();
+            map.invalidateSize();
 
-        }, 300);
+        },400);
 
-        /* =========================
-           RADAR MATRIX
-        ========================= */
+        /* RADAR */
 
         let radarData = [];
+
+        const activeIndex = 0;
 
         lats.forEach((gridLat,index)=>{
 
@@ -524,19 +494,13 @@ async function loadData(){
             const cloudVal =
             item.hourly.cloud_cover[activeIndex] || 0;
 
-            let valNormalized =
-            cloudVal / 100;
-
-            valNormalized =
-            Math.min(valNormalized,1);
-
             radarData.push({
 
                 lat:gridLat,
 
                 lng:lons[index],
 
-                count:valNormalized
+                count:cloudVal/100
 
             });
 
@@ -554,50 +518,31 @@ async function loadData(){
 
     catch(err){
 
-        console.error(
-        "Gagal memperbarui radar:",
-        err
-        );
+        console.error(err);
 
     }
 
 }
-
-/* =========================
-   INITIAL LOAD
-========================= */
 
 loadData();
 
 setInterval(loadData,300000);
 
 /* =========================
-   IOS SAFARI FINAL FIX
+   IOS FINAL FORCE
 ========================= */
 
 window.addEventListener('load',()=>{
 
     setTimeout(()=>{
 
-        map.invalidateSize();
-
         forecastChart.resize();
 
         forecastChart.update();
 
-    },500);
-
-});
-
-window.addEventListener('resize',()=>{
-
-    setTimeout(()=>{
-
         map.invalidateSize();
 
-        forecastChart.resize();
-
-    },200);
+    },1000);
 
 });
 
