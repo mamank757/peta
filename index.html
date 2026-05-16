@@ -98,7 +98,7 @@ html, body{
 }
 
 /* =========================
-   MOBILE UI RESPONSIVE - AMANDEMEN TOTAL
+   MOBILE UI RESPONSIVE - AMANDEMEN TOTAL IOS & ANDROID
 ========================= */
 
 @media(max-width:768px){
@@ -106,7 +106,7 @@ html, body{
     .forecast{
         left:10px !important;
         right:10px !important;
-        width: calc(100% - 20px) !important; /* Paksa melar penuh selebar layar HP */
+        width: calc(100% - 20px) !important; 
         bottom:10px !important;
         padding:14px 10px !important; 
         border-radius:18px !important;
@@ -119,16 +119,17 @@ html, body{
         padding-left: 5px !important;
     }
 
-    /* PENGUNCIAN UTAMA: Paksa tinggi kontainer dan canvas secara mutlak di level CSS */
+    /* PAKSA TINGGI ABSOLUT DI LEVEL CSS MOBILE */
     .chart-container {
         width: 100% !important;
-        height: 240px !important; /* Kunci tinggi panggung grafik 240px di HP */
+        height: 250px !important; /* Kita naikkan ke 250px agar di iOS makin kelihatan menonjol */
         display: block !important;
+        clear: both !important;
     }
 
     #forecastChart {
         width: 100% !important;
-        height: 240px !important; /* Paksa canvas Chart.js berdiri tegak tinggi mutlak */
+        height: 250px !important; /* Paksa tinggi canvas di Safari WebKit */
     }
 
     .legend{
@@ -143,9 +144,9 @@ html, body{
         font-size:.58rem !important;
     }
 
-    /* Tendang zoom kontrol Leaflet ke atas agar tidak menabrak bingkai bawah */
+    /* Jarak aman tombol zoom Leaflet */
     .leaflet-control-zoom{
-        margin-bottom:390px !important;
+        margin-bottom:400px !important;
         transform:scale(.85) !important;
     }
 
@@ -268,7 +269,8 @@ const forecastChart = new Chart(ctx,{
     },
     options:{
         responsive:true,
-        maintainAspectRatio:false, // Izinkan peregangan manipulasi tinggi kontainer
+        maintainAspectRatio:false, // Dasar manipulasi tinggi
+        aspectRatio: false,
         layout: {
             padding: { 
                 left: -6,  
@@ -347,7 +349,17 @@ async function loadData(){
             return `${bagian[0]}:${bagian[1]}`;
         });
         forecastChart.data.datasets[0].data = center.hourly.rain.slice(0,24);
+        
+        // TRIK iOS: Paksa matikan aspek rasio di level penulisan ulang data runtime
+        forecastChart.options.maintainAspectRatio = false;
+        forecastChart.options.aspectRatio = false;
+        
         forecastChart.update();
+        
+        // PAKSA RESIZE: Memaksa Safari WebKit iOS merender ulang tinggi canvas menjadi besar
+        setTimeout(() => {
+            forecastChart.resize();
+        }, 150);
 
         /* UPDATE MATRIKS RADAR AWAN ASIMETRIS */
         let radarData = [];
