@@ -1,165 +1,722 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisis Mikro Spasial Lahan - PPL Wajo</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0d1117; font-family: 'Segoe UI', sans-serif; }
-        #map { width: 100%; height: 100%; }
-        
-        /* Dasbor HUD Premium Glassmorphism */
-        .hud-panel {
-            position: absolute; top: 15px; right: 15px; z-index: 1000;
-            background: rgba(22, 27, 34, 0.85);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid #30363d;
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
-            padding: 15px; border-radius: 16px; color: #ffffff; 
-            width: 260px; font-size: 0.75rem;
-        }
-        .hud-title { 
-            font-weight: 800; color: #00ff88; text-transform: uppercase; 
-            letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid #30363d; padding-bottom: 5px;
-        }
-        .hud-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .hud-val { font-weight: 700; color: #ffd700; }
-        
-        .radar-legend {
-            position: absolute; bottom: 25px; left: 15px; z-index: 1000;
-            background: rgba(22, 27, 34, 0.9); padding: 10px; border-radius: 10px;
-            border: 1px solid #30363d; color: #fff; font-size: 0.65rem;
-        }
-        .legend-color { width: 12px; height: 12px; display: inline-block; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Smart Farm Weather Map</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js"></script>
+<script src="https://raw.githack.com/pa7/heatmap.js/master/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Segoe UI, sans-serif;
+    background:#0b1220;
+}
+
+#map{
+    width:100%;
+    height:100%;
+}
+
+/* HUD */
+
+.hud{
+    position:absolute;
+    top:15px;
+    left:15px;
+    z-index:1000;
+
+    width:320px;
+
+    background:rgba(10,15,25,0.85);
+
+    backdrop-filter:blur(12px);
+
+    border-radius:18px;
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    color:white;
+
+    padding:16px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,0.45);
+}
+
+.title{
+    font-size:1rem;
+    font-weight:800;
+    margin-bottom:14px;
+    color:#71f7ff;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.card{
+    background:rgba(255,255,255,0.04);
+    border-radius:12px;
+    padding:10px;
+}
+
+.label{
+    font-size:.7rem;
+    opacity:.7;
+}
+
+.value{
+    margin-top:4px;
+    font-size:1rem;
+    font-weight:700;
+}
+
+.alert{
+    margin-top:12px;
+    padding:12px;
+    border-radius:12px;
+    background:rgba(255,180,0,0.12);
+    border:1px solid rgba(255,180,0,0.2);
+    font-size:.82rem;
+    line-height:1.5;
+}
+
+/* Layer buttons */
+
+.layers{
+    position:absolute;
+    top:15px;
+    right:15px;
+    z-index:1000;
+
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    background:rgba(10,15,25,0.85);
+    color:white;
+    border:none;
+    border-radius:12px;
+    padding:10px 14px;
+    cursor:pointer;
+    backdrop-filter:blur(10px);
+    font-size:.78rem;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+/* Forecast */
+
+.forecast{
+    position:absolute;
+    bottom:15px;
+    left:15px;
+    z-index:1000;
+
+    width:420px;
+
+    background:rgba(10,15,25,0.85);
+
+    backdrop-filter:blur(12px);
+
+    border-radius:18px;
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    padding:14px;
+
+    color:white;
+}
+
+.forecast-title{
+    margin-bottom:10px;
+    font-weight:700;
+}
+
+.legend{
+    position:absolute;
+    bottom:15px;
+    right:15px;
+    z-index:1000;
+
+    width:240px;
+
+    background:rgba(10,15,25,0.85);
+
+    color:white;
+
+    border-radius:14px;
+
+    padding:12px;
+
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.gradient{
+    width:100%;
+    height:14px;
+    border-radius:999px;
+    margin-top:10px;
+
+    background:linear-gradient(
+        to right,
+        #00ff88,
+        #d4ff00,
+        #ffd000,
+        #ff7b00,
+        #ff0000,
+        #ff00ff
+    );
+}
+
+.scale{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+    font-size:.65rem;
+}
+
+canvas{
+    max-height:180px;
+}
+
+/* CB Pulse */
+
+.cb-alert{
+    animation:pulseCB 1.5s infinite;
+}
+
+@keyframes pulseCB{
+
+    0%{
+        box-shadow:0 0 0 0 rgba(255,0,0,0.5);
+    }
+
+    70%{
+        box-shadow:0 0 0 16px rgba(255,0,0,0);
+    }
+
+    100%{
+        box-shadow:0 0 0 0 rgba(255,0,0,0);
+    }
+
+}
+
+@media(max-width:768px){
+
+    .hud{
+        width:calc(100% - 30px);
+    }
+
+    .forecast{
+        width:calc(100% - 30px);
+    }
+
+    .legend{
+        display:none;
+    }
+}
+
+</style>
 </head>
+
 <body>
 
-    <div id="map"></div>
+<div id="map"></div>
 
-    <div class="hud-panel">
-        <div class="hud-title">🛰️ MIKRO SPASIAL WAJO</div>
-        <div class="hud-row"><span>☁️ Kerapatan Awan Pusat</span><span class="hud-val" id="valAwan">-</span></div>
-        <div class="hud-row"><span>🌧️ Curah Hujan Aktual</span><span class="hud-val" id="valHujan">-</span></div>
-        <div class="hud-row"><span>⚡ Indeks CAPE (Petir)</span><span class="hud-val" id="valCAPE">-</span></div>
-        <div class="hud-row"><span>💧 Kelembapan Udara</span><span class="hud-val" id="valHumid">-</span></div>
-        <div class="hud-row"><span>💨 Kecepatan Angin</span><span class="hud-val" id="valAngin">-</span></div>
-        <div class="hud-row"><span>☀️ Indeks UV Maks</span><span class="hud-val" id="valUV">-</span></div>
-        <div class="hud-row"><span>🌱 Suhu Tanah (0-10cm)</span><span class="hud-val" id="valTanah">-</span></div>
+<!-- HUD -->
+
+<div class="hud">
+
+    <div class="title">🛰 SMART FARM WEATHER</div>
+
+    <div class="grid">
+
+        <div class="card">
+            <div class="label">☁ Awan</div>
+            <div class="value" id="cloud">-</div>
+        </div>
+
+        <div class="card">
+            <div class="label">🌧 Curah Hujan</div>
+            <div class="value" id="rain">-</div>
+        </div>
+
+        <div class="card">
+            <div class="label">💨 Kecepatan Angin</div>
+            <div class="value" id="wind">-</div>
+        </div>
+
+        <div class="card">
+            <div class="label">💧 Kelembapan Udara</div>
+            <div class="value" id="humid">-</div>
+        </div>
+
+        <div class="card">
+            <div class="label">⚡ CAPE</div>
+            <div class="value" id="cape">-</div>
+        </div>
+
+        <div class="card">
+            <div class="label">🌡 Suhu Tanah</div>
+            <div class="value" id="soil">-</div>
+        </div>
+
     </div>
 
-    <div class="radar-legend">
-        <div style="font-weight: 700; margin-bottom: 5px; color: #00ff88;">📡 INTENSITAS GRID ATMOSFER:</div>
-        <div><span class="legend-color" style="background: #00ff88;"></span> Rendah (Cerah / Berawan)</div>
-        <div><span class="legend-color" style="background: #ffd700;"></span> Sedang (Mendung / Gerimis Lokal)</div>
-        <div><span class="legend-color" style="background: #f85149;"></span> Tinggi (Awan CB / Risiko Blast Tinggi)</div>
+    <div class="alert" id="statusBox">
+        Memuat analisis pertanian...
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js"></script>
-    <script src="https://raw.githack.com/pa7/heatmap.js/master/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
+</div>
 
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const lat = parseFloat(urlParams.get('lat')) || -4.1200; 
-        const lon = parseFloat(urlParams.get('lon')) || 120.0300;
+<!-- Layer Controls -->
 
-        // Inisialisasi Peta Gelap dengan tingkat zoom yang lebih detail (Zoom 11)
-        const map = L.map('map', { zoomControl: false }).setView([lat, lon], 11);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+<div class="layers">
+    <button class="btn" onclick="setMode('rain')">🌧 Hujan</button>
+    <button class="btn" onclick="setMode('cloud')">☁ Awan</button>
+    <button class="btn" onclick="setMode('storm')">⚡ Petir</button>
+    <button class="btn" onclick="setMode('cb')">⛈  Awan CB</button> </div>
 
-        // Penanda Pin Lokasi Sawah Utama
-        L.marker([lat, lon]).addTo(map).bindPopup('<b style="color:#000;">Titik Koordinat Utama Lahan</b>').openPopup();
+<!-- Forecast -->
 
-        // Konfigurasi Heatmap Layer yang Dipersempit agar gumpalan awan lebih presisi per desa
-        const cfg = {
-            "radius": 0.08, // Radius diperkecil dari 0.25 ke 0.08 agar tidak nge-blur ke wilayah lain
-            "maxOpacity": .7, 
-            "scaleRadius": true, 
-            "useLocalExtrema": false,
-            latField: 'lat', lngField: 'lng', valueField: 'count',
-            gradient: { '.15': '#00ff88', '.55': '#ffd700', '.85': '#f85149' }
-        };
-        const heatmapLayer = new HeatmapOverlay(cfg).addTo(map);
+<div class="forecast">
 
-        async function muatDataSpasialPadat() {
-            try {
-                // GENERATOR GRID PADAT: Membuat 13 titik koordinat rapat di sekitar lokasi (Resolusi ~4-5 KM per titik)
-                const step = 0.04; 
-                let lats = [lat];
-                let lons = [lon];
+    <div class="forecast-title">
+        📈 Forecast 24 Jam
+    </div>
 
-                // Membuat pola grid cincin ganda di sekitar Kecamatan lokasi berdiri
-                for (let i = -2; i <= 2; i++) {
-                    for (let j = -2; j <= 2; j++) {
-                        if (i === 0 && j === 0) continue;
-                        // Mengambil sampel acak silang untuk membentuk formasi awan alami
-                        if (Math.abs(i) + Math.abs(j) <= 3) {
-                            lats.push(parseFloat((lat + i * step).toFixed(4)));
-                            lons.push(parseFloat((lon + j * step).toFixed(4)));
-                        }
-                    }
+    <canvas id="forecastChart"></canvas>
+
+</div>
+
+<!-- Legend -->
+
+<div class="legend">
+
+    <div><b>RADAR ATMOSFER</b></div>
+
+    <div class="gradient"></div>
+
+    <div class="scale">
+        <span>Lemah</span>
+        <span>Sedang</span>
+        <span>Kuat</span>
+    </div>
+
+    <div style="margin-top:10px;font-size:.72rem;line-height:1.5;opacity:.8">
+        ⛈ Mode CB mendeteksi potensi awan cumulonimbus berdasarkan:
+        <br>• CAPE tinggi
+        <br>• Kelembapan tinggi
+        <br>• Tutupan awan pekat
+        <br>• Curah hujan lokal
+    </div>
+
+</div>
+
+<script>
+
+/* =========================
+   LOCATION
+========================= */
+
+const urlParams = new URLSearchParams(window.location.search);
+
+const lat = parseFloat(urlParams.get('lat')) || -4.1200;
+const lon = parseFloat(urlParams.get('lon')) || 120.0300;
+
+/* =========================
+   MAP
+========================= */
+
+const map = L.map('map',{
+    zoomControl:false
+}).setView([lat, lon], 10);
+
+L.control.zoom({
+    position:'bottomright'
+}).addTo(map);
+
+L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {
+        attribution:'© OpenStreetMap'
+    }
+).addTo(map);
+
+/* Marker */
+
+L.marker([lat, lon])
+.addTo(map)
+.bindPopup('📍 Lokasi Sawah');
+
+/* =========================
+   CB CIRCLE
+========================= */
+
+const cbCircle = L.circle([lat, lon],{
+    radius:12000,
+    color:'#ffaa00',
+    fillColor:'#ff0000',
+    fillOpacity:0.04,
+    weight:1
+}).addTo(map);
+
+/* =========================
+   HEATMAP
+========================= */
+
+let activeMode = "rain";
+
+const cfg = {
+    radius:0.09,
+    maxOpacity:0.75,
+    scaleRadius:true,
+    useLocalExtrema:false,
+
+    latField:'lat',
+    lngField:'lng',
+    valueField:'count',
+
+    gradient:{
+        0.10:'#00ff88',
+        0.30:'#c8ff00',
+        0.50:'#ffd000',
+        0.70:'#ff7b00',
+        0.85:'#ff0000',
+        1.00:'#ff00ff'
+    }
+};
+
+const heatmapLayer = new HeatmapOverlay(cfg);
+heatmapLayer.addTo(map);
+
+/* =========================
+   CHART
+========================= */
+
+const ctx = document.getElementById('forecastChart');
+
+const forecastChart = new Chart(ctx,{
+    type:'line',
+    data:{
+        labels:[],
+        datasets:[{
+            label:'Curah Hujan',
+            data:[],
+            tension:0.4,
+            borderColor:'#00ff88',
+            backgroundColor:'rgba(0,255,136,0.2)',
+            fill:true
+        }]
+    },
+    options:{
+        responsive:true,
+        plugins:{
+            legend:{
+                labels:{
+                    color:'white'
                 }
-
-                // Kirim mega-request untuk 13 koordinat spasial sekaligus ke Open-Meteo
-                const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats.join(',')}&longitude=${lons.join(',')}&current=cloud_cover,rain,relative_humidity_2m,wind_speed_10m&hourly=cape,soil_temperature_0_to_10cm&daily=uv_index_max&timezone=auto`;
-                
-                const res = await fetch(apiUrl);
-                const responses = await res.json();
-                
-                // Titik indeks 0 adalah koordinat pusat tempat petani berdiri
-                const dataPusat = Array.isArray(responses) ? responses[0] : responses;
-                const curPusat = dataPusat.current;
-                
-                // Ambil data CAPE dan Suhu tanah jam berjalan dari pusat
-                const capePusat = dataPusat.hourly?.cape?.[0] || 0;
-                const soilTempPusat = dataPusat.hourly?.soil_temperature_0_to_10cm?.[0] || 0;
-
-                // Tempelkan parameter detail ke panel kontrol HUD
-                document.getElementById('valAwan').innerText = `${curPusat.cloud_cover}%`;
-                document.getElementById('valHujan').innerText = `${curPusat.rain.toFixed(1)} mm`;
-                document.getElementById('valCAPE').innerText = `${capePusat} J/kg`;
-                document.getElementById('valHumid').innerText = `${curPusat.relative_humidity_2m}%`;
-                document.getElementById('valAngin').innerText = `${curPusat.wind_speed_10m} km/jam`;
-                document.getElementById('valUV').innerText = `${(dataPusat.daily?.uv_index_max?.[0] || 0).toFixed(1)} Poin`;
-                document.getElementById('valTanah').innerText = `${soilTempPusat.toFixed(1)} °C`;
-
-                // PROSES KALKULASI MULTIVARIAT UNTUK TIAP TITIK GRID
-                let dataGridRadar = [];
-                lats.forEach((titikLat, index) => {
-                    const objekData = Array.isArray(responses) ? responses[index] : responses;
-                    const cloudValue = objekData.current.cloud_cover || 0;
-                    const rainValue = objekData.current.rain || 0;
-                    const capeValue = objekData.hourly?.cape?.[0] || 0;
-
-                    // LOGIKA BOBOT RADAR: Menggabungkan kepadatan awan, air hujan, dan instabilitas petir (CAPE)
-                    // Nilai akhir (bobot) berkisar 0.0 sampai 1.0
-                    let bobotAtmosfer = cloudValue / 100;
-                    
-                    if (rainValue > 0.5) bobotAtmosfer += 0.2; // Jika hujan, awan terlihat lebih pekat di radar
-                    if (capeValue > 1200) bobotAtmosfer += 0.15; // Jika energi badai tinggi, warna bergeser ke zona bahaya (merah)
-                    
-                    // Batasi nilai maksimal di angka 1.0
-                    if (bobotAtmosfer > 1.0) bobotAtmosfer = 1.0;
-
-                    dataGridRadar.push({
-                        lat: titikLat,
-                        lng: lons[index],
-                        count: bobotAtmosfer
-                    });
-                });
-
-                // Suntikkan data 13 grid interkoneksi ke peta Leaflet Heatmap
-                heatmapLayer.setData({ max: 1, data: dataGridRadar });
-
-            } catch (err) {
-                console.error("Gagal memproses analisis mikro spasial:", err);
+            }
+        },
+        scales:{
+            x:{
+                ticks:{ color:'white' }
+            },
+            y:{
+                ticks:{ color:'white' }
             }
         }
+    }
+});
 
-        muatDataSpasialPadat();
-    </script>
+/* =========================
+   SET MODE
+========================= */
+
+function setMode(mode){
+
+    activeMode = mode;
+
+    loadData();
+
+}
+
+/* =========================
+   LOAD DATA
+========================= */
+
+async function loadData(){
+
+    try{
+
+        const step = 0.05;
+
+        let lats = [];
+        let lons = [];
+
+        for(let i=-3;i<=3;i++){
+
+            for(let j=-3;j<=3;j++){
+
+                if(Math.abs(i)+Math.abs(j)<=4){
+
+                    lats.push(
+                        parseFloat((lat + i*step).toFixed(4))
+                    );
+
+                    lons.push(
+                        parseFloat((lon + j*step).toFixed(4))
+                    );
+
+                }
+
+            }
+
+        }
+
+        const api =
+        `https://api.open-meteo.com/v1/forecast?`+
+        `latitude=${lats.join(',')}`+
+        `&longitude=${lons.join(',')}`+
+        `&current=temperature_2m,relative_humidity_2m,rain,cloud_cover,wind_speed_10m`+
+        `&hourly=rain,precipitation_probability,cape,soil_temperature_0_to_10cm`+
+        `&timezone=auto`;
+
+        const res = await fetch(api);
+
+        const responses = await res.json();
+
+        const center = responses[0];
+
+        const current = center.current;
+
+        const cape =
+            center.hourly.cape?.[0] || 0;
+
+        const soil =
+            center.hourly.soil_temperature_0_to_10cm?.[0] || 0;
+
+        /* HUD */
+
+        document.getElementById('cloud').innerHTML =
+            current.cloud_cover + "%";
+
+        document.getElementById('rain').innerHTML =
+            current.rain.toFixed(1) + " mm";
+
+        document.getElementById('wind').innerHTML =
+            current.wind_speed_10m + " km/j";
+
+        document.getElementById('humid').innerHTML =
+            current.relative_humidity_2m + "%";
+
+        document.getElementById('cape').innerHTML =
+            Math.round(cape);
+
+        document.getElementById('soil').innerHTML =
+            soil.toFixed(1) + "°C";
+
+        /* STATUS */
+
+        let status = "✅ Kondisi sawah relatif aman.";
+
+        if(current.rain > 5){
+
+            status =
+            "🌧 Hujan cukup tinggi. Tunda pemupukan.";
+
+        }
+
+        if(current.relative_humidity_2m > 88){
+
+            status +=
+            "<br>⚠ Kelembapan tinggi. Risiko jamur/blast meningkat.";
+
+        }
+
+        if(cape > 1200){
+
+            status +=
+            "<br>⚡ Potensi badai lokal dan petir.";
+
+        }
+
+        if(current.wind_speed_10m > 24){
+
+            status +=
+            "<br>💨 Angin kencang. Hindari penyemprotan.";
+
+        }
+
+        /* CB ANALYSIS */
+
+        if(
+            cape > 1400 &&
+            current.cloud_cover > 75 &&
+            current.relative_humidity_2m > 82
+        ){
+
+            status += `
+            <br><br>
+            <span style="color:#ff4d4d;font-weight:700;">
+            ⛈ POTENSI AWAN CUMULONIMBUS
+            </span>
+            <br>
+            Risiko hujan lebat,
+            petir,
+            angin turun,
+            badai lokal.
+            `;
+
+            cbCircle.setStyle({
+                fillOpacity:0.18,
+                color:'#ff0000'
+            });
+
+        }else{
+
+            cbCircle.setStyle({
+                fillOpacity:0.04,
+                color:'#ffaa00'
+            });
+
+        }
+
+        document.getElementById('statusBox').innerHTML = status;
+
+        /* FORECAST */
+
+        const labels =
+            center.hourly.time.slice(0,24).map(t=>{
+
+                return t.split("T")[1];
+
+            });
+
+        const rainData =
+            center.hourly.rain.slice(0,24);
+
+        forecastChart.data.labels = labels;
+
+        forecastChart.data.datasets[0].data =
+            rainData;
+
+        forecastChart.update();
+
+        /* HEATMAP */
+
+        let radarData = [];
+
+        lats.forEach((gridLat,index)=>{
+
+            const item = responses[index];
+
+            const cloud =
+                item.current.cloud_cover || 0;
+
+            const rain =
+                item.current.rain || 0;
+
+            const humidity =
+                item.current.relative_humidity_2m || 0;
+
+            const wind =
+                item.current.wind_speed_10m || 0;
+
+            const cape =
+                item.hourly.cape?.[0] || 0;
+
+            let value = 0;
+
+            /* RAIN */
+
+            if(activeMode === "rain"){
+
+                value = rain / 10;
+
+            }
+
+            /* CLOUD */
+
+            else if(activeMode === "cloud"){
+
+                value = cloud / 100;
+
+            }
+
+            /* STORM */
+
+            else if(activeMode === "storm"){
+
+                value = cape / 2000;
+
+            }
+
+            /* CB CLOUD */
+
+            else if(activeMode === "cb"){
+
+                value =
+                    (cloud / 100) * 0.35 +
+                    (humidity / 100) * 0.20 +
+                    (cape / 2500) * 0.35 +
+                    (rain / 10) * 0.07 +
+                    (wind / 40) * 0.03;
+
+            }
+
+            value = Math.min(value,1);
+
+            radarData.push({
+                lat:gridLat,
+                lng:lons[index],
+                count:value
+            });
+
+        });
+
+        heatmapLayer.setData({
+            max:1,
+            data:radarData
+        });
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+    }
+
+}
+
+loadData();
+
+/* Auto refresh */
+
+setInterval(loadData,300000);
+
+</script>
+
 </body>
 </html>
