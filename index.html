@@ -60,11 +60,16 @@ html, body{
     color: #71f7ff;
 }
 
-/* Tinggi bawaan desktop */
+/* Bingkai grafik versi desktop */
 .chart-container {
     position: relative;
     width: 100%;
     height: 200px; 
+}
+
+#forecastChart {
+    width: 100% !important;
+    height: 100% !important;
 }
 
 /* =========================
@@ -99,7 +104,7 @@ html, body{
 }
 
 /* =========================
-   MOBILE UI RESPONSIVE (GRAFIK MAKSIMAL)
+   MOBILE UI RESPONSIVE (GRAFIK DIJAMIN BESAR)
 ========================= */
 
 @media(max-width:768px){
@@ -109,38 +114,40 @@ html, body{
         right:10px;
         width:auto; 
         bottom:10px;
-        padding:14px; 
+        padding:14px 10px; /* Dipersempit padding kanan-kiri agar grafik melar */
         border-radius:18px;
-        gap: 4px;
+        gap: 6px;
     }
 
     .forecast-title{
         font-size:.85rem;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
         text-align: left;
+        padding-left: 5px;
     }
 
-    /* DONGKRAK UKURAN GRAFIK MAKSIMAL DI HP */
+    /* PAKSA UKURAN BINGKAI GRAFIK BESAR DI HP */
     .chart-container {
-        width: 100%;
-        height: 100px; /* Kita tinggikan jadi 260px agar grafik berdiri tegak dan besar */
-        margin-bottom: 5px;
+        width: 100% !important;
+        height: 220px; /* Tinggi yang sangat pas untuk layar HP */
+        margin: 0 auto;
     }
 
-    /* Legenda kita taruh paling bawah dengan layout ringkas */
     .legend{
-        margin-top: 8px;
+        margin-top: 10px;
         border-top: 1px solid rgba(255,255,255,0.08);
         padding-top: 8px;
+        padding-left: 5px;
+        padding-right: 5px;
     }
 
     .scale {
         font-size:.58rem;
     }
 
-    /* Amankan tombol zoom Leaflet ke atas agar tidak menumpuk */
+    /* Amankan posisi kontrol tombol zoom Leaflet map */
     .leaflet-control-zoom{
-        margin-bottom:410px !important;
+        margin-bottom:380px !important;
         transform:scale(.85);
     }
 
@@ -242,7 +249,7 @@ const heatmapLayer = new HeatmapOverlay(cfg);
 heatmapLayer.addTo(map);
 
 /* =========================
-   FORECAST CHART (CHART.JS FULL WIDTH & STRETCH HEIGHT)
+   FORECAST CHART (CHART.JS MAX STRETCH CONFIGURED)
 ========================= */
 
 const ctx = document.getElementById('forecastChart');
@@ -263,17 +270,17 @@ const forecastChart = new Chart(ctx,{
     },
     options:{
         responsive:true,
-        maintainAspectRatio:false,
+        maintainAspectRatio:false, // WAJIB: Agar chart mau ditarik memenuhi kontainer tinggi
         layout: {
             padding: { 
-                left: -8,  // Tarik mepet ke ujung kiri
-                right: 0,  // Tarik mepet ke ujung kanan
+                left: -6,  // Paksa nempel rata dinding kiri luar canvas
+                right: 4,  // Paksa melar penuh ke batas kanan luar canvas
                 top: 5, 
                 bottom: 0 
             }
         },
         plugins:{
-            legend:{ display: false },
+            legend:{ display: false }, // Hilangkan box bawaan atas agar space murni untuk grafik
             tooltip: { mode: 'index', intersect: false }
         },
         scales:{
@@ -286,7 +293,7 @@ const forecastChart = new Chart(ctx,{
                     autoSkip: true,
                     maxTicksLimit: 6
                 },
-                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                grid: { color: 'rgba(255, 255, 255, 0.04)' }
             },
             y:{ 
                 ticks:{ 
@@ -294,7 +301,7 @@ const forecastChart = new Chart(ctx,{
                     font: { size: 9, weight: 'bold' },
                     beginAtZero: true
                 },
-                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                grid: { color: 'rgba(255, 255, 255, 0.04)' }
             }
         }
     }
@@ -344,7 +351,7 @@ async function loadData(){
         forecastChart.data.datasets[0].data = center.hourly.rain.slice(0,24);
         forecastChart.update();
 
-        /* UPDATE MATRIKS RADAR AWAN */
+        /* UPDATE MATRIKS RADAR AWAN ASIMETRIS */
         let radarData = [];
         lats.forEach((gridLat, index) => {
             const item = responses[index];
