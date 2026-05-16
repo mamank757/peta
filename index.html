@@ -29,6 +29,7 @@ html, body{
 #map{
     width:100%;
     height:100dvh;
+    z-index: 1;
 }
 
 /* =========================
@@ -41,15 +42,13 @@ html, body{
     left:15px;
     z-index:1100;
     width:420px;
-    background:rgba(8,15,30,0.88);
+    background:rgba(8,15,30,0.92);
     backdrop-filter:blur(22px);
     border-radius:20px;
     border:1px solid rgba(255,255,255,0.06);
     padding:16px;
     color:white;
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
 }
 
 .forecast-title{
@@ -65,11 +64,6 @@ html, body{
     position: relative;
     width: 100%;
     height: 200px; 
-}
-
-#forecastChart {
-    width: 100% !important;
-    height: 100% !important;
 }
 
 /* =========================
@@ -104,51 +98,55 @@ html, body{
 }
 
 /* =========================
-   MOBILE UI RESPONSIVE (GRAFIK DIJAMIN MELEDAK BESAR)
+   MOBILE UI RESPONSIVE - AMANDEMEN TOTAL
 ========================= */
 
 @media(max-width:768px){
 
     .forecast{
-        left:10px;
-        right:10px;
-        width:auto; 
-        bottom:10px;
-        padding:14px 10px; 
-        border-radius:18px;
-        gap: 6px;
+        left:10px !important;
+        right:10px !important;
+        width: calc(100% - 20px) !important; /* Paksa melar penuh selebar layar HP */
+        bottom:10px !important;
+        padding:14px 10px !important; 
+        border-radius:18px !important;
     }
 
     .forecast-title{
-        font-size:.85rem;
-        margin-bottom: 8px;
-        text-align: left;
-        padding-left: 5px;
+        font-size:.85rem !important;
+        margin-bottom: 8px !important;
+        text-align: left !important;
+        padding-left: 5px !important;
     }
 
-    /* PAKSA UKURAN BINGKAI GRAFIK MADING TINGGI DI HP */
+    /* PENGUNCIAN UTAMA: Paksa tinggi kontainer dan canvas secara mutlak di level CSS */
     .chart-container {
         width: 100% !important;
-        height: 250px; /* Ditambah ke 250px agar kurva berdiri tegak, besar, dan puas dilihat */
-        margin: 0 auto;
+        height: 240px !important; /* Kunci tinggi panggung grafik 240px di HP */
+        display: block !important;
+    }
+
+    #forecastChart {
+        width: 100% !important;
+        height: 240px !important; /* Paksa canvas Chart.js berdiri tegak tinggi mutlak */
     }
 
     .legend{
-        margin-top: 10px;
-        border-top: 1px solid rgba(255,255,255,0.08);
-        padding-top: 8px;
-        padding-left: 5px;
-        padding-right: 5px;
+        margin-top: 12px !important;
+        border-top: 1px solid rgba(255,255,255,0.08) !important;
+        padding-top: 8px !important;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
     }
 
     .scale {
-        font-size:.58rem;
+        font-size:.58rem !important;
     }
 
-    /* Amankan posisi kontrol tombol zoom Leaflet map */
+    /* Tendang zoom kontrol Leaflet ke atas agar tidak menabrak bingkai bawah */
     .leaflet-control-zoom{
-        margin-bottom:410px !important;
-        transform:scale(.85);
+        margin-bottom:390px !important;
+        transform:scale(.85) !important;
     }
 
 }
@@ -249,10 +247,10 @@ const heatmapLayer = new HeatmapOverlay(cfg);
 heatmapLayer.addTo(map);
 
 /* =========================
-   FORECAST CHART (CHART.JS MAX STRETCH CONFIGURED)
+   FORECAST CHART CONFIGURATION
 ========================= */
 
-const ctx = document.getElementById('forecastChart');
+const ctx = document.getElementById('forecastChart').getContext('2d');
 const forecastChart = new Chart(ctx,{
     type:'line',
     data:{
@@ -270,18 +268,17 @@ const forecastChart = new Chart(ctx,{
     },
     options:{
         responsive:true,
-        maintainAspectRatio:false, // WAJIB: Agar chart mau ditarik memenuhi kontainer tinggi
-        aspectRatio: false,        // PERBAIKAN UTAMA: Paksa matikan rasio otomatis agar grafik melar tinggi sempurna di HP
+        maintainAspectRatio:false, // Izinkan peregangan manipulasi tinggi kontainer
         layout: {
             padding: { 
-                left: -6,  // Paksa nempel rata dinding kiri luar canvas
-                right: 4,  // Paksa melar penuh ke batas kanan luar canvas
+                left: -6,  
+                right: 4,  
                 top: 5, 
                 bottom: 0 
             }
         },
         plugins:{
-            legend:{ display: false }, // Hilangkan box bawaan atas agar space murni untuk grafik
+            legend:{ display: false }, 
             tooltip: { mode: 'index', intersect: false }
         },
         scales:{
