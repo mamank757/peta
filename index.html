@@ -4,14 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<title>Premium Smart Farm Climate Radar</title>
+<title>Premium Smart Farm Satellite Radar</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js"></script>
-<script src="https://raw.githack.com/pa7/heatmap.js/master/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -114,20 +110,20 @@ html, body{
     text-transform: uppercase;
 }
 
-/* Kunci Tinggi Mutlak Kontainer Grafik */
+/* PAKSA KUNCI TINGGI MURNI GRAFIK ANTI GEPENG */
 .chart-container {
     position: relative;
     width: 100% !important;
-    height: 220px !important;
+    height: 240px !important;
     display: block !important;
 }
 #forecastChart {
     width: 100% !important;
-    height: 220px !important;
+    height: 240px !important;
 }
 
 /* =========================
-   LEGENDA RADAR AGRO
+   LEGENDA SATELIT RADAR
 ========================= */
 
 .legend{
@@ -140,7 +136,7 @@ html, body{
     width:100%;
     height:8px;
     border-radius:999px;
-    background:linear-gradient(to right, rgba(0,140,255,0.1) 0%, #00ff88 33%, #ffd000 66%, #ff0000 100%);
+    background:linear-gradient(to right, rgba(0,140,255,0.15) 0%, #00ff88 33%, #ffd000 66%, #ff0000 100%);
 }
 
 .scale{
@@ -152,7 +148,7 @@ html, body{
 }
 
 /* =========================
-   RESPONSIVE LAYOUT UNTUK HP (ANDROID & iOS)
+   RESPONSIVE MOBILE (ANDROID & iOS SAFARI PASSED)
 ========================= */
 
 @media(max-width:768px){
@@ -171,16 +167,16 @@ html, body{
     
     .forecast-title { font-size: 0.8rem !important; }
 
-    /* PAKSA UKURAN GRAFIK TETAP MELEDAK BESAR DI SAFARI DAN CHROME MOBILE */
+    /* PAKSA GRAFIK TETAP MELEDAK BESAR DI iOS */
     .chart-container, #forecastChart {
-        height: 230px !important;
+        height: 240px !important;
     }
 
     .legend { margin-top: 10px !important; }
     .scale { font-size: 0.55rem !important; }
 
     .leaflet-control-zoom{
-        margin-bottom: 380px !important;
+        margin-bottom: 390px !important;
         transform: scale(0.8) !important;
     }
 }
@@ -191,18 +187,17 @@ html, body{
 <body>
 
 <div class="radar-modes">
-    <button class="mode-btn active" onclick="switchRadarMode('atmosfer', this)">🌀 Radar Atmosfer (Gabungan)</button>
-    <button class="mode-btn" onclick="switchRadarMode('awan', this)">☁ Radar Awan</button>
-    <button class="mode-btn" onclick="switchRadarMode('hujan', this)">🌧 Radar Hujan (mm)</button>
-    <button class="mode-btn" onclick="switchRadarMode('angin', this)">💨 Koridor Angin</button>
+    <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">☁ Satelit Radar Awan</button>
+    <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">🌧 Satelit Radar Hujan</button>
+    <button class="mode-btn" onclick="switchRadarLayer('angin', this)">💨 Koridor Angin (Grafik)</button>
 </div>
 
 <div id="map"></div>
 
 <div class="forecast">
     <div class="forecast-header">
-        <div class="forecast-title" id="chartTitle">📈 Forecast Curah Hujan 24 Jam</div>
-        <div class="radar-status-badge" id="radarBadge">Atmosfer</div>
+        <div class="forecast-title" id="chartTitle">季度 Forecast Curah Hujan 24 Jam</div>
+        <div class="radar-status-badge" id="radarBadge">Awan</div>
     </div>
     
     <div class="chart-container">
@@ -210,12 +205,12 @@ html, body{
     </div>
 
     <div class="legend">
-        <div class="gradient" id="legendGradient"></div>
+        <div class="gradient"></div>
         <div class="scale">
-            <span id="scaleMin">Aman / Rendah</span>
-            <span>Normal</span>
-            <span>Waspada</span>
-            <span id="scaleMax">Ekstrem / Bahaya</span>
+            <span>Rendah / Cerah</span>
+            <span>Sedang</span>
+            <span>Lebat</span>
+            <span>Ekstrem / Badai</span>
         </div>
     </div>
 </div>
@@ -223,49 +218,40 @@ html, body{
 <script>
 
 /* =========================
-   KOORDINAT UTAMA
+   LOCATION & CREDENTIALS
 ========================= */
 const urlParams = new URLSearchParams(window.location.search);
 const lat = parseFloat(urlParams.get('lat')) || -4.1200;
 const lon = parseFloat(urlParams.get('lon')) || 120.0300;
 
-let currentRadarMode = 'atmosfer';
-let globalApiResponseData = null;
+// MENYUNTIKKAN INTEGRASI API KEY OWM MILIK KING MAMANK
+const owmApiKey = "a6da7e4d60b79f9bc5e5a35f7ccc5885"; 
+
+let activeLayerName = 'awan';
+let owmTileLayers = {};
 
 /* =========================
    LEAFLET MAP CONTROLLER
 ========================= */
-const map = L.map('map',{ zoomControl:false }).setView([lat, lon], 12);
+const map = L.map('map',{ zoomControl:false }).setView([lat, lon], 10); // Zoom 10 agar hamparan wilayah luar kelihatan luas
 L.control.zoom({ position:'bottomright' }).addTo(map);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution:'© OpenStreetMap'
 }).addTo(map);
 
-/* MARKER UTAMA */
-L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Inti');
+/* MARKER SAWAH INTI */
+L.marker([lat, lon]).addTo(map).bindPopup('📍 Titik Sawah Pengguna');
 
-/* LINGKARAN CAKUPAN KLIMATOLOGI 12 KM */
-L.circle([lat, lon],{ radius:12000, color:'#71f7ff', fillColor:'#71f7ff', fillOpacity:0.01, weight:1.2 }).addTo(map);
+/* KONEKSI TILE LAYER SATELIT ASLI OPENWEATHERMAP */
+owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
+owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.65 });
 
-/* =========================
-   HEATMAP RADAR ENGINE
-========================= */
-const cfg = {
-    radius:0.05, maxOpacity:0.65, scaleRadius:true, useLocalExtrema:false,
-    latField:'lat', lngField:'lng', valueField:'count',
-    gradient: {
-        0.15: 'rgba(0,140,255,0.15)', // Biru
-        0.40: '#00ff88',              // Hijau
-        0.70: '#ffd000',              // Kuning
-        1.00: '#ff0000'               // Merah
-    }
-};
-const heatmapLayer = new HeatmapOverlay(cfg);
-heatmapLayer.addTo(map);
+// Aktifkan radar awan secara default di layar map
+owmTileLayers['awan'].addTo(map);
 
 /* =========================
-   CHART CONTROLLER (CHART.JS MURNI)
+   CHART ENGINE (CHART.JS MURNI)
 ========================= */
 const ctx = document.getElementById('forecastChart').getContext('2d');
 const forecastChart = new Chart(ctx,{
@@ -296,144 +282,84 @@ const forecastChart = new Chart(ctx,{
 });
 
 /* =========================
-   FUNGSI SWITCH MODE RADAR
+   FUNGSI SAKLAR LAYER RADAR SATELIT
 ========================= */
-function switchRadarMode(mode, element) {
-    currentRadarMode = mode;
+function switchRadarLayer(mode, element) {
+    // Hapus layer cuaca yang sedang aktif sebelumnya
+    if (owmTileLayers[activeLayerName]) {
+        map.removeLayer(owmTileLayers[activeLayerName]);
+    }
     
-    // Switch status aktif tombol menu
+    activeLayerName = mode;
+
+    // Masukkan layer cuaca yang baru dipilih ke atas peta daratan
+    if (owmTileLayers[mode]) {
+        owmTileLayers[mode].addTo(map);
+    }
+    
+    // Ganti class button aktif
     document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
     
-    // Ubah nama text indikator panel
-    const badge = document.getElementById('radarBadge');
-    badge.innerText = mode;
+    document.getElementById('radarBadge').innerText = mode;
     
-    if (globalApiResponseData) {
-        processRadarAndChart(globalApiResponseData);
-    }
+    // Sinkronisasi grafik bawah agar ikut berubah fungsinya
+    updateChartData();
 }
 
 /* =========================
-   CORE PROCESSOR & INTERPOLASI DATA WEATHER
+   SINKRONISASI UPDATE DATA GRAFIK
 ========================= */
-function processRadarAndChart(responses) {
-    const center = responses[0];
-    const sekarang = new Date();
-    const jamSekarangISO = sekarang.toISOString().slice(0, 13) + ":00";
-    
-    let activeIndex = center.hourly.time.findIndex(t => t.startsWith(jamSekarangISO.slice(0,13)));
-    if (activeIndex === -1) activeIndex = 0;
+let cachedHourlyData = null;
 
-    /* RE-RENDER GRAFIK DATA BERDASARKAN MODE */
-    forecastChart.data.labels = center.hourly.time.slice(0,24).map(t => t.split("T")[1].slice(0,5));
-    
-    if (currentRadarMode === 'angin') {
+function updateChartData() {
+    if (!cachedHourlyData) return;
+
+    if (activeLayerName === 'angin') {
         forecastChart.data.datasets[0].label = 'Kecepatan Angin (km/j)';
-        forecastChart.data.datasets[0].data = center.hourly.wind_speed_10m.slice(0,24);
+        forecastChart.data.datasets[0].data = cachedHourlyData.wind_speed_10m.slice(0,24);
         forecastChart.data.datasets[0].borderColor = '#71f7ff';
         forecastChart.data.datasets[0].backgroundColor = 'rgba(113,247,255,0.12)';
         document.getElementById('chartTitle').innerText = '📈 Forecast Kecepatan Angin 24 Jam';
     } else {
         forecastChart.data.datasets[0].label = 'Prediksi Hujan (mm)';
-        forecastChart.data.datasets[0].data = center.hourly.rain.slice(0,24);
+        forecastChart.data.datasets[0].data = cachedHourlyData.rain.slice(0,24);
         forecastChart.data.datasets[0].borderColor = '#00ff88';
         forecastChart.data.datasets[0].backgroundColor = 'rgba(0,255,136,0.12)';
         document.getElementById('chartTitle').innerText = '📈 Forecast Perubahan Hujan 24 Jam';
     }
-    
+
     forecastChart.options.maintainAspectRatio = false;
     forecastChart.options.aspectRatio = false;
     forecastChart.update();
     
-    // Paksa kalkulasi ulang Safari WebKit iOS agar anti-gepeng
-    setTimeout(() => { forecastChart.resize(); }, 100);
-
-    /* RE-RENDER SEBARAN RADAR MAP SPASIAL (MATRIKS INTERPOLASI) */
-    let radarData = [];
-    
-    // Rekonstruksi grid koordinat keliling sawah
-    const step = 0.04;
-    let gridIndex = 0;
-    
-    for(let i=-3; i<=3; i++){
-        for(let j=-3; j<=3; j++){
-            const gridLat = parseFloat((lat + i*step).toFixed(4));
-            const gridLon = parseFloat((lon + j*step).toFixed(4));
-            
-            const item = responses[gridIndex];
-            gridIndex++;
-            if(!item) continue;
-
-            let finalValue = 0;
-            
-            // Logika Kalkulasi Parameter Terpadu
-            if (currentRadarMode === 'atmosfer') {
-                // Formula Agroklimatologi: Bobot Awan (35%) + Kelembapan (25%) + Angin (20%) + Hujan Saat Ini (20%)
-                const cVal = (item.hourly.cloud_cover[activeIndex] || 0) / 100;
-                const hVal = (item.hourly.relative_humidity_2m[activeIndex] || 0) / 100;
-                const wVal = (item.hourly.wind_speed_10m[activeIndex] || 0) / 35; // Normalisasi top speed 35km/j
-                const rVal = (item.hourly.rain[activeIndex] || 0) / 8; // Normalisasi batas curah hujan lebat
-                
-                finalValue = (cVal * 0.35) + (hVal * 0.25) + (Math.min(wVal,1) * 0.20) + (Math.min(rVal,1) * 0.20);
-            } 
-            else if (currentRadarMode === 'awan') {
-                finalValue = (item.hourly.cloud_cover[activeIndex] || 0) / 100;
-            } 
-            else if (currentRadarMode === 'hujan') {
-                finalValue = (item.hourly.rain[activeIndex] || 0) / 10; // Skala maks desimal hujan lebat 10mm
-            } 
-            else if (currentRadarMode === 'angin') {
-                finalValue = (item.hourly.wind_speed_10m[activeIndex] || 0) / 40; // Batas waspada badai angin roboh padi
-            }
-
-            finalValue = Math.min(Math.max(finalValue, 0), 1);
-
-            radarData.push({ lat: gridLat, lng: gridLon, count: finalValue });
-        }
-    }
-
-    heatmapLayer.setData({ max: 1, data: radarData });
+    // Trik Pemaksa WebKit Safari iOS merender tinggi grafik secara penuh
+    setTimeout(() => { forecastChart.resize(); }, 120);
 }
 
 /* =========================
-   ASYNC DATA EXTRACTOR API OPEN-METEO
+   FETCHING PREDIKSI ANGKA (OPEN-METEO FOR GRAPH)
 ========================= */
-async function loadData(){
-    try{
-        const step = 0.04; 
-        let lats = [];
-        let lons = [];
-
-        // Pemetaan Koordinat Persegi Polos (Acak Alami)
-        for(let i=-3; i<=3; i++){
-            for(let j=-3; j<=3; j++){
-                lats.push(parseFloat((lat + i*step).toFixed(4)));
-                lons.push(parseFloat((lon + j*step).toFixed(4)));
-            }
-        }
-
-        // AMBIL PARAMETER LENGKAP: Cloud Cover, Rain, Humidity, Wind Speed
-        const api =
-        `https://api.open-meteo.com/v1/forecast?`+
-        `latitude=${lats.join(',')}`+
-        `&longitude=${lons.join(',')}`+
-        `&hourly=cloud_cover,rain,relative_humidity_2m,wind_speed_10m`+ 
-        `&timezone=auto`;
-
+async function loadForecastMetrics(){
+    try {
+        const api = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=rain,wind_speed_10m&timezone=auto`;
         const res = await fetch(api);
-        globalApiResponseData = await res.json();
+        const data = await res.json();
         
-        processRadarAndChart(globalApiResponseData);
+        cachedHourlyData = data.hourly;
 
-    } catch(err){
-        console.error("Gagal interkoneksi satelit cuaca premium:", err);
+        // Set Label Sumbu Jam X
+        forecastChart.data.labels = data.hourly.time.slice(0,24).map(t => t.split("T")[1].slice(0,5));
+        
+        updateChartData();
+    } catch (err) {
+        console.error("Gagal sinkronisasi data metrik grafik:", err);
     }
 }
 
-// Inisialisasi Booting Awal
-loadData();
-setInterval(loadData, 300000); // Sinkronisasi otomatis tiap 5 menit
+// Eksekusi Pemicu Awal
+loadForecastMetrics();
+setInterval(loadForecastMetrics, 300000); // Auto sync data tiap 5 menit
 
 </script>
 
