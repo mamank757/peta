@@ -132,6 +132,7 @@ html, body{
     opacity: 1;
 }
 
+/* Kondisi Saat Tersembunyi */
 .forecast.collapsed .collapsible-content {
     max-height: 0px !important;
     opacity: 0;
@@ -206,14 +207,11 @@ html, body{
     .legend { margin-top: 10px !important; }
     .scale { font-size: 0.55rem !important; }
 
+    /* Pengaturan awal tombol zoom Leaflet di HP mepet ke bawah */
     .leaflet-control-zoom {
-        margin-bottom: 390px !important;
+        margin-bottom: 75px !important; 
         transition: margin-bottom 0.3s ease-in-out;
         transform: scale(0.8) !important;
-    }
-    
-    body:has(.forecast.collapsed) .leaflet-control-zoom {
-        margin-bottom: 75px !important;
     }
 }
 
@@ -223,19 +221,19 @@ html, body{
 <body>
 
 <div class="radar-modes">
-    <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">☁ Satelit Awan</button>
-    <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">🌧 Satelit Hujan</button>
+    <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">☁ Pantau Awan</button>
+    <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">🌧 Pantau Hujan</button>
 </div>
 
 <div id="map"></div>
 
-<div class="forecast" id="forecastPanel">
+<div class="forecast collapsed" id="forecastPanel">
     <div class="forecast-header" onclick="toggleForecast()">
         <div class="forecast-title-block">
             <button class="toggle-btn" id="arrowBtn">▼</button>
-            <div class="forecast-title">📈 Forecast Curah Hujan 24 Jam</div>
+            <div class="forecast-title">📈 Curah Hujan 24 Jam</div>
         </div>
-        <div class="radar-status-badge" id="radarBadge">Awan</div>
+        <div class="radar-status-badge" id="radarBadge">Lihat Grafik</div>
     </div>
     
     <div class="collapsible-content">
@@ -256,7 +254,6 @@ html, body{
    LOCATION & CREDENTIALS
 ========================= */
 const urlParams = new URLSearchParams(window.location.search);
-// Tetap ambil koordinat spesifik sawah pengguna dari URL, jika tidak ada, default marker di posisi umum
 const markerLat = parseFloat(urlParams.get('lat')) || -4.1200;
 const markerLon = parseFloat(urlParams.get('lon')) || 120.0300;
 
@@ -266,20 +263,32 @@ let activeLayerName = 'awan';
 let owmTileLayers = {};
 
 /* =========================
-   TOGGLE COLLAPSE FUNCTION
+   TOGGLE COLLAPSE FUNCTION (DINAMIS DENGAN TOMBOL ZOOM)
 ========================= */
 function toggleForecast() {
     const panel = document.getElementById('forecastPanel');
     panel.classList.toggle('collapsed');
+    
+    // Geser paksa tombol zoom Leaflet naik-turun secara presisi khusus di HP
+    if(window.innerWidth <= 768) {
+        const zoomControl = document.querySelector('.leaflet-control-zoom');
+        if(zoomControl) {
+            if(panel.classList.contains('collapsed')) {
+                zoomControl.style.setProperty('margin-bottom', '75px', 'important');
+            } else {
+                zoomControl.style.setProperty('margin-bottom', '390px', 'important');
+            }
+        }
+    }
+    
     setTimeout(() => {
         forecastChart.resize();
     }, 310);
 }
 
 /* =========================
-   LEAFLET MAP INITIALIZATION (DIZOOM OUT KE SULSEL)
+   LEAFLET MAP INITIALIZATION (SULSEL VIEW DEFAULT)
 ========================= */
-// Pusat peta digeser ke tengah Sulsel (-4.0000, 120.2000) dengan zoom diperkecil menjadi 7.5
 const map = L.map('map',{ zoomControl:false }).setView([-4.0000, 120.2000], 7.5); 
 L.control.zoom({ position:'bottomright' }).addTo(map);
 
@@ -287,7 +296,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution:'© OpenStreetMap'
 }).addTo(map);
 
-// Penanda lokasi sawah pengguna tetap terpasang dengan aman di titiknya
+// Pin penanda sawah inti pengguna tetap kokoh terpasang
 L.marker([markerLat, markerLon]).addTo(map).bindPopup('📍 Lokasi Sawah Pengguna');
 
 owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
@@ -296,7 +305,7 @@ owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precip
 owmTileLayers['awan'].addTo(map);
 
 /* =========================
-   FUNGSI UPDATE LEGENDA RADAR
+   FUNGSI UPDATE LEGENDA RADAR (SINKRON SATELLITE PALETTE)
 ========================= */
 function updateLegendUI(mode) {
     const gradientDiv = document.getElementById('legendGradient');
