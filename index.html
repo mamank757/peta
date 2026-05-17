@@ -256,8 +256,9 @@ html, body{
    LOCATION & CREDENTIALS
 ========================= */
 const urlParams = new URLSearchParams(window.location.search);
-const lat = parseFloat(urlParams.get('lat')) || -4.1200;
-const lon = parseFloat(urlParams.get('lon')) || 120.0300;
+// Tetap ambil koordinat spesifik sawah pengguna dari URL, jika tidak ada, default marker di posisi umum
+const markerLat = parseFloat(urlParams.get('lat')) || -4.1200;
+const markerLon = parseFloat(urlParams.get('lon')) || 120.0300;
 
 const owmApiKey = "a6da7e4d60b79f9bc5e5a35f7ccc5885"; 
 
@@ -276,16 +277,18 @@ function toggleForecast() {
 }
 
 /* =========================
-   LEAFLET MAP INITIALIZATION
+   LEAFLET MAP INITIALIZATION (DIZOOM OUT KE SULSEL)
 ========================= */
-const map = L.map('map',{ zoomControl:false }).setView([lat, lon], 10); 
+// Pusat peta digeser ke tengah Sulsel (-4.0000, 120.2000) dengan zoom diperkecil menjadi 7.5
+const map = L.map('map',{ zoomControl:false }).setView([-4.0000, 120.2000], 7.5); 
 L.control.zoom({ position:'bottomright' }).addTo(map);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution:'© OpenStreetMap'
 }).addTo(map);
 
-L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Pengguna');
+// Penanda lokasi sawah pengguna tetap terpasang dengan aman di titiknya
+L.marker([markerLat, markerLon]).addTo(map).bindPopup('📍 Lokasi Sawah Pengguna');
 
 owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
 owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_cls/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.70 });
@@ -293,7 +296,7 @@ owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precip
 owmTileLayers['awan'].addTo(map);
 
 /* =========================
-   FUNGSI UPDATE LEGENDA RADAR - DIKOREKSI TOTAL
+   FUNGSI UPDATE LEGENDA RADAR
 ========================= */
 function updateLegendUI(mode) {
     const gradientDiv = document.getElementById('legendGradient');
@@ -303,9 +306,8 @@ function updateLegendUI(mode) {
         gradientDiv.style.background = "linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.9) 100%)";
         scaleDiv.innerHTML = "<span>Cerah / Polos</span><span>Berawan Tipis</span><span>Mendung Pekat</span>";
     } else if (mode === 'hujan') {
-        // KOREKSI STRUKTUR WARNA: Memasukkan Biru di bagian awal gradasi agar sinkron dengan peta Anda
         gradientDiv.style.background = "linear-gradient(to right, #1d3ede 0%, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f 100%)";
-        scaleDiv.innerHTML = "<span>Gerimis (🔵)</span><span>Ringan (🟢)</span><span>Sedang (🟡)</span><span>Lebat (🟠)</span><span>Ekstrem (🔴)</span>";
+        scaleDiv.innerHTML = "<span>Gerimis (🔵)</span><span>Ringan (🟢)</span><span>Sedang (🟡)</span><span>Lebat (🔴)</span><span>Ekstrem (🟣)</span>";
     }
 }
 
@@ -362,7 +364,7 @@ const forecastChart = new Chart(ctx,{
 
 async function loadForecastMetrics(){
     try {
-        const api = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=rain&timezone=auto`;
+        const api = `https://api.open-meteo.com/v1/forecast?latitude=${markerLat}&longitude=${markerLon}&hourly=rain&timezone=auto`;
         const res = await fetch(api);
         const data = await res.json();
         
