@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<title>Premium Smart Farm Satellite Radar</title>
+<title>Smart Farm Weather Satellite Radar</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -29,7 +29,7 @@ html, body{
 }
 
 /* =========================
-   MODE SWITCHER CONTROLLER (ATAS LAYAR)
+   MODE SWITCHER CONTROLLER
 ========================= */
 
 .radar-modes{
@@ -39,21 +39,18 @@ html, body{
     right: 15px;
     z-index: 1200;
     display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 4px;
+    gap: 8px;
+    justify-content: center;
 }
-.radar-modes::-webkit-scrollbar { display: none; }
 
 .mode-btn {
     background: rgba(11, 22, 44, 0.85);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.7);
-    padding: 8px 14px;
+    padding: 10px 18px;
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -67,7 +64,7 @@ html, body{
 }
 
 /* =========================
-   FORECAST PANEL CONTAINER (BAWAH LAYAR)
+   FORECAST PANEL CONTAINER
 ========================= */
 
 .forecast{
@@ -83,13 +80,21 @@ html, body{
     padding:16px;
     color:white;
     box-sizing: border-box;
+    transition: all 0.3s ease-in-out;
 }
 
 .forecast-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.forecast-title-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .forecast-title{
@@ -97,6 +102,16 @@ html, body{
     font-size: 0.9rem;
     color: #71f7ff;
     letter-spacing: 0.5px;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    color: #71f7ff;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.3s ease;
 }
 
 .radar-status-badge {
@@ -110,12 +125,29 @@ html, body{
     text-transform: uppercase;
 }
 
-/* PAKSA KUNCI TINGGI MURNI GRAFIK ANTI GEPENG */
+.collapsible-content {
+    max-height: 300px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, opacity 0.2s ease-in-out;
+    opacity: 1;
+}
+
+.forecast.collapsed .collapsible-content {
+    max-height: 0px !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.forecast.collapsed .toggle-btn {
+    transform: rotate(-180deg);
+}
+
 .chart-container {
     position: relative;
     width: 100% !important;
     height: 240px !important;
     display: block !important;
+    margin-top: 10px;
 }
 #forecastChart {
     width: 100% !important;
@@ -123,7 +155,7 @@ html, body{
 }
 
 /* =========================
-   LEGENDA SATELIT RADAR
+   LEGENDA RADAR STYLE
 ========================= */
 
 .legend{
@@ -136,7 +168,7 @@ html, body{
     width:100%;
     height:8px;
     border-radius:999px;
-    background:linear-gradient(to right, rgba(0,140,255,0.15) 0%, #00ff88 33%, #ffd000 66%, #ff0000 100%);
+    transition: background 0.3s ease;
 }
 
 .scale{
@@ -148,14 +180,14 @@ html, body{
 }
 
 /* =========================
-   RESPONSIVE MOBILE (ANDROID & iOS SAFARI PASSED)
+   RESPONSIVE MOBILE CONTROLLER
 ========================= */
 
 @media(max-width:768px){
     .radar-modes {
-        top: 10px; left: 10px; right: 10px; gap: 5px;
+        top: 10px; left: 10px; right: 10px; gap: 6px;
     }
-    .mode-btn { padding: 8px 12px; font-size: 0.72rem; }
+    .mode-btn { padding: 8px 16px; font-size: 0.75rem; flex: 1; text-align: center; }
 
     .forecast{
         left:10px !important; right:10px !important;
@@ -167,7 +199,6 @@ html, body{
     
     .forecast-title { font-size: 0.8rem !important; }
 
-    /* PAKSA GRAFIK TETAP MELEDAK BESAR DI iOS */
     .chart-container, #forecastChart {
         height: 240px !important;
     }
@@ -175,9 +206,14 @@ html, body{
     .legend { margin-top: 10px !important; }
     .scale { font-size: 0.55rem !important; }
 
-    .leaflet-control-zoom{
+    .leaflet-control-zoom {
         margin-bottom: 390px !important;
+        transition: margin-bottom 0.3s ease-in-out;
         transform: scale(0.8) !important;
+    }
+    
+    body:has(.forecast.collapsed) .leaflet-control-zoom {
+        margin-bottom: 75px !important;
     }
 }
 
@@ -187,30 +223,29 @@ html, body{
 <body>
 
 <div class="radar-modes">
-    <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">☁ Satelit Radar Awan</button>
-    <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">🌧 Satelit Radar Hujan</button>
-    <button class="mode-btn" onclick="switchRadarLayer('angin', this)">💨 Koridor Angin (Grafik)</button>
+    <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">☁ Satelit Awan</button>
+    <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">🌧 Satelit Hujan</button>
 </div>
 
 <div id="map"></div>
 
-<div class="forecast">
-    <div class="forecast-header">
-        <div class="forecast-title" id="chartTitle">季度 Forecast Curah Hujan 24 Jam</div>
+<div class="forecast" id="forecastPanel">
+    <div class="forecast-header" onclick="toggleForecast()">
+        <div class="forecast-title-block">
+            <button class="toggle-btn" id="arrowBtn">▼</button>
+            <div class="forecast-title">📈 Forecast Curah Hujan 24 Jam</div>
+        </div>
         <div class="radar-status-badge" id="radarBadge">Awan</div>
     </div>
     
-    <div class="chart-container">
-        <canvas id="forecastChart"></canvas>
-    </div>
+    <div class="collapsible-content">
+        <div class="chart-container">
+            <canvas id="forecastChart"></canvas>
+        </div>
 
-    <div class="legend">
-        <div class="gradient"></div>
-        <div class="scale">
-            <span>Rendah / Cerah</span>
-            <span>Sedang</span>
-            <span>Lebat</span>
-            <span>Ekstrem / Badai</span>
+        <div class="legend">
+            <div class="gradient" id="legendGradient"></div>
+            <div class="scale" id="legendScale"></div>
         </div>
     </div>
 </div>
@@ -224,34 +259,78 @@ const urlParams = new URLSearchParams(window.location.search);
 const lat = parseFloat(urlParams.get('lat')) || -4.1200;
 const lon = parseFloat(urlParams.get('lon')) || 120.0300;
 
-// MENYUNTIKKAN INTEGRASI API KEY OWM MILIK KING MAMANK
 const owmApiKey = "a6da7e4d60b79f9bc5e5a35f7ccc5885"; 
 
 let activeLayerName = 'awan';
 let owmTileLayers = {};
 
 /* =========================
-   LEAFLET MAP CONTROLLER
+   TOGGLE COLLAPSE FUNCTION
 ========================= */
-const map = L.map('map',{ zoomControl:false }).setView([lat, lon], 10); // Zoom 10 agar hamparan wilayah luar kelihatan luas
+function toggleForecast() {
+    const panel = document.getElementById('forecastPanel');
+    panel.classList.toggle('collapsed');
+    setTimeout(() => {
+        forecastChart.resize();
+    }, 310);
+}
+
+/* =========================
+   LEAFLET MAP INITIALIZATION
+========================= */
+const map = L.map('map',{ zoomControl:false }).setView([lat, lon], 10); 
 L.control.zoom({ position:'bottomright' }).addTo(map);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution:'© OpenStreetMap'
 }).addTo(map);
 
-/* MARKER SAWAH INTI */
-L.marker([lat, lon]).addTo(map).bindPopup('📍 Titik Sawah Pengguna');
+L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Pengguna');
 
-/* KONEKSI TILE LAYER SATELIT ASLI OPENWEATHERMAP */
-owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
-owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.65 });
+owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
+owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_cls/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.70 });
 
-// Aktifkan radar awan secara default di layar map
 owmTileLayers['awan'].addTo(map);
 
 /* =========================
-   CHART ENGINE (CHART.JS MURNI)
+   FUNGSI UPDATE LEGENDA RADAR - DIKOREKSI TOTAL
+========================= */
+function updateLegendUI(mode) {
+    const gradientDiv = document.getElementById('legendGradient');
+    const scaleDiv = document.getElementById('legendScale');
+
+    if (mode === 'awan') {
+        gradientDiv.style.background = "linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.9) 100%)";
+        scaleDiv.innerHTML = "<span>Cerah / Polos</span><span>Berawan Tipis</span><span>Mendung Pekat</span>";
+    } else if (mode === 'hujan') {
+        // KOREKSI STRUKTUR WARNA: Memasukkan Biru di bagian awal gradasi agar sinkron dengan peta Anda
+        gradientDiv.style.background = "linear-gradient(to right, #1d3ede 0%, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f 100%)";
+        scaleDiv.innerHTML = "<span>Gerimis (🔵)</span><span>Ringan (🟢)</span><span>Sedang (🟡)</span><span>Lebat (🟠)</span><span>Ekstrem (🔴)</span>";
+    }
+}
+
+updateLegendUI('awan');
+
+/* =========================
+   TOGGLE SWITCH RADAR SATELIT
+========================= */
+function switchRadarLayer(mode, element) {
+    if (owmTileLayers[activeLayerName]) {
+        map.removeLayer(owmTileLayers[activeLayerName]);
+    }
+    activeLayerName = mode;
+    if (owmTileLayers[mode]) {
+        owmTileLayers[mode].addTo(map);
+    }
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+    document.getElementById('radarBadge').innerText = mode;
+
+    updateLegendUI(mode);
+}
+
+/* =========================
+   FORECAST CHART GRAPH (CHART.JS)
 ========================= */
 const ctx = document.getElementById('forecastChart').getContext('2d');
 const forecastChart = new Chart(ctx,{
@@ -281,85 +360,26 @@ const forecastChart = new Chart(ctx,{
     }
 });
 
-/* =========================
-   FUNGSI SAKLAR LAYER RADAR SATELIT
-========================= */
-function switchRadarLayer(mode, element) {
-    // Hapus layer cuaca yang sedang aktif sebelumnya
-    if (owmTileLayers[activeLayerName]) {
-        map.removeLayer(owmTileLayers[activeLayerName]);
-    }
-    
-    activeLayerName = mode;
-
-    // Masukkan layer cuaca yang baru dipilih ke atas peta daratan
-    if (owmTileLayers[mode]) {
-        owmTileLayers[mode].addTo(map);
-    }
-    
-    // Ganti class button aktif
-    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
-    
-    document.getElementById('radarBadge').innerText = mode;
-    
-    // Sinkronisasi grafik bawah agar ikut berubah fungsinya
-    updateChartData();
-}
-
-/* =========================
-   SINKRONISASI UPDATE DATA GRAFIK
-========================= */
-let cachedHourlyData = null;
-
-function updateChartData() {
-    if (!cachedHourlyData) return;
-
-    if (activeLayerName === 'angin') {
-        forecastChart.data.datasets[0].label = 'Kecepatan Angin (km/j)';
-        forecastChart.data.datasets[0].data = cachedHourlyData.wind_speed_10m.slice(0,24);
-        forecastChart.data.datasets[0].borderColor = '#71f7ff';
-        forecastChart.data.datasets[0].backgroundColor = 'rgba(113,247,255,0.12)';
-        document.getElementById('chartTitle').innerText = '📈 Forecast Kecepatan Angin 24 Jam';
-    } else {
-        forecastChart.data.datasets[0].label = 'Prediksi Hujan (mm)';
-        forecastChart.data.datasets[0].data = cachedHourlyData.rain.slice(0,24);
-        forecastChart.data.datasets[0].borderColor = '#00ff88';
-        forecastChart.data.datasets[0].backgroundColor = 'rgba(0,255,136,0.12)';
-        document.getElementById('chartTitle').innerText = '📈 Forecast Perubahan Hujan 24 Jam';
-    }
-
-    forecastChart.options.maintainAspectRatio = false;
-    forecastChart.options.aspectRatio = false;
-    forecastChart.update();
-    
-    // Trik Pemaksa WebKit Safari iOS merender tinggi grafik secara penuh
-    setTimeout(() => { forecastChart.resize(); }, 120);
-}
-
-/* =========================
-   FETCHING PREDIKSI ANGKA (OPEN-METEO FOR GRAPH)
-========================= */
 async function loadForecastMetrics(){
     try {
-        const api = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=rain,wind_speed_10m&timezone=auto`;
+        const api = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=rain&timezone=auto`;
         const res = await fetch(api);
         const data = await res.json();
         
-        cachedHourlyData = data.hourly;
-
-        // Set Label Sumbu Jam X
         forecastChart.data.labels = data.hourly.time.slice(0,24).map(t => t.split("T")[1].slice(0,5));
+        forecastChart.data.datasets[0].data = data.hourly.rain.slice(0,24);
+        forecastChart.options.maintainAspectRatio = false;
+        forecastChart.options.aspectRatio = false;
+        forecastChart.update();
         
-        updateChartData();
+        setTimeout(() => { forecastChart.resize(); }, 120);
     } catch (err) {
-        console.error("Gagal sinkronisasi data metrik grafik:", err);
+        console.error("Gagal memuat metrik ramalan cuaca:", err);
     }
 }
 
-// Eksekusi Pemicu Awal
 loadForecastMetrics();
-setInterval(loadForecastMetrics, 300000); // Auto sync data tiap 5 menit
+setInterval(loadForecastMetrics, 300000);
 
 </script>
 
