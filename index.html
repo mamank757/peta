@@ -206,7 +206,7 @@
     </style>
 </head>
 
-<body class="panel-open">
+<body>
 
     <div class="radar-modes">
         <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">Pantau Awan</button>
@@ -215,10 +215,10 @@
 
     <div id="map"></div>
 
-    <div class="forecast" id="forecastPanel">
+    <div class="forecast collapsed" id="forecastPanel">
         <div class="forecast-header" onclick="toggleForecast()">
             <div class="forecast-title-block">
-                <button class="toggle-btn" id="toggleBtnText">Sembunyikan</button>
+                <button class="toggle-btn" id="toggleBtnText">Tampilkan</button>
                 <div class="forecast-title">📈 Curah Hujan 24 Jam</div>
             </div>
             <div class="radar-status-badge" id="radarBadge">AWAN</div>
