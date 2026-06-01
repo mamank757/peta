@@ -1,398 +1,403 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Smart Farm Weather Satellite Radar</title>
 
-<title>Smart Farm Weather Satellite Radar</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+            background: #060b13;
+        }
 
-<style>
+        #map {
+            width: 100%;
+            height: 100dvh;
+            z-index: 1;
+        }
 
-html, body{
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    font-family:Segoe UI,sans-serif;
-    background:#060b13;
-}
+        /* =========================
+           MODE SWITCHER CONTROLLER
+        ========================= */
+        .radar-modes {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            z-index: 1200;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
 
-#map{
-    width:100%;
-    height:100dvh;
-    z-index: 1;
-}
+        .mode-btn {
+            background: rgba(11, 22, 44, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
 
-/* =========================
-   MODE SWITCHER CONTROLLER
-========================= */
+        .mode-btn:hover {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: rgba(0, 255, 136, 0.5);
+        }
 
-.radar-modes{
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    right: 15px;
-    z-index: 1200;
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
+        .mode-btn.active {
+            background: #00ff88;
+            color: #060b13;
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
 
-.mode-btn {
-    background: rgba(11, 22, 44, 0.85);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.7);
-    padding: 10px 18px;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s;
-}
-.mode-btn.active {
-    background: #00ff88;
-    color: #060b13;
-    border-color: #00ff88;
-    box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
-}
+        /* =========================
+           FORECAST PANEL CONTAINER
+        ========================= */
+        .forecast {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            z-index: 1100;
+            width: 430px;
+            background: rgba(8, 15, 30, 0.92);
+            backdrop-filter: blur(22px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 18px;
+            color: white;
+            box-sizing: border-box;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-/* =========================
-   FORECAST PANEL CONTAINER
-========================= */
+        .forecast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
 
-.forecast{
-    position:absolute;
-    bottom:15px;
-    left:15px;
-    z-index:1100;
-    width:430px;
-    background:rgba(8,15,30,0.92);
-    backdrop-filter:blur(22px);
-    border-radius:24px;
-    border:1px solid rgba(255,255,255,0.08);
-    padding:16px;
-    color:white;
-    box-sizing: border-box;
-    transition: all 0.3s ease-in-out;
-}
+        .forecast-title-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-.forecast-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-}
+        .forecast-title {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #71f7ff;
+            letter-spacing: 0.5px;
+        }
 
-.forecast-title-block {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #71f7ff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
-.forecast-title{
-    font-weight:800;
-    font-size: 0.9rem;
-    color: #71f7ff;
-    letter-spacing: 0.5px;
-}
+        .radar-status-badge {
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
 
-.toggle-btn {
-    background: none;
-    border: none;
-    color: #71f7ff;
-    font-size: 0.85rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: transform 0.3s ease;
-}
+        .collapsible-content {
+            max-height: 400px;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.3s ease;
+            opacity: 1;
+            margin-top: 15px;
+        }
 
-.radar-status-badge {
-    background: rgba(0, 255, 136, 0.1);
-    border: 1px solid rgba(0, 255, 136, 0.2);
-    color: #00ff88;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-}
+        .forecast.collapsed .collapsible-content {
+            max-height: 0px;
+            opacity: 0;
+            margin-top: 0;
+            pointer-events: none;
+        }
 
-.collapsible-content {
-    max-height: 300px;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out, opacity 0.2s ease-in-out;
-    opacity: 1;
-}
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+        }
 
-/* Kondisi Saat Tersembunyi */
-.forecast.collapsed .collapsible-content {
-    max-height: 0px !important;
-    opacity: 0;
-    pointer-events: none;
-}
+        /* =========================
+           LEGENDA RADAR STYLE
+        ========================= */
+        .legend {
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 15px;
+        }
 
-.forecast.collapsed .toggle-btn {
-    transform: rotate(-180deg);
-}
+        .gradient {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            transition: background 0.4s ease;
+        }
 
-.chart-container {
-    position: relative;
-    width: 100% !important;
-    height: 240px !important;
-    display: block !important;
-    margin-top: 10px;
-}
-#forecastChart {
-    width: 100% !important;
-    height: 240px !important;
-}
+        .scale {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.65rem;
+            opacity: 0.8;
+            font-weight: 500;
+        }
 
-/* =========================
-   LEGENDA RADAR STYLE
-========================= */
+        /* =========================
+           RESPONSIVE MOBILE
+        ========================= */
+        @media(max-width: 768px) {
+            .radar-modes { top: 10px; left: 10px; right: 10px; gap: 6px; }
+            .mode-btn { padding: 8px 12px; font-size: 0.75rem; flex: 1; }
 
-.legend{
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 12px;
-}
-
-.gradient{
-    width:100%;
-    height:8px;
-    border-radius:999px;
-    transition: background 0.3s ease;
-}
-
-.scale{
-    display:flex;
-    justify-content:space-between;
-    margin-top:5px;
-    font-size:.6rem;
-    opacity: 0.8;
-}
-
-/* =========================
-   RESPONSIVE MOBILE CONTROLLER
-========================= */
-
-@media(max-width:768px){
-    .radar-modes {
-        top: 10px; left: 10px; right: 10px; gap: 6px;
-    }
-    .mode-btn { padding: 8px 16px; font-size: 0.75rem; flex: 1; text-align: center; }
-
-    .forecast{
-        left:10px !important; right:10px !important;
-        width: calc(100% - 20px) !important;
-        bottom:10px !important;
-        padding: 12px 10px !important;
-        border-radius: 20px !important;
-    }
-    
-    .forecast-title { font-size: 0.8rem !important; }
-
-    .chart-container, #forecastChart {
-        height: 240px !important;
-    }
-
-    .legend { margin-top: 10px !important; }
-    .scale { font-size: 0.55rem !important; }
-
-    /* Pengaturan awal tombol zoom Leaflet di HP mepet ke bawah */
-    .leaflet-control-zoom {
-        margin-bottom: 75px !important; 
-        transition: margin-bottom 0.3s ease-in-out;
-        transform: scale(0.8) !important;
-    }
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="radar-modes">
-    <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">☁ Pantau Awan</button>
-    <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">🌧 Pantau Hujan</button>
-</div>
-
-<div id="map"></div>
-
-<div class="forecast collapsed" id="forecastPanel">
-    <div class="forecast-header" onclick="toggleForecast()">
-        <div class="forecast-title-block">
-            <button class="toggle-btn" id="arrowBtn">▼</button>
-            <div class="forecast-title">📈 Curah Hujan 24 Jam</div>
-        </div>
-        <div class="radar-status-badge" id="radarBadge">Lihat Grafik</div>
-    </div>
-    
-    <div class="collapsible-content">
-        <div class="chart-container">
-            <canvas id="forecastChart"></canvas>
-        </div>
-
-        <div class="legend">
-            <div class="gradient" id="legendGradient"></div>
-            <div class="scale" id="legendScale"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-
-/* =========================
-   LOCATION & CREDENTIALS
-========================= */
-const urlParams = new URLSearchParams(window.location.search);
-const markerLat = parseFloat(urlParams.get('lat')) || -4.1200;
-const markerLon = parseFloat(urlParams.get('lon')) || 120.0300;
-
-const owmApiKey = "a6da7e4d60b79f9bc5e5a35f7ccc5885"; 
-
-let activeLayerName = 'awan';
-let owmTileLayers = {};
-
-/* =========================
-   TOGGLE COLLAPSE FUNCTION (DINAMIS DENGAN TOMBOL ZOOM)
-========================= */
-function toggleForecast() {
-    const panel = document.getElementById('forecastPanel');
-    panel.classList.toggle('collapsed');
-    
-    // Geser paksa tombol zoom Leaflet naik-turun secara presisi khusus di HP
-    if(window.innerWidth <= 768) {
-        const zoomControl = document.querySelector('.leaflet-control-zoom');
-        if(zoomControl) {
-            if(panel.classList.contains('collapsed')) {
-                zoomControl.style.setProperty('margin-bottom', '75px', 'important');
-            } else {
-                zoomControl.style.setProperty('margin-bottom', '390px', 'important');
+            .forecast {
+                left: 10px; right: 10px;
+                width: calc(100% - 20px);
+                bottom: 20px;
+                padding: 15px;
+            }
+            
+            /* Penempatan dinamis kontrol Leaflet menggunakan flex/transform bawaan CSS */
+            .leaflet-control-zoom {
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateY(-80px); 
+            }
+            /* Saat panel terbuka, dorong tombol zoom lebih ke atas */
+            body.panel-open .leaflet-control-zoom {
+                transform: translateY(-360px);
             }
         }
-    }
-    
-    setTimeout(() => {
-        forecastChart.resize();
-    }, 310);
-}
+    </style>
+</head>
 
-/* =========================
-   LEAFLET MAP INITIALIZATION (SULSEL VIEW DEFAULT)
-========================= */
-const map = L.map('map',{ zoomControl:false }).setView([-4.0000, 120.2000], 7.5); 
-L.control.zoom({ position:'bottomright' }).addTo(map);
+<body class="panel-open">
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'© OpenStreetMap'
-}).addTo(map);
+    <div class="radar-modes">
+        <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">Pantau Awan</button>
+        <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">Pantau Hujan</button>
+    </div>
 
-// Pin penanda sawah inti pengguna tetap kokoh terpasang
-L.marker([markerLat, markerLon]).addTo(map).bindPopup('📍 Lokasi Sawah Pengguna');
+    <div id="map"></div>
 
-owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
-owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_cls/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.70 });
+    <div class="forecast" id="forecastPanel">
+        <div class="forecast-header" onclick="toggleForecast()">
+            <div class="forecast-title-block">
+                <button class="toggle-btn" id="toggleBtnText">Sembunyikan</button>
+                <div class="forecast-title">📈 Curah Hujan 24 Jam</div>
+            </div>
+            <div class="radar-status-badge" id="radarBadge">AWAN</div>
+        </div>
+        
+        <div class="collapsible-content">
+            <div class="chart-container">
+                <canvas id="forecastChart"></canvas>
+            </div>
 
-owmTileLayers['awan'].addTo(map);
+            <div class="legend">
+                <div class="gradient" id="legendGradient"></div>
+                <div class="scale" id="legendScale"></div>
+            </div>
+        </div>
+    </div>
 
-/* =========================
-   FUNGSI UPDATE LEGENDA RADAR (SINKRON SATELLITE PALETTE)
-========================= */
-function updateLegendUI(mode) {
-    const gradientDiv = document.getElementById('legendGradient');
-    const scaleDiv = document.getElementById('legendScale');
+    <script>
+        /* =========================
+           LOCATION & CREDENTIALS
+        ========================= */
+        const urlParams = new URLSearchParams(window.location.search);
+        // Koordinat disetel default fokus di area Wajo
+        const markerLat = parseFloat(urlParams.get('lat')) || -4.1200;
+        const markerLon = parseFloat(urlParams.get('lon')) || 120.0300;
 
-    if (mode === 'awan') {
-        gradientDiv.style.background = "linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.9) 100%)";
-        scaleDiv.innerHTML = "<span>Cerah / Polos</span><span>Berawan Tipis</span><span>Mendung Pekat</span>";
-    } else if (mode === 'hujan') {
-        gradientDiv.style.background = "linear-gradient(to right, #1d3ede 0%, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f 100%)";
-        scaleDiv.innerHTML = "<span>Gerimis (🔵)</span><span>Ringan (🟢)</span><span>Sedang (🟡)</span><span>Lebat (🔴)</span><span>Ekstrem (🟣)</span>";
-    }
-}
+        const owmApiKey = "a6da7e4d60b79f9bc5e5a35f7ccc5885"; 
 
-updateLegendUI('awan');
+        let activeLayerName = 'awan';
+        let owmTileLayers = {};
 
-/* =========================
-   TOGGLE SWITCH RADAR SATELIT
-========================= */
-function switchRadarLayer(mode, element) {
-    if (owmTileLayers[activeLayerName]) {
-        map.removeLayer(owmTileLayers[activeLayerName]);
-    }
-    activeLayerName = mode;
-    if (owmTileLayers[mode]) {
-        owmTileLayers[mode].addTo(map);
-    }
-    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
-    document.getElementById('radarBadge').innerText = mode;
-
-    updateLegendUI(mode);
-}
-
-/* =========================
-   FORECAST CHART GRAPH (CHART.JS)
-========================= */
-const ctx = document.getElementById('forecastChart').getContext('2d');
-const forecastChart = new Chart(ctx,{
-    type:'line',
-    data:{
-        labels:[],
-        datasets:[{
-            label:'Prediksi Hujan (mm)',
-            data:[],
-            tension:0.4,
-            borderColor:'#00ff88',
-            backgroundColor:'rgba(0,255,136,0.12)',
-            fill:true,
-            pointRadius: 2
-        }]
-    },
-    options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        aspectRatio: false,
-        layout: { padding: { left: -6, right: 4, top: 5, bottom: 0 } },
-        plugins:{ legend:{ display: false }, tooltip: { mode: 'index', intersect: false } },
-        scales:{
-            x:{ ticks:{ color:'rgba(255,255,255,0.8)', font:{ size:9, weight:'bold' }, maxTicksLimit:6 }, grid:{ color:'rgba(255,255,255,0.03)' } },
-            y:{ ticks:{ color:'rgba(255,255,255,0.8)', font:{ size:9, weight:'bold' }, beginAtZero:true }, grid:{ color:'rgba(255,255,255,0.03)' } }
+        /* =========================
+           TOGGLE COLLAPSE FUNCTION
+        ========================= */
+        function toggleForecast() {
+            const panel = document.getElementById('forecastPanel');
+            const btnText = document.getElementById('toggleBtnText');
+            
+            panel.classList.toggle('collapsed');
+            document.body.classList.toggle('panel-open');
+            
+            // Ubah teks tombol secara dinamis
+            if (panel.classList.contains('collapsed')) {
+                btnText.innerText = "Tampilkan";
+            } else {
+                btnText.innerText = "Sembunyikan";
+            }
+            
+            setTimeout(() => {
+                if (forecastChart) forecastChart.resize();
+            }, 400);
         }
-    }
-});
 
-async function loadForecastMetrics(){
-    try {
-        const api = `https://api.open-meteo.com/v1/forecast?latitude=${markerLat}&longitude=${markerLon}&hourly=rain&timezone=auto`;
-        const res = await fetch(api);
-        const data = await res.json();
-        
-        forecastChart.data.labels = data.hourly.time.slice(0,24).map(t => t.split("T")[1].slice(0,5));
-        forecastChart.data.datasets[0].data = data.hourly.rain.slice(0,24);
-        forecastChart.options.maintainAspectRatio = false;
-        forecastChart.options.aspectRatio = false;
-        forecastChart.update();
-        
-        setTimeout(() => { forecastChart.resize(); }, 120);
-    } catch (err) {
-        console.error("Gagal memuat metrik ramalan cuaca:", err);
-    }
-}
+        /* =========================
+           LEAFLET MAP INITIALIZATION
+        ========================= */
+        const map = L.map('map', { zoomControl: false }).setView([markerLat, markerLon], 9); 
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-loadForecastMetrics();
-setInterval(loadForecastMetrics, 300000);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-</script>
+        L.marker([markerLat, markerLon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
 
+        owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
+        owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_cls/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.70 });
+
+        owmTileLayers['awan'].addTo(map);
+
+        /* =========================
+           FUNGSI UPDATE LEGENDA
+        ========================= */
+        function updateLegendUI(mode) {
+            const gradientDiv = document.getElementById('legendGradient');
+            const scaleDiv = document.getElementById('legendScale');
+
+            if (mode === 'awan') {
+                gradientDiv.style.background = "linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.9) 100%)";
+                scaleDiv.innerHTML = "<span>Cerah / Polos</span><span>Berawan Tipis</span><span>Mendung Pekat</span>";
+            } else if (mode === 'hujan') {
+                gradientDiv.style.background = "linear-gradient(to right, #1d3ede 0%, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f 100%)";
+                scaleDiv.innerHTML = "<span>Gerimis</span><span>Ringan</span><span>Sedang</span><span>Lebat</span><span>Ekstrem</span>";
+            }
+        }
+
+        updateLegendUI('awan');
+
+        /* =========================
+           TOGGLE SWITCH RADAR
+        ========================= */
+        function switchRadarLayer(mode, element) {
+            if (owmTileLayers[activeLayerName]) {
+                map.removeLayer(owmTileLayers[activeLayerName]);
+            }
+            activeLayerName = mode;
+            if (owmTileLayers[mode]) {
+                owmTileLayers[mode].addTo(map);
+            }
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('radarBadge').innerText = mode.toUpperCase();
+
+            updateLegendUI(mode);
+        }
+
+        /* =========================
+           FORECAST CHART GRAPH
+        ========================= */
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        const forecastChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Prediksi Hujan (mm)',
+                    data: [],
+                    tension: 0.4,
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0,255,136,0.15)',
+                    fill: true,
+                    pointBackgroundColor: '#060b13',
+                    pointBorderColor: '#00ff88',
+                    pointBorderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { left: -5, right: 5, top: 10, bottom: 0 } },
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { 
+                        mode: 'index', 
+                        intersect: false,
+                        backgroundColor: 'rgba(8, 15, 30, 0.9)',
+                        titleColor: '#71f7ff',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    } 
+                },
+                scales: {
+                    x: { 
+                        ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10 } }, 
+                        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } 
+                    },
+                    y: { 
+                        ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10 }, beginAtZero: true }, 
+                        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } 
+                    }
+                }
+            }
+        });
+
+        async function loadForecastMetrics() {
+            try {
+                const api = `https://api.open-meteo.com/v1/forecast?latitude=${markerLat}&longitude=${markerLon}&hourly=rain&timezone=auto`;
+                const res = await fetch(api);
+                const data = await res.json();
+                
+                forecastChart.data.labels = data.hourly.time.slice(0, 24).map(t => t.split("T")[1].slice(0, 5));
+                forecastChart.data.datasets[0].data = data.hourly.rain.slice(0, 24);
+                forecastChart.update();
+                
+            } catch (err) {
+                console.error("Gagal memuat metrik ramalan cuaca:", err);
+            }
+        }
+
+        loadForecastMetrics();
+        setInterval(loadForecastMetrics, 300000);
+
+        // Menjaga grafik tetap responsif saat ukuran layar berubah
+        window.addEventListener('resize', () => {
+            if (forecastChart) forecastChart.resize();
+        });
+    </script>
 </body>
 </html>
