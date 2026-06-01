@@ -10,18 +10,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* ============================
-           BASE & RESET
-        ============================ */
-        *, *::before, *::after { box-sizing: border-box; }
-
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: #060b13;
         }
 
@@ -31,52 +26,9 @@
             z-index: 1;
         }
 
-        /* ============================
-           LOADING OVERLAY — BARU
-        ============================ */
-        #loadingOverlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: #060b13;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
-        }
-
-        #loadingOverlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loader-ring {
-            width: 52px;
-            height: 52px;
-            border: 3px solid rgba(0, 255, 136, 0.15);
-            border-top-color: #00ff88;
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loader-text {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
-            color: rgba(0, 255, 136, 0.8);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            animation: blink 1.4s ease-in-out infinite;
-        }
-
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        /* ============================
-           MODE SWITCHER
-        ============================ */
+        /* =========================
+           MODE SWITCHER CONTROLLER
+        ========================= */
         .radar-modes {
             position: absolute;
             top: 15px;
@@ -91,7 +43,6 @@
         .mode-btn {
             background: rgba(11, 22, 44, 0.85);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.8);
             padding: 10px 20px;
@@ -101,7 +52,6 @@
             cursor: pointer;
             white-space: nowrap;
             transition: all 0.3s ease;
-            font-family: inherit;
         }
 
         .mode-btn:hover {
@@ -116,209 +66,9 @@
             box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
         }
 
-        /* ============================
-           CURRENT WEATHER CARD — BARU
-        ============================ */
-        .current-weather {
-            position: absolute;
-            top: 68px;
-            left: 15px;
-            z-index: 1100;
-            background: rgba(8, 15, 30, 0.88);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 14px 16px;
-            color: white;
-            min-width: 200px;
-            transition: opacity 0.4s ease;
-        }
-
-        .current-weather.loading {
-            opacity: 0.5;
-        }
-
-        .cw-location {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: rgba(255,255,255,0.45);
-            margin-bottom: 8px;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .cw-main {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .cw-icon {
-            font-size: 2rem;
-            line-height: 1;
-        }
-
-        .cw-temp {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1;
-        }
-
-        .cw-desc {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.55);
-            margin-top: 2px;
-            text-transform: capitalize;
-        }
-
-        .cw-metrics {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .cw-metric {
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 6px 8px;
-        }
-
-        .cw-metric-label {
-            font-size: 0.6rem;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 2px;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .cw-metric-value {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #71f7ff;
-        }
-
-        /* skeleton animation saat loading */
-        .skeleton {
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 4px;
-            color: transparent !important;
-        }
-
-        @keyframes shimmer {
-            0%   { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        /* ============================
-           TIMESTAMP BADGE — BARU
-        ============================ */
-        .update-badge {
-            position: absolute;
-            top: 68px;
-            right: 15px;
-            z-index: 1100;
-            background: rgba(8, 15, 30, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 8px 12px;
-            color: rgba(255,255,255,0.55);
-            font-size: 0.65rem;
-            font-family: 'Space Mono', monospace;
-            text-align: right;
-            line-height: 1.6;
-        }
-
-        .update-badge .dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #00ff88;
-            box-shadow: 0 0 6px #00ff88;
-            animation: pulse-dot 2s ease-in-out infinite;
-            vertical-align: middle;
-            margin-right: 5px;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.5; transform: scale(0.7); }
-        }
-
-        /* ============================
-           ERROR TOAST — BARU
-        ============================ */
-        #errorToast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            z-index: 3000;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #fca5a5;
-            padding: 10px 18px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            pointer-events: none;
-        }
-
-        #errorToast.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* ============================
-           PULSE MARKER — BARU
-        ============================ */
-        .pulse-marker {
-            position: relative;
-            width: 16px;
-            height: 16px;
-        }
-
-        .pulse-marker::before,
-        .pulse-marker::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-        }
-
-        .pulse-marker::before {
-            background: #00ff88;
-            transform: scale(0.5);
-        }
-
-        .pulse-marker::after {
-            background: rgba(0, 255, 136, 0.35);
-            animation: ripple 2s ease-out infinite;
-        }
-
-        @keyframes ripple {
-            0%   { transform: scale(0.5); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        /* ============================
-           FORECAST PANEL
-        ============================ */
+        /* =========================
+           FORECAST PANEL CONTAINER
+        ========================= */
         .forecast {
             position: absolute;
             bottom: 15px;
@@ -327,11 +77,9 @@
             width: 430px;
             background: rgba(8, 15, 30, 0.92);
             backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 18px;
-            padding-bottom: calc(18px + env(safe-area-inset-bottom));
             color: white;
             box-sizing: border-box;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -366,12 +114,13 @@
             border-radius: 6px;
             font-size: 0.75rem;
             cursor: pointer;
-            font-weight: 700;
+            font-weight: 600;
             transition: all 0.3s ease;
-            font-family: 'DM Sans', sans-serif;
         }
-
-        .toggle-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
         .radar-status-badge {
             background: rgba(0, 255, 136, 0.15);
@@ -382,7 +131,6 @@
             font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
-            font-family: 'Space Mono', monospace;
         }
 
         .collapsible-content {
@@ -394,64 +142,25 @@
         }
 
         .forecast.collapsed .collapsible-content {
-            max-height: 0;
+            max-height: 0px;
             opacity: 0;
             margin-top: 0;
             pointer-events: none;
         }
 
-        /* Ringkasan statistik 24 jam — BARU */
-        .forecast-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 10px;
-            padding: 8px 10px;
-            text-align: center;
-        }
-
-        .stat-box-label {
-            font-size: 0.58rem;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-family: 'Space Mono', monospace;
-            margin-bottom: 4px;
-        }
-
-        .stat-box-value {
-            font-size: 1rem;
-            font-weight: 800;
-            color: #00ff88;
-        }
-
         .chart-container {
             position: relative;
             width: 100%;
-            height: 180px;
+            height: 220px;
         }
 
-        /* ============================
-           LEGENDA
-        ============================ */
+        /* =========================
+           LEGENDA RADAR STYLE
+        ========================= */
         .legend {
             width: 100%;
-            margin-top: 14px;
-        }
-
-        .legend-title {
-            font-size: 0.6rem;
-            color: rgba(255,255,255,0.35);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 6px;
-            font-family: 'Space Mono', monospace;
+            box-sizing: border-box;
+            margin-top: 15px;
         }
 
         .gradient {
@@ -464,42 +173,32 @@
         .scale {
             display: flex;
             justify-content: space-between;
-            margin-top: 6px;
-            font-size: 0.62rem;
-            color: rgba(255,255,255,0.55);
+            margin-top: 8px;
+            font-size: 0.65rem;
+            opacity: 0.8;
             font-weight: 500;
         }
 
-        /* ============================
+        /* =========================
            RESPONSIVE MOBILE
-        ============================ */
-        @media (max-width: 768px) {
+        ========================= */
+        @media(max-width: 768px) {
             .radar-modes { top: 10px; left: 10px; right: 10px; gap: 6px; }
-            .mode-btn { padding: 8px 10px; font-size: 0.75rem; flex: 1; }
-
-            .current-weather {
-                top: 62px;
-                left: 10px;
-                min-width: unset;
-                width: calc(60% - 15px);
-            }
-
-            .update-badge { top: 62px; right: 10px; }
+            .mode-btn { padding: 8px 12px; font-size: 0.75rem; flex: 1; }
 
             .forecast {
                 left: 10px; right: 10px;
                 width: calc(100% - 20px);
-                bottom: 0;
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-                padding-bottom: calc(18px + env(safe-area-inset-bottom));
+                bottom: 20px;
+                padding: 15px;
             }
-
+            
+            /* Penempatan dinamis kontrol Leaflet menggunakan flex/transform bawaan CSS */
             .leaflet-control-zoom {
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                transform: translateY(-80px);
+                transform: translateY(-80px); 
             }
-
+            /* Saat panel terbuka, dorong tombol zoom lebih ke atas */
             body.panel-open .leaflet-control-zoom {
                 transform: translateY(-360px);
             }
@@ -509,75 +208,13 @@
 
 <body>
 
-    <!-- ============================
-         LOADING OVERLAY
-    ============================ -->
-    <div id="loadingOverlay">
-        <div class="loader-ring"></div>
-        <div class="loader-text">Memuat Radar Sawah…</div>
-    </div>
-
-    <!-- ============================
-         ERROR TOAST
-    ============================ -->
-    <div id="errorToast">⚠️ <span id="errorMsg">Gagal memuat data cuaca</span></div>
-
-    <!-- ============================
-         TOP BAR — MODE SWITCHER
-    ============================ -->
     <div class="radar-modes">
-        <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">☁️ Pantau Awan</button>
-        <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">🌧️ Pantau Hujan</button>
+        <button class="mode-btn active" onclick="switchRadarLayer('awan', this)">Pantau Awan</button>
+        <button class="mode-btn" onclick="switchRadarLayer('hujan', this)">Pantau Hujan</button>
     </div>
 
-    <!-- ============================
-         CURRENT WEATHER CARD
-    ============================ -->
-    <div class="current-weather loading" id="currentWeatherCard">
-        <div class="cw-location" id="cwLocation">— Memuat lokasi…</div>
-        <div class="cw-main">
-            <div class="cw-icon" id="cwIcon">⏳</div>
-            <div>
-                <div class="cw-temp skeleton" id="cwTemp" style="width:80px;height:32px;">--°C</div>
-                <div class="cw-desc skeleton" id="cwDesc" style="width:120px;height:14px;margin-top:4px;">Mengambil data…</div>
-            </div>
-        </div>
-        <div class="cw-metrics">
-            <div class="cw-metric">
-                <div class="cw-metric-label">💧 Kelembaban</div>
-                <div class="cw-metric-value" id="cwHumidity">—</div>
-            </div>
-            <div class="cw-metric">
-                <div class="cw-metric-label">💨 Angin</div>
-                <div class="cw-metric-value" id="cwWind">—</div>
-            </div>
-            <div class="cw-metric">
-                <div class="cw-metric-label">👁️ Visibilitas</div>
-                <div class="cw-metric-value" id="cwVis">—</div>
-            </div>
-            <div class="cw-metric">
-                <div class="cw-metric-label">🌡️ Terasa</div>
-                <div class="cw-metric-value" id="cwFeels">—</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================
-         UPDATE TIMESTAMP BADGE
-    ============================ -->
-    <div class="update-badge">
-        <div><span class="dot"></span>LIVE RADAR</div>
-        <div id="lastUpdated" style="margin-top:3px;">—</div>
-    </div>
-
-    <!-- ============================
-         MAP
-    ============================ -->
     <div id="map"></div>
 
-    <!-- ============================
-         FORECAST PANEL
-    ============================ -->
     <div class="forecast collapsed" id="forecastPanel">
         <div class="forecast-header" onclick="toggleForecast()">
             <div class="forecast-title-block">
@@ -586,30 +223,13 @@
             </div>
             <div class="radar-status-badge" id="radarBadge">AWAN</div>
         </div>
-
+        
         <div class="collapsible-content">
-            <!-- Ringkasan statistik -->
-            <div class="forecast-stats">
-                <div class="stat-box">
-                    <div class="stat-box-label">Total</div>
-                    <div class="stat-box-value" id="statTotal">—</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-box-label">Maks/Jam</div>
-                    <div class="stat-box-value" id="statMax">—</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-box-label">Jam Hujan</div>
-                    <div class="stat-box-value" id="statHours">—</div>
-                </div>
-            </div>
-
             <div class="chart-container">
                 <canvas id="forecastChart"></canvas>
             </div>
 
             <div class="legend">
-                <div class="legend-title">Legenda Intensitas Radar</div>
                 <div class="gradient" id="legendGradient"></div>
                 <div class="scale" id="legendScale"></div>
             </div>
@@ -617,124 +237,69 @@
     </div>
 
     <script>
-        /* ============================================
-           KONSTANTA & PARAMETER URL
-        ============================================ */
+        /* =========================
+           LOCATION & CREDENTIALS
+        ========================= */
         const urlParams = new URLSearchParams(window.location.search);
+        // Koordinat disetel default fokus di area Wajo
         const markerLat = parseFloat(urlParams.get('lat')) || -4.1200;
         const markerLon = parseFloat(urlParams.get('lon')) || 120.0300;
-        const owmApiKey  = "a6da7e4d60b79f9bc5e5a35f7ccc5885";
+
+        const owmApiKey = "a6da7e4d60b79f9bc5e5a35f7ccc5885"; 
 
         let activeLayerName = 'awan';
-        let owmTileLayers  = {};
-        let forecastChart;
+        let owmTileLayers = {};
 
-        /* ============================================
-           LOADING OVERLAY HELPER
-        ============================================ */
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-
-        /* ============================================
-           ERROR TOAST HELPER
-        ============================================ */
-        let toastTimer = null;
-        function showError(msg) {
-            const toast = document.getElementById('errorToast');
-            document.getElementById('errorMsg').textContent = msg;
-            toast.classList.add('show');
-            if (toastTimer) clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
-        }
-
-        /* ============================================
-           TIMESTAMP UPDATE
-        ============================================ */
-        function updateTimestamp() {
-            const now = new Date();
-            const fmt  = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('lastUpdated').textContent = fmt;
-        }
-
-        /* ============================================
-           TOGGLE COLLAPSE FORECAST PANEL
-        ============================================ */
+        /* =========================
+           TOGGLE COLLAPSE FUNCTION
+        ========================= */
         function toggleForecast() {
-            const panel   = document.getElementById('forecastPanel');
+            const panel = document.getElementById('forecastPanel');
             const btnText = document.getElementById('toggleBtnText');
-
+            
             panel.classList.toggle('collapsed');
             document.body.classList.toggle('panel-open');
-
-            btnText.innerText = panel.classList.contains('collapsed') ? 'Tampilkan' : 'Sembunyikan';
-
-            setTimeout(() => { if (forecastChart) forecastChart.resize(); }, 420);
+            
+            // Ubah teks tombol secara dinamis
+            if (panel.classList.contains('collapsed')) {
+                btnText.innerText = "Tampilkan";
+            } else {
+                btnText.innerText = "Sembunyikan";
+            }
+            
+            setTimeout(() => {
+                if (forecastChart) forecastChart.resize();
+            }, 400);
         }
 
-        /* ============================================
-           LEAFLET MAP INIT
-        ============================================ */
-        const map = L.map('map', { zoomControl: false }).setView([markerLat, markerLon], 9);
+        /* =========================
+           LEAFLET MAP INITIALIZATION
+        ========================= */
+        const map = L.map('map', { zoomControl: false }).setView([markerLat, markerLon], 9); 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap contributors © CARTO',
-            maxZoom: 19
+            attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        /* -- Pulse Marker custom untuk lokasi sawah -- */
-        const pulseIcon = L.divIcon({
-            className: '',
-            html: '<div class="pulse-marker"></div>',
-            iconSize:   [16, 16],
-            iconAnchor: [8, 8],
-            popupAnchor:[0, -10]
-        });
+        L.marker([markerLat, markerLon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
 
-        L.marker([markerLat, markerLon], { icon: pulseIcon })
-            .addTo(map)
-            .bindPopup(
-                `<b style="color:#00ff88;">📍 Lokasi Sawah Terpantau</b><br>
-                 <small style="opacity:.7;">${markerLat.toFixed(4)}, ${markerLon.toFixed(4)}</small>`
-            );
-
-        /* -- OWM Tile Layers -- */
-        owmTileLayers['awan']  = L.tileLayer(`https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
+        owmTileLayers['awan'] = L.tileLayer(`https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.55 });
         owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_cls/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.70 });
 
         owmTileLayers['awan'].addTo(map);
 
-        /* Sembunyikan loading setelah peta siap */
-        map.whenReady(() => {
-            setTimeout(hideLoading, 600);
-        });
-
-        /* ============================================
-           SWITCH RADAR LAYER
-        ============================================ */
-        function switchRadarLayer(mode, element) {
-            if (owmTileLayers[activeLayerName]) map.removeLayer(owmTileLayers[activeLayerName]);
-            activeLayerName = mode;
-            if (owmTileLayers[mode]) owmTileLayers[mode].addTo(map);
-
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('radarBadge').innerText = mode.toUpperCase();
-            updateLegendUI(mode);
-        }
-
-        /* ============================================
-           LEGENDA RADAR
-        ============================================ */
+        /* =========================
+           FUNGSI UPDATE LEGENDA
+        ========================= */
         function updateLegendUI(mode) {
             const gradientDiv = document.getElementById('legendGradient');
-            const scaleDiv    = document.getElementById('legendScale');
+            const scaleDiv = document.getElementById('legendScale');
 
             if (mode === 'awan') {
-                gradientDiv.style.background = "linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.4), rgba(255,255,255,0.9))";
+                gradientDiv.style.background = "linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.9) 100%)";
                 scaleDiv.innerHTML = "<span>Cerah / Polos</span><span>Berawan Tipis</span><span>Mendung Pekat</span>";
-            } else {
+            } else if (mode === 'hujan') {
                 gradientDiv.style.background = "linear-gradient(to right, #1d3ede 0%, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f 100%)";
                 scaleDiv.innerHTML = "<span>Gerimis</span><span>Ringan</span><span>Sedang</span><span>Lebat</span><span>Ekstrem</span>";
             }
@@ -742,193 +307,94 @@
 
         updateLegendUI('awan');
 
-        /* ============================================
-           WEATHER ICON MAPPER
-        ============================================ */
-        function getWeatherIcon(code) {
-            const id = parseInt(code);
-            if (id >= 200 && id < 300) return '⛈️';
-            if (id >= 300 && id < 400) return '🌦️';
-            if (id >= 500 && id < 600) return '🌧️';
-            if (id >= 600 && id < 700) return '❄️';
-            if (id >= 700 && id < 800) return '🌫️';
-            if (id === 800)             return '☀️';
-            if (id === 801)             return '🌤️';
-            if (id === 802)             return '⛅';
-            if (id >= 803)              return '☁️';
-            return '🌡️';
-        }
-
-        /* ============================================
-           LOAD CURRENT WEATHER (OWM)
-        ============================================ */
-        async function loadCurrentWeather() {
-            const card = document.getElementById('currentWeatherCard');
-            try {
-                const url  = `https://api.openweathermap.org/data/2.5/weather?lat=${markerLat}&lon=${markerLon}&appid=${owmApiKey}&units=metric&lang=id`;
-                const res  = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const d    = await res.json();
-
-                /* Hapus skeleton */
-                document.getElementById('cwTemp').classList.remove('skeleton');
-                document.getElementById('cwDesc').classList.remove('skeleton');
-                card.classList.remove('loading');
-
-                document.getElementById('cwLocation').textContent = `${d.name}, ${d.sys.country}`;
-                document.getElementById('cwIcon').textContent    = getWeatherIcon(d.weather[0].id);
-                document.getElementById('cwTemp').textContent    = `${Math.round(d.main.temp)}°C`;
-                document.getElementById('cwDesc').textContent    = d.weather[0].description;
-                document.getElementById('cwHumidity').textContent= `${d.main.humidity}%`;
-                document.getElementById('cwWind').textContent    = `${(d.wind.speed * 3.6).toFixed(1)} km/j`;
-                document.getElementById('cwVis').textContent     = d.visibility ? `${(d.visibility / 1000).toFixed(1)} km` : '—';
-                document.getElementById('cwFeels').textContent   = `${Math.round(d.main.feels_like)}°C`;
-
-                updateTimestamp();
-
-            } catch (err) {
-                console.error('Gagal memuat cuaca saat ini:', err);
-                document.getElementById('cwLocation').textContent = 'Data tidak tersedia';
-                document.getElementById('cwIcon').textContent    = '❓';
-                document.getElementById('cwTemp').textContent    = '--°C';
-                document.getElementById('cwTemp').classList.remove('skeleton');
-                document.getElementById('cwDesc').textContent    = 'Periksa koneksi internet';
-                document.getElementById('cwDesc').classList.remove('skeleton');
-                card.classList.remove('loading');
-                showError('Gagal memuat data cuaca saat ini');
+        /* =========================
+           TOGGLE SWITCH RADAR
+        ========================= */
+        function switchRadarLayer(mode, element) {
+            if (owmTileLayers[activeLayerName]) {
+                map.removeLayer(owmTileLayers[activeLayerName]);
             }
+            activeLayerName = mode;
+            if (owmTileLayers[mode]) {
+                owmTileLayers[mode].addTo(map);
+            }
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('radarBadge').innerText = mode.toUpperCase();
+
+            updateLegendUI(mode);
         }
 
-        /* ============================================
-           CHART INIT
-        ============================================ */
+        /* =========================
+           FORECAST CHART GRAPH
+        ========================= */
         const ctx = document.getElementById('forecastChart').getContext('2d');
-        forecastChart = new Chart(ctx, {
-            type: 'bar',
+        const forecastChart = new Chart(ctx, {
+            type: 'line',
             data: {
                 labels: [],
-                datasets: [
-                    {
-                        type: 'line',
-                        label: 'Tren Hujan',
-                        data: [],
-                        tension: 0.45,
-                        borderColor: 'rgba(113,247,255,0.7)',
-                        backgroundColor: 'transparent',
-                        fill: false,
-                        pointRadius: 0,
-                        borderWidth: 1.5,
-                        borderDash: [4, 3],
-                        order: 1
-                    },
-                    {
-                        type: 'bar',
-                        label: 'Curah Hujan (mm)',
-                        data: [],
-                        backgroundColor: (ctx) => {
-                            const v = ctx.raw || 0;
-                            if (v >= 10) return 'rgba(239,28,28,0.75)';
-                            if (v >= 5)  return 'rgba(233,238,40,0.75)';
-                            if (v >= 1)  return 'rgba(77,243,59,0.75)';
-                            return 'rgba(29,62,222,0.6)';
-                        },
-                        borderColor: 'transparent',
-                        borderRadius: 3,
-                        order: 2
-                    }
-                ]
+                datasets: [{
+                    label: 'Prediksi Hujan (mm)',
+                    data: [],
+                    tension: 0.4,
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0,255,136,0.15)',
+                    fill: true,
+                    pointBackgroundColor: '#060b13',
+                    pointBorderColor: '#00ff88',
+                    pointBorderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { left: 0, right: 4, top: 8, bottom: 0 } },
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(8,15,30,0.95)',
+                layout: { padding: { left: -5, right: 5, top: 10, bottom: 0 } },
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { 
+                        mode: 'index', 
+                        intersect: false,
+                        backgroundColor: 'rgba(8, 15, 30, 0.9)',
                         titleColor: '#71f7ff',
-                        bodyColor: 'rgba(255,255,255,0.7)',
                         borderColor: 'rgba(255,255,255,0.1)',
-                        borderWidth: 1,
-                        callbacks: {
-                            label: (ctx) => {
-                                if (ctx.datasetIndex === 1) return ` ${ctx.raw.toFixed(2)} mm`;
-                                return null;
-                            }
-                        }
-                    }
+                        borderWidth: 1
+                    } 
                 },
                 scales: {
-                    x: {
-                        ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 9.5 } },
-                        grid: { color: 'rgba(255,255,255,0.04)' }
+                    x: { 
+                        ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10 } }, 
+                        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } 
                     },
-                    y: {
-                        ticks: {
-                            color: 'rgba(255,255,255,0.5)',
-                            font: { size: 9.5 },
-                            callback: v => v + ' mm'
-                        },
-                        grid: { color: 'rgba(255,255,255,0.04)' },
-                        beginAtZero: true
+                    y: { 
+                        ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10 }, beginAtZero: true }, 
+                        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } 
                     }
                 }
             }
         });
 
-        /* ============================================
-           LOAD FORECAST METRICS (Open-Meteo)
-        ============================================ */
         async function loadForecastMetrics() {
             try {
-                const api = `https://api.open-meteo.com/v1/forecast?latitude=${markerLat}&longitude=${markerLon}&hourly=rain&timezone=auto&forecast_days=2`;
-                const res  = await fetch(api);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const api = `https://api.open-meteo.com/v1/forecast?latitude=${markerLat}&longitude=${markerLon}&hourly=rain&timezone=auto`;
+                const res = await fetch(api);
                 const data = await res.json();
-
-                const labels = data.hourly.time.slice(0, 24).map(t => t.split('T')[1].slice(0, 5));
-                const values = data.hourly.rain.slice(0, 24);
-
-                /* Hitung statistik */
-                const total  = values.reduce((a, b) => a + b, 0);
-                const maxVal = Math.max(...values);
-                const wetHrs = values.filter(v => v > 0).length;
-
-                document.getElementById('statTotal').textContent  = total.toFixed(1) + ' mm';
-                document.getElementById('statMax').textContent    = maxVal.toFixed(1) + ' mm';
-                document.getElementById('statHours').textContent  = wetHrs + ' jam';
-
-                /* Update chart */
-                forecastChart.data.labels                    = labels;
-                forecastChart.data.datasets[0].data          = values;   /* garis tren */
-                forecastChart.data.datasets[1].data          = values;   /* bar utama */
-                forecastChart.update('active');
-
-                updateTimestamp();
-
+                
+                forecastChart.data.labels = data.hourly.time.slice(0, 24).map(t => t.split("T")[1].slice(0, 5));
+                forecastChart.data.datasets[0].data = data.hourly.rain.slice(0, 24);
+                forecastChart.update();
+                
             } catch (err) {
-                console.error('Gagal memuat ramalan cuaca:', err);
-                showError('Gagal memuat grafik curah hujan');
+                console.error("Gagal memuat metrik ramalan cuaca:", err);
             }
         }
 
-        /* ============================================
-           INISIALISASI SEMUA DATA
-        ============================================ */
-        async function initAllData() {
-            await Promise.all([
-                loadCurrentWeather(),
-                loadForecastMetrics()
-            ]);
-        }
+        loadForecastMetrics();
+        setInterval(loadForecastMetrics, 300000);
 
-        initAllData();
-
-        /* Refresh otomatis setiap 5 menit */
-        setInterval(initAllData, 300_000);
-
-        /* Jaga chart tetap responsif saat resize */
+        // Menjaga grafik tetap responsif saat ukuran layar berubah
         window.addEventListener('resize', () => {
             if (forecastChart) forecastChart.resize();
         });
