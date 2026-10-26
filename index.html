@@ -9,6 +9,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Leaflet Velocity (Animasi Angin) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-velocity@1.2.1/dist/leaflet-velocity.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-velocity@1.2.1/dist/leaflet-velocity.min.js"></script>
+
     <style>
         html, body {
             margin: 0; padding: 0;
@@ -78,7 +82,7 @@
             box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
         }
 
-        /* ── DATA SOURCE BADGE (kanan atas, tampil saat mode wave aktif) ── */
+        /* ── DATA SOURCE BADGE ── */
         .wave-source-badge {
             position: absolute;
             top: 130px; right: 15px;
@@ -111,7 +115,7 @@
             display: flex;
         }
 
-        /* ── WAVE INFO BADGE (tengah atas) ── */
+        /* ── WAVE INFO BADGE ── */
         .wave-info-badge {
             position: absolute;
             top: 170px; left: 50%;
@@ -318,6 +322,10 @@
         <button class="mode-btn" onclick="switchRadarLayer('rossby', this)">
             <span>🌊</span> Rossby Wave
         </button>
+        <!-- TOMBOL ANIMASI ANGIN -->
+        <button class="mode-btn" onclick="switchRadarLayer('angin_windy', this)">
+            <span>🌬️</span> Animasi Angin
+        </button>
     </div>
 
     <!-- GEOLOCATION BANNER -->
@@ -447,6 +455,7 @@
     let markerObj = null;
     let map = null;
     let forecastChart = null;
+    let windVelocityLayer = null; // Menyimpan instance layer angin
 
     // Cache per gelombang — reset setelah TTL
     const gasCache = { mjo: null, kelvin: null, rossby: null };
@@ -490,6 +499,57 @@
         updateLegendUI('awan');
         initForecastChart();
         loadForecastMetrics();
+    }
+
+    /* ================================================================
+       ANIMASI ANGIN (WINDY)
+    ================================================================ */
+    async function loadWindyAnimation() {
+        const badge = document.getElementById('waveSourceBadge');
+        badge.className = 'wave-source-badge loading';
+        badge.innerHTML = `<span class="pulse">⏳</span> Merender vektor angin...`;
+        badge.style.display = 'flex';
+
+        try {
+            // Mengambil data dari hasil generate GitHub Actions
+            const response = await fetch('./data/wind-sulsel.json'); 
+            const windData = await response.json();
+
+            if (windVelocityLayer) {
+                windVelocityLayer.remove();
+            }
+
+            windVelocityLayer = L.velocityLayer({
+                displayValues: true,
+                displayOptions: {
+                    velocityType: 'Angin Permukaan',
+                    position: 'bottomleft',
+                    emptyString: 'Tidak ada data angin',
+                    angleConvention: 'bearingCW',
+                    displayPosition: 'bottomleft',
+                    displayEmptyString: 'Tidak ada data',
+                    speedUnit: 'm/s'
+                },
+                data: windData,
+                maxVelocity: 15,
+                velocityScale: 0.005,
+                particleAge: 90,
+                lineWidth: 1.5,
+                colorScale: [
+                    "#3288bd", "#66c2a5", "#abdda4", "#e6f598",
+                    "#fee08b", "#fdae61", "#f46d43", "#d53e4f"
+                ]
+            });
+
+            windVelocityLayer.addTo(map);
+
+            badge.className = 'wave-source-badge gas';
+            badge.innerHTML = `✅ Vektor Angin Aktif (Data NOAA)`;
+        } catch (err) {
+            console.error("Gagal memuat data angin:", err);
+            badge.className = 'wave-source-badge fallback';
+            badge.innerHTML = `⚠️ Gagal merender angin`;
+        }
     }
 
     /* ================================================================
@@ -570,11 +630,12 @@
         hujan:  { gradient: 'linear-gradient(to right, #1d3ede, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f)', labels: ['Gerimis', 'Ringan', 'Sedang', 'Lebat', 'Ekstrem'] },
         mjo:    { gradient: 'linear-gradient(to right, #0a0a2e, #1a1a6e 20%, #4040c0 40%, #8888ff 60%, #00d4ff 80%, #00ffcc)', labels: ['Inaktif', 'Fase 1-2', 'Fase 3-4', 'Fase 5-6', 'Fase 7-8'] },
         kelvin: { gradient: 'linear-gradient(to right, #001a33, #004488 25%, #0080cc 50%, #00ccff 75%, #ffff00)', labels: ['Dingin Anomali', 'Netral', 'Hangat Ringan', 'Hangat Kuat', 'Puncak Konveksi'] },
-        rossby: { gradient: 'linear-gradient(to right, #1a0033, #6600cc 30%, #cc66ff 55%, #ff99ff 75%, #ffccff)', labels: ['Tekanan Rendah', 'Vorteks Lemah', 'Vorteks Sedang', 'Aktif', 'Puncak Rossby'] }
+        rossby: { gradient: 'linear-gradient(to right, #1a0033, #6600cc 30%, #cc66ff 55%, #ff99ff 75%, #ffccff)', labels: ['Tekanan Rendah', 'Vorteks Lemah', 'Vorteks Sedang', 'Aktif', 'Puncak Rossby'] },
+        angin_windy: { gradient: 'linear-gradient(to right, #3288bd, #abdda4, #fee08b, #f46d43, #d53e4f)', labels: ['Tenang', 'Sedang', 'Kencang', 'Sangat Kencang', 'Badai'] }
     };
 
     function updateLegendUI(mode) {
-        const cfg = legendConfig[mode];
+        const cfg = legendConfig[mode] || legendConfig['awan'];
         document.getElementById('legendGradient').style.background = cfg.gradient;
         document.getElementById('legendScale').innerHTML = cfg.labels.map(l => `<span>${l}</span>`).join('');
     }
@@ -974,21 +1035,28 @@
         hujan:  '📈 Curah Hujan 24 Jam',
         mjo:    '🌀 MJO NOAA · Fase & Amplitudo',
         kelvin: '〰️ Kelvin Wave NOAA · OLR Anomali',
-        rossby: '🌊 Rossby Wave NOAA · Vortisitas v850'
+        rossby: '🌊 Rossby Wave NOAA · Vortisitas v850',
+        angin_windy: '🌬️ Data Angin Spasial (NOAA GFS)'
     };
 
     function switchRadarLayer(mode, element) {
         if (!map) return;
         const isWave = ['mjo','kelvin','rossby'].includes(mode);
+        const isWindy = (mode === 'angin_windy'); 
 
         // Hapus layer sebelumnya
         if (owmTileLayers[activeLayerName]?.remove) owmTileLayers[activeLayerName].remove();
         if (waveOverlayLayer) { waveOverlayLayer.remove(); waveOverlayLayer = null; }
+        
+        // Hapus animasi angin jika sedang tidak di mode angin
+        if (windVelocityLayer && !isWindy) {
+            windVelocityLayer.remove();
+        }
 
         activeLayerName = mode;
 
         // Toggle section visibility
-        document.getElementById('standardChartSection').style.display = isWave ? 'none' : 'block';
+        document.getElementById('standardChartSection').style.display = (isWave || isWindy) ? 'none' : 'block';
         document.getElementById('waveDataPanel').classList.remove('active');
         document.getElementById('waveLoadingIndicator').classList.remove('active');
         document.getElementById('waveInfoBadge').style.display = isWave ? 'flex' : 'none';
@@ -996,30 +1064,32 @@
 
         // Source badge
         const badge = document.getElementById('waveSourceBadge');
-        if (isWave) {
+        
+        if (isWindy) {
+            loadWindyAnimation();
+        } else if (isWave) {
             badge.className = 'wave-source-badge loading';
             badge.innerHTML = `<span class="pulse">⏳</span> Menghubungi GAS ${mode.toUpperCase()}...`;
-        } else {
-            badge.className = 'wave-source-badge';
-            badge.style.display = 'none';
-        }
-
-        if (!isWave) {
-            owmTileLayers[mode]?.addTo(map);
-            map.setView([markerLat, markerLon], 9);
-        } else {
+            badge.style.display = 'flex';
+            
             waveOverlayLayer = waveOverlays[mode]();
             waveOverlayLayer.addTo(map);
             const [lat, lon, zoom] = waveMapView[mode];
             map.setView([lat, lon], zoom);
             loadWaveData(mode);
+        } else {
+            badge.className = 'wave-source-badge';
+            badge.style.display = 'none';
+            owmTileLayers[mode]?.addTo(map);
+            map.setView([markerLat, markerLon], 9);
         }
 
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         element.classList.add('active');
-        document.getElementById('radarBadge').innerText = mode.toUpperCase();
+        document.getElementById('radarBadge').innerText = mode.toUpperCase().replace('_WINDY', '');
         document.getElementById('panelChartTitle').innerText = panelTitles[mode] || '📈 Data Atmosfer';
-        updateLegendUI(mode);
+        
+        updateLegendUI(mode); 
     }
 
     /* ================================================================
