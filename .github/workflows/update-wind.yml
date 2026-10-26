@@ -1,0 +1,43 @@
+name: Update Wind Grid Data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Berjalan setiap 6 jam
+  workflow_dispatch:      # Mengizinkan eksekusi manual via tombol di GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install System Dependencies (eccodes untuk GRIB)
+        run: sudo apt-get install -y libeccodes-dev
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+
+      - name: Jalankan Script Pengolah Angin
+        run: |
+          cd scripts
+          python process_wind.py
+
+      - name: Commit dan Push Perubahan
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ../data/wind-sulsel.json
+          git commit -m "Auto-update: Data matriks angin spasial" || echo "Tidak ada perubahan data"
+          git push
