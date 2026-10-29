@@ -2,11 +2,15 @@ name: Update Wind Grid Data
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Berjalan setiap 6 jam
-  workflow_dispatch:      # Mengizinkan eksekusi manual via tombol di GitHub
+    - cron: '25 * * * *'   # tiap jam (menit ke-25) agar angin selalu mendekati waktu sekarang
+  workflow_dispatch:       # eksekusi manual via tombol di GitHub
 
 permissions:
   contents: write
+
+concurrency:
+  group: update-wind
+  cancel-in-progress: false
 
 jobs:
   build-and-update:
@@ -14,15 +18,19 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
 
       - name: Install System Dependencies (eccodes untuk GRIB)
-        run: sudo apt-get install -y libeccodes-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeccodes-dev
 
       - name: Install Python Dependencies
         run: |
@@ -30,14 +38,17 @@ jobs:
           pip install -r scripts/requirements.txt
 
       - name: Jalankan Script Pengolah Angin
-        run: |
-          cd scripts
-          python process_wind.py
+        run: python scripts/process_wind.py
 
       - name: Commit dan Push Perubahan
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add data/wind-sulsel.json
-          git commit -m "Auto-update: Data matriks angin spasial" || echo "Tidak ada perubahan data"
-          git push
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan data"
+          else
+            git commit -m "Auto-update: angin GFS $(date -u +'%Y-%m-%d %H:%MZ')"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push
+          fi
