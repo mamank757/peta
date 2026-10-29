@@ -512,8 +512,11 @@
 
         try {
             // Mengambil data dari hasil generate GitHub Actions
-            const response = await fetch('./data/wind-sulsel.json'); 
+            // cache-buster: cegah browser/CDN memakai JSON lama
+            const response = await fetch('./data/wind-sulsel.json?t=' + Date.now(), { cache: 'no-store' });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
             const windData = await response.json();
+            const refTime = windData[0]?.header?.refTime;
 
             if (windVelocityLayer) {
                 windVelocityLayer.remove();
@@ -525,7 +528,7 @@
                     velocityType: 'Angin Permukaan',
                     position: 'bottomleft',
                     emptyString: 'Tidak ada data angin',
-                    angleConvention: 'bearingCW',
+                    angleConvention: 'meteoCW',   // arah ASAL angin, sama seperti Windy/BMKG
                     displayPosition: 'bottomleft',
                     displayEmptyString: 'Tidak ada data',
                     speedUnit: 'm/s'
@@ -544,7 +547,14 @@
             windVelocityLayer.addTo(map);
 
             badge.className = 'wave-source-badge gas';
-            badge.innerHTML = `✅ Vektor Angin Aktif (Data NOAA)`;
+            let waktu = '';
+            if (refTime) {
+                waktu = ' · berlaku ' + new Date(refTime).toLocaleString('id-ID', {
+                    timeZone: 'Asia/Makassar', day: '2-digit', month: 'short',
+                    hour: '2-digit', minute: '2-digit', hour12: false
+                }) + ' WITA';
+            }
+            badge.innerHTML = `✅ Angin GFS 10 m${waktu}`;
         } catch (err) {
             console.error("Gagal memuat data angin:", err);
             badge.className = 'wave-source-badge fallback';
