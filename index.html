@@ -224,6 +224,26 @@ function initMap(lat, lon) {
         attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16
     }).addTo(map);
     markerObj = L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
+
+    // --- TAMBAHKAN KODE INI UNTUK MEMBACA PROVINCES.JSON ---
+    fetch('provinces.json')
+        .then(response => response.json())
+        .then(data => {
+            L.geoJSON(data, {
+                style: {
+                    color: "#00ff88", // Mengikuti aksen neon hijau UI Anda
+                    weight: 1,        // Tipis saja agar tidak menutupi radar hujan
+                    opacity: 0.4,     // Agak transparan
+                    fillOpacity: 0    // Transparan penuh di bagian dalam poligon
+                },
+                interactive: false    // Penting: agar perbatasan tidak menghalangi klik ke marker/peta
+            }).addTo(map);
+        })
+        .catch(err => console.error("Gagal memuat provinces.json: ", err));
+    // --------------------------------------------------------
+
+    // zIndex: awan di bawah, hujan di atas; partikel angin (canvas) otomatis paling atas
+    owmTileLayers['awan'] = L.tileLayer(
  
     // zIndex: awan di bawah, hujan di atas; partikel angin (canvas) otomatis paling atas
     // Awan diperkuat agar pola tutupan awan terlihat jelas pada basemap gelap.
