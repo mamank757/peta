@@ -211,9 +211,11 @@ function initMap(lat, lon) {
     map = L.map('map', { zoomControl: false }).setView([lat, lon], 9);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.on('moveend', onWindMove);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16
-    }).addTo(map);
+    
+// Label nama tempat/jalan di atas satelit (zIndex 5 = di atas awan & hujan)
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, zIndex: 5
+}).addTo(map);
     markerObj = L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
  
     // zIndex: awan di bawah, hujan di atas; partikel angin (canvas) otomatis paling atas
