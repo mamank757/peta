@@ -212,7 +212,7 @@ function initMap(lat, lon) {
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.on('moveend', onWindMove);
     
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Tiles &copy; Esri &mdash; Maxar, Earthstar Geographics',
     maxZoom: 18
 }).addTo(map);
