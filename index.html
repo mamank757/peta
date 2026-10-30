@@ -94,8 +94,14 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
     .wind-time-box { top:158px; right:10px; width:170px; }
     .layer-toggle { top:118px; left:10px; }
 }
-.layer-hujan {
-    filter: saturate(2.2) contrast(1.35) brightness(1.1) drop-shadow(0 0 2px rgba(0,0,0,.6));
+/* Penegasan visual citra satelit: awan dibuat lebih terang, hujan lebih kontras */
+.leaflet-tile.layer-awan {
+    filter: brightness(1.7) contrast(1.4) saturate(1.2)
+            drop-shadow(0 0 2px rgba(255,255,255,.28));
+}
+.leaflet-tile.layer-hujan {
+    filter: saturate(2.8) contrast(1.55) brightness(1.15)
+            drop-shadow(0 0 3px rgba(0,0,0,.75));
 }
 </style>
 </head>
@@ -220,12 +226,17 @@ function initMap(lat, lon) {
     markerObj = L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
  
     // zIndex: awan di bawah, hujan di atas; partikel angin (canvas) otomatis paling atas
-    owmTileLayers['awan']  = L.tileLayer(`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
-    { opacity: 0.40, zIndex: 3 });          // awan lebih tipis supaya tidak menutupi hujan
-owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
-    { opacity: 0.95, zIndex: 4, className: 'layer-hujan' });
- owmTileLayers['hujan2'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
-    { opacity: 0.6, zIndex: 5, className: 'layer-hujan' });
+    // Awan diperkuat agar pola tutupan awan terlihat jelas pada basemap gelap.
+    owmTileLayers['awan'] = L.tileLayer(
+        `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
+        { opacity: 0.72, zIndex: 3, className: 'layer-awan' }
+    );
+
+    // Hujan tetap berada di atas awan dengan warna radar yang lebih tegas.
+    owmTileLayers['hujan'] = L.tileLayer(
+        `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
+        { opacity: 0.98, zIndex: 4, className: 'layer-hujan' }
+    );
     applyWeatherLayers();          // awan + hujan + angin langsung tampil
     updateLegendUI('gabungan');
     initForecastChart();
