@@ -217,12 +217,10 @@ function initMap(lat, lon) {
     markerObj = L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
  
     // zIndex: awan di bawah, hujan di atas; partikel angin (canvas) otomatis paling atas
-    owmTileLayers['awan']  = L.tileLayer(
-        `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
-        { opacity: 0.55, zIndex: 3 });
-    owmTileLayers['hujan'] = L.tileLayer(
-        `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
-        { opacity: 0.70, zIndex: 4 });
+    owmTileLayers['awan']  = L.tileLayer(`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
+    { opacity: 0.40, zIndex: 3 });          // awan lebih tipis supaya tidak menutupi hujan
+owmTileLayers['hujan'] = L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
+    { opacity: 0.95, zIndex: 4, className: 'layer-hujan' });
  
     applyWeatherLayers();          // awan + hujan + angin langsung tampil
     updateLegendUI('gabungan');
