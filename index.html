@@ -212,6 +212,11 @@ function initMap(lat, lon) {
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.on('moveend', onWindMove);
     
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Maxar, Earthstar Geographics',
+    maxZoom: 18
+}).addTo(map);
+
 // Label nama tempat/jalan di atas satelit (zIndex 5 = di atas awan & hujan)
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 18, zIndex: 5
