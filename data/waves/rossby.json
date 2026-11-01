@@ -14,13 +14,13 @@
    211.25
   ]
  ],
- "nilaiBox": -1.67,
- "sigma": 3.04,
- "z": -0.55,
- "fase": "netral",
- "aktif": false,
- "korelasiPropagasi": 0.4,
- "indeksKelvin": 0.55,
+ "nilaiBox": -7.96,
+ "sigma": 3.15,
+ "z": -2.53,
+ "fase": "konvektif",
+ "aktif": true,
+ "korelasiPropagasi": 0.93,
+ "indeksKelvin": 2.53,
  "hov": {
   "hari": 90,
   "lon0": 30.0,
@@ -35,6 +35,6 @@
  "vortisitas": -0.029,
  "tanggalAngin": "2026-03-17",
  "arah": "Barat (ER n=1)",
- "label": "Sinyal lemah/netral",
- "dampak": "Tidak dominan"
+ "label": "Fase konvektif di atas Indonesia",
+ "dampak": "Peluang hujan meningkat (OLR tersaring negatif)"
 }

@@ -14,13 +14,13 @@
    211.25
   ]
  ],
- "nilaiBox": -4.87,
- "sigma": 9.14,
- "z": -0.53,
+ "nilaiBox": -1.65,
+ "sigma": 8.26,
+ "z": -0.2,
  "fase": "netral",
  "aktif": false,
- "korelasiPropagasi": 0.93,
- "indeksKelvin": 0.53,
+ "korelasiPropagasi": 0.92,
+ "indeksKelvin": 0.2,
  "hov": {
   "hari": 90,
   "lon0": 30.0,
