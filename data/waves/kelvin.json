@@ -1,0 +1,40 @@
+{
+ "gelombang": "kelvin",
+ "tanggal": "2022-12-31",
+ "sumber": "NOAA PSL · OLR terinterpolasi + NCEP/NCAR R1 · filter Wheeler-Kiladis",
+ "satuan": "W/m²",
+ "vmax": 15,
+ "bounds": [
+  [
+   -26.25,
+   28.75
+  ],
+  [
+   26.25,
+   211.25
+  ]
+ ],
+ "nilaiBox": 0.08,
+ "sigma": 0.01,
+ "z": 10.0,
+ "fase": "tertekan",
+ "aktif": false,
+ "korelasiPropagasi": 0.98,
+ "indeksKelvin": 0.0,
+ "hov": {
+  "hari": 90,
+  "lon0": 30.0,
+  "lon1": 210.0,
+  "tanggal0": "2022-10-03",
+  "tanggal1": "2022-12-31"
+ },
+ "catatan": "3-5 hari terakhir kurang andal (efek tepi filter). Bukan pengganti produk resmi CPC.",
+ "vektor": true,
+ "anomaliU850": 0.52,
+ "anomaliAngin": 0.17,
+ "vortisitas": 0.041,
+ "tanggalAngin": "2022-12-31",
+ "arah": "Timur (±15-20 m/s)",
+ "label": "Fase tertekan (kering)",
+ "dampak": "Hujan cenderung berkurang"
+}
