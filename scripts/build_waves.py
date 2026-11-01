@@ -13,10 +13,11 @@ Metode: anomali thd klimatologi (3 harmonik) -> filter ruang-waktu Wheeler & Kil
 
 Keluaran per gelombang di data/waves/: {w}.png, {w}.json, {w}-vec.json, {w}-hov.png
 """
+import importlib.util
 import json
 import sys
 import time
-import urllib.request
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,8 @@ import xarray as xr
 from PIL import Image
 from scipy.ndimage import zoom
 
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+ENGINES = ("netcdf4",) + (("pydap",) if importlib.util.find_spec("pydap") else ())
 PSL = "https://psl.noaa.gov/thredds/dodsC/Datasets/"
 OLR_URL = PSL + "olr_cdr_day/olr.day.mean.v2.nc"          # NOAA OLR CDR v2, 1°, jeda ±2 hari
 OLR_LTM = PSL + "olr_cdr_day/olr.day.ltm.v2.1991-2020.nc"
@@ -32,9 +35,6 @@ WND_URL = PSL + "ncep.reanalysis/Dailies/pressure/{v}.{y}.nc"
 WND_LTM = PSL + "ncep.reanalysis.derived/pressure/{v}.day.ltm.1991-2020.nc"
 
 NDAYS = 1500                      # ~4 tahun: untuk filter + sigma referensi
-OLR_STEP, LTM_STEP, WND_STEP = 90, 60, 366   # hari per permintaan OPeNDAP (belah otomatis bila rusak)
-REQ_PAUSE = 1.0                   # detik jeda antar permintaan (hindari HTTP 429 dari server PSL)
-WIND_MAX_LAG = 3                  # angin boleh tertinggal maksimal sekian hari dari OLR
 MAX_AGE_DAYS = 7                  # tolak data lebih tua dari ini
 LAT_T = np.arange(-30, 30.1, 2.5)
 LON_T = np.arange(0, 360, 2.5)
@@ -62,10 +62,10 @@ def band_mask(nt, nx, kind):
     af, as_ = np.abs(f), np.abs(s)
     east, west = (f * s) > 0, (f * s) < 0
 
-    def kel(h):                                      # garis dispersi Kelvin, siklus/hari
+    def kel(h):                                     # garis dispersi Kelvin, siklus/hari
         return np.sqrt(G * h) * as_ / (2 * np.pi * A) * 86400
 
-    def er(h):                                       # garis dispersi ER n=1, siklus/hari
+    def er(h):                                      # garis dispersi ER n=1, siklus/hari
         k, c = as_ / A, np.sqrt(G * h)
         return BETA * k / (k ** 2 + 3 * BETA / c) / (2 * np.pi) * 86400
 
@@ -99,39 +99,14 @@ def wk_filter(x, kind, ntaper=30, npad=30, ext="ramp"):
 
 
 # --------------------------------------------------------------- data
-def retry(fn, n=6):
-    """Ulangi dengan jeda eksponensial (10,20,40,80,120 dtk). Menangani unduhan terpotong dan
-    HTTP 429/5xx dari server PSL."""
+def retry(fn, n=4):
     for i in range(n):
         try:
             return fn()
-        except Exception as e:
-            wait = min(10 * 2 ** i, 120)
-            print(f"percobaan {i + 1}/{n} gagal: {str(e)[:150]}" + (f" — tunggu {wait} dtk" if i < n - 1 else ""),
-                  file=sys.stderr)
-            if i < n - 1:
-                time.sleep(wait)
+        except Exception as e:                      # unduhan OPeNDAP terpotong dll.
+            print(f"percobaan {i + 1}/{n} gagal: {e}", file=sys.stderr)
+            time.sleep(5 * (i + 1))
     raise RuntimeError("unduhan gagal setelah beberapa percobaan")
-
-
-def open_ds(url, **kw):
-    """xr.open_dataset dengan percobaan ulang (open pun bisa ditolak 429)."""
-    return retry(lambda: xr.open_dataset(url, cache=False, **kw))
-
-
-def download_static(dods_url):
-    """
-    Mengunduh file utuh lewat FileServer NOAA untuk menghindari 429 OPeNDAP.
-    Hanya butuh 1 HTTP request per file alih-alih puluhan request chunking.
-    """
-    file_url = dods_url.replace("/dodsC/", "/fileServer/")
-    local_path = OUT.parent / file_url.split("/")[-1]
-    
-    if not local_path.exists():
-        print(f"Mengunduh {local_path.name} secara lokal...", file=sys.stderr)
-        retry(lambda: urllib.request.urlretrieve(file_url, local_path))
-        
-    return xr.open_dataset(local_path, cache=False, decode_times=False)
 
 
 def first_var(ds):
@@ -160,46 +135,6 @@ def to_grid(da):
                         coords={"time": da["time"], "lat": LAT_T, "lon": LON_T}, attrs=da.attrs)
 
 
-def valid_sub(piece, lo, hi, tries=3, frac_ok=0.01):
-    """Muat potongan dan validasi rentang [lo,hi].
-    Unduhan OPeNDAP yang terpotong ("DATADDS packet is apparently too short") TIDAK melempar
-    exception: library C hanya mencetak ERR lalu mengisi sisanya dengan sampah memori. Jadi:
-      1) muat ulang sampai `tries` kali;
-      2) bila masih rusak, belah potongan (waktu) jadi dua dan muat masing-masing -> permintaan
-         lebih kecil jarang terpotong;
-      3) potongan 1 langkah yang tetap rusak: bila hanya sedikit (<= frac_ok) -> jadikan NaN,
-         bila banyak -> hentikan (lebih baik tidak menulis apa pun daripada menulis sampah)."""
-    last = None
-    for k in range(tries):
-        time.sleep(REQ_PAUSE)
-        out = retry(lambda: sub(piece))
-        v = out.values
-        bad = (v < lo) | (v > hi)                   # NaN -> False (NaN asli dibiarkan)
-        nbad = int(bad.sum())
-        if nbad == 0:
-            return out
-        print(f"  potongan ({piece.sizes['time']} langkah) berisi {nbad} nilai di luar rentang "
-              f"— unduh ulang ({k + 1}/{tries})", file=sys.stderr)
-        last = (out, bad, nbad)
-    n = piece.sizes["time"]
-    if n > 1:
-        h = n // 2
-        return xr.concat([valid_sub(piece.isel(time=slice(0, h)), lo, hi, tries, frac_ok),
-                          valid_sub(piece.isel(time=slice(h, None)), lo, hi, tries, frac_ok)], "time")
-    out, bad, nbad = last
-    if nbad / bad.size > frac_ok:
-        raise RuntimeError(f"unduhan tetap rusak: {nbad}/{bad.size} nilai di luar [{lo},{hi}] pada 1 langkah waktu")
-    print(f"  {nbad} nilai rusak dijadikan NaN (1 langkah waktu)", file=sys.stderr)
-    return out.copy(data=np.where(bad, np.nan, out.values).astype(out.dtype))
-
-
-def load_chunked(da, lo, hi, step):
-    """Unduh sepanjang sumbu waktu dalam potongan kecil (permintaan besar sering terpotong)."""
-    n = da.sizes["time"]
-    return xr.concat([valid_sub(da.isel(time=slice(a, min(a + step, n))), lo, hi)
-                      for a in range(0, n, step)], "time")
-
-
 def sub(da):
     """Potong lintang (urutan asli bisa menurun), muat ke memori, urutkan naik."""
     lat = da.lat.values
@@ -213,21 +148,8 @@ def clim_smooth(ltm):
     return np.fft.irfft(f, n=ltm.shape[0], axis=0)
 
 
-def fill_circular(a):
-    """Isi NaN pada klimatologi (sumbu 0 = hari-dalam-tahun, melingkar). Tanpa ini satu NaN
-    saja membuat rfft di clim_smooth menjadi NaN untuk seluruh deret piksel itu."""
-    if not np.isnan(a).any():
-        return a
-    T = a.shape[0]
-    flat = a.reshape(T, -1).astype(np.float64)
-    cols = np.isnan(flat).any(0)
-    df = pd.DataFrame(np.concatenate([flat[:, cols]] * 3, 0)).interpolate(limit_direction="both")
-    flat[:, cols] = df.values[T:2 * T]
-    return flat.reshape(a.shape)
-
-
 def anomaly(da, ltm):
-    c = clim_smooth(fill_circular(ltm.values))
+    c = clim_smooth(ltm.values)
     doy = np.minimum(da.time.dt.dayofyear.values, c.shape[0]) - 1
     return da.values - c[doy]
 
@@ -238,12 +160,46 @@ def fix_time(da):
     return da
 
 
+def _fetch(url, work, decode_times=True, tol=1e-4):
+    """work(ds) -> (hasil, jumlah_rusak, total). Ulangi; cadangan engine; terima bila rusak < tol."""
+    best = None
+    for eng in ENGINES:
+        for k in range(3):
+            try:
+                res, bad, tot = work(xr.open_dataset(url, engine=eng, decode_times=decode_times))
+                if bad == 0:
+                    return res
+                print(f"  {eng}: {bad}/{tot} nilai di luar rentang — ulangi ({k + 1}/3)", file=sys.stderr)
+                if best is None or bad < best[1]:
+                    best = (res, bad, tot)
+            except Exception as e:
+                print(f"  {eng} gagal ({k + 1}/3): {str(e)[:120]}", file=sys.stderr)
+            time.sleep(3 * (k + 1))
+    if best and best[1] / best[2] < tol:
+        print(f"  diterima dengan {best[1]} sel rusak (akan di-NaN-kan)", file=sys.stderr)
+        return best[0]
+    raise RuntimeError(f"unduhan gagal/rusak: {url}")
+
+
+def fetch_series(url, lo, hi, step, last=None, var=None, sel=None, decode_times=True):
+    """Unduh sumbu waktu dalam potongan kecil (step hari); tiap potongan divalidasi ke [lo,hi]."""
+    sel = sel or (lambda d: d)
+    pick = lambda ds: sel(ds[var] if var else ds[first_var(ds)])
+    n = _fetch(url, lambda ds: (pick(ds).sizes["time"], 0, 1), decode_times)
+    parts = []
+    for a in range(max(0, n - last) if last else 0, n, step):
+        def work(ds, a=a):
+            out = sub(pick(ds).isel(time=slice(a, min(a + step, n))))
+            v = out.values
+            return out, int(np.nansum((v < lo) | (v > hi))), v.size
+        parts.append(_fetch(url, work, decode_times))
+        time.sleep(0.3)
+    return xr.concat(parts, "time")
+
+
 def load_olr():
-    ds = open_ds(OLR_URL)
-    var = first_var(ds)
-    da = ds[var]
-    n = da.sizes["time"]
-    da = load_chunked(da.isel(time=slice(max(0, n - NDAYS), n)), 50, 400, OLR_STEP)
+    da = fetch_series(OLR_URL, 50, 400, 60, last=NDAYS)
+    var = "olr"
     raw = da.values
     out = int(np.nansum((raw < 50) | (raw > 400)))
     print(f"variabel={var} satuan={da.attrs.get('units')} min={np.nanmin(raw):.1f} max={np.nanmax(raw):.1f} "
@@ -251,16 +207,10 @@ def load_olr():
     da = da.where((da >= 50) & (da <= 400))            # nilai isian/ngawur -> NaN
     da = fix_time(to_grid(da))
     da = da.interpolate_na(dim="time", limit=5)         # celah pendek: interpolasi linear
-    
-    # Perbaikan HTTP 429 OPeNDAP: Unduh statis
-    dl = download_static(OLR_LTM)
-    lv = first_var(dl)
-    ltm = load_chunked(dl[lv], 50, 400, LTM_STEP)
+    lv = "olr"
+    ltm = fetch_series(OLR_LTM, 50, 400, 100, decode_times=False)
     ltm = to_grid(ltm.where((ltm >= 50) & (ltm <= 400)))
     lv_ = ltm.values
-    nan_l = float(np.isnan(lv_).mean())
-    if nan_l > 0.01:                                # jangan lanjut dengan klimatologi bolong
-        sys.exit(f"KLIMATOLOGI RUSAK: NaN={nan_l:.1%} setelah unduh/validasi — tidak ada yang ditulis")
     print(f"klimatologi: variabel={lv} langkah={ltm.shape[0]} min={np.nanmin(lv_):.1f} max={np.nanmax(lv_):.1f} NaN={np.isnan(lv_).mean():.1%}")
     anom = anomaly(da, ltm)
     t = pd.to_datetime(da.time.values)
@@ -279,18 +229,13 @@ def load_olr():
 
 
 def load_wind(var, t0, t1):
-    parts = []
-    for y in range(pd.Timestamp(t0).year, pd.Timestamp(t1).year + 1):
-        ds = open_ds(WND_URL.format(v=var, y=y))[var].sel(level=850)
-        parts.append(load_chunked(ds, -100, 100, WND_STEP))
+    lev = lambda d: d.sel(level=850)
+    parts = [fetch_series(WND_URL.format(v=var, y=y), -100, 100, 100, var=var, sel=lev)
+             for y in range(pd.Timestamp(t0).year, pd.Timestamp(t1).year + 1)]
     da = xr.concat(parts, "time")
     da = fix_time(da.where(abs(da) < 100)).sel(time=slice(t0, None))
-    
-    # Perbaikan HTTP 429 OPeNDAP: Unduh statis
-    dl = download_static(WND_LTM.format(v=var))
-    ltm = load_chunked(dl[var].sel(level=850), -100, 100, LTM_STEP)
-    ltm = ltm.where(abs(ltm) < 100)
-    return anomaly(da, ltm), da.time.values
+    ltm = fetch_series(WND_LTM.format(v=var), -100, 100, 100, var=var, sel=lev, decode_times=False)
+    return anomaly(da, ltm.where(abs(ltm) < 100)), da.time.values
 
 
 # --------------------------------------------------------------- produk
@@ -430,9 +375,6 @@ def process(wave, olr, wnd):
             n = min(len(ut), len(vt))
             Fu, Fv = wk_filter(ua[-n:], wave, ext=best), wk_filter(va[-n:], wave, ext=best)
             wdate = str(pd.Timestamp(ut[-1]).date())
-            lag = (pd.Timestamp(times[-1]) - pd.Timestamp(ut[-1])).days
-            if lag > WIND_MAX_LAG:                      # jangan campur angin usang dengan OLR terbaru
-                raise RuntimeError(f"angin usang: terakhir {wdate}, OLR {date} (selisih {lag} hari)")
             write_vec(OUT / f"{wave}-vec.json", Fu[-1], Fv[-1], lat, lon, wdate)
             u_box = box_mean(Fu, lat, lon, BOX["lat"], BOX["lon"])[-1]
             v_box = box_mean(Fv, lat, lon, BOX["lat"], BOX["lon"])[-1]
@@ -465,7 +407,6 @@ def main():
         sys.exit(f"OLR terakhir {pd.Timestamp(t1).date()} ({age} hari lalu): terlalu usang, tidak ada yang ditulis")
     try:
         wnd = (load_wind("uwnd", t0, t1), load_wind("vwnd", t0, t1))
-        print(f"angin: {pd.Timestamp(wnd[0][1][0]).date()} .. {pd.Timestamp(wnd[0][1][-1]).date()} (OLR sampai {pd.Timestamp(t1).date()})")
     except Exception as e:
         print(f"angin NCEP tidak tersedia: {e}", file=sys.stderr)
         wnd = None
