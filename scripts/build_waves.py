@@ -32,6 +32,7 @@ WND_LTM = PSL + "ncep.reanalysis.derived/pressure/{v}.day.ltm.1991-2020.nc"
 
 NDAYS = 1500                      # ~4 tahun: untuk filter + sigma referensi
 OLR_STEP, LTM_STEP, WND_STEP = 60, 30, 120   # hari per permintaan OPeNDAP (kecil = jarang terpotong)
+WIND_MAX_LAG = 3                  # angin boleh tertinggal maksimal sekian hari dari OLR
 MAX_AGE_DAYS = 7                  # tolak data lebih tua dari ini
 LAT_T = np.arange(-30, 30.1, 2.5)
 LON_T = np.arange(0, 360, 2.5)
@@ -397,6 +398,9 @@ def process(wave, olr, wnd):
             n = min(len(ut), len(vt))
             Fu, Fv = wk_filter(ua[-n:], wave, ext=best), wk_filter(va[-n:], wave, ext=best)
             wdate = str(pd.Timestamp(ut[-1]).date())
+            lag = (pd.Timestamp(times[-1]) - pd.Timestamp(ut[-1])).days
+            if lag > WIND_MAX_LAG:                      # jangan campur angin usang dengan OLR terbaru
+                raise RuntimeError(f"angin usang: terakhir {wdate}, OLR {date} (selisih {lag} hari)")
             write_vec(OUT / f"{wave}-vec.json", Fu[-1], Fv[-1], lat, lon, wdate)
             u_box = box_mean(Fu, lat, lon, BOX["lat"], BOX["lon"])[-1]
             v_box = box_mean(Fv, lat, lon, BOX["lat"], BOX["lon"])[-1]
@@ -429,6 +433,7 @@ def main():
         sys.exit(f"OLR terakhir {pd.Timestamp(t1).date()} ({age} hari lalu): terlalu usang, tidak ada yang ditulis")
     try:
         wnd = (load_wind("uwnd", t0, t1), load_wind("vwnd", t0, t1))
+        print(f"angin: {pd.Timestamp(wnd[0][1][0]).date()} .. {pd.Timestamp(wnd[0][1][-1]).date()} (OLR sampai {pd.Timestamp(t1).date()})")
     except Exception as e:
         print(f"angin NCEP tidak tersedia: {e}", file=sys.stderr)
         wnd = None
