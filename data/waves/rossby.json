@@ -14,13 +14,13 @@
    211.25
   ]
  ],
- "nilaiBox": -5.05,
- "sigma": 3.35,
- "z": -1.51,
+ "nilaiBox": -7.96,
+ "sigma": 3.15,
+ "z": -2.53,
  "fase": "konvektif",
  "aktif": false,
- "korelasiPropagasi": 0.8,
- "indeksKelvin": 1.51,
+ "korelasiPropagasi": 0.93,
+ "indeksKelvin": 2.53,
  "hov": {
   "hari": 90,
   "lon0": 30.0,
@@ -30,9 +30,9 @@
  },
  "catatan": "3-5 hari terakhir kurang andal (efek tepi filter). Bukan pengganti produk resmi CPC.",
  "keandalanTepi": {
-  "korelasi": 0.39,
-  "kemiringan": 0.45,
-  "rmseSigma": 1.41,
+  "korelasi": 0.3,
+  "kemiringan": 0.21,
+  "rmseSigma": 0.87,
   "n": 30
  },
  "keandalan": "rendah",
