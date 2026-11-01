@@ -1,7 +1,7 @@
 {
  "gelombang": "rossby",
  "tanggal": "2026-10-28",
- "sumber": "NOAA PSL · OLR terinterpolasi + NCEP/NCAR R1 · filter Wheeler-Kiladis",
+ "sumber": "NOAA OLR CDR (terinterpolasi) + ERA5T 850 hPa · filter Wheeler-Kiladis",
  "satuan": "W/m²",
  "vmax": 15,
  "bounds": [
