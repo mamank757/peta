@@ -2,37 +2,21 @@
 """
 Peta gelombang ekuator (MJO, Kelvin, Rossby) dari data NOAA.
 
-Sumber:
-  OLR harian NOAA CDR v2 (1°, digrid ke 2,5°), NOAA PSL THREDDS/OPeNDAP:
-    Datasets/olr_cdr_day/olr.day.mean.v2.nc (+ klimatologi 1991-2020)
-  Angin 850 hPa harian: ERA5/ERA5T (Copernicus CDS, 'reanalysis-era5-pressure-levels', 4x/hari -> rata-rata harian).
-    NCEP/NCAR R1 berhenti produksi 17 Maret 2026 sehingga tidak dipakai lagi.
+Sumber (semua NOAA PSL THREDDS/OPeNDAP):
+  OLR harian NOAA CDR v2 (1°, digrid ke 2,5°): Datasets/olr_cdr_day/olr.day.mean.v2.nc (+ klimatologi 1991-2020)
+  Angin 850 hPa harian (NCEP/NCAR R1): Datasets/ncep.reanalysis/Dailies/pressure/{u,v}wnd.YYYY.nc
 
-Pengaturan angin ERA5T (sekali saja):
-  1. Daftar di https://cds.climate.copernicus.eu, setujui lisensi dataset ERA5 pressure levels di halamannya.
-  2. Ambil token API dari profil -> simpan sebagai secret GitHub  CDSAPI_KEY
-     (opsional CDSAPI_URL, bawaan: https://cds.climate.copernicus.eu/api).
-  3. pip install cdsapi
-  4. Cache bulanan di data/cache/era5/ sebaiknya disimpan lewat actions/cache agar eksekusi harian
-     hanya mengunduh 1-2 bulan terakhir (eksekusi pertama mengunduh ~14 bulan, bisa lama karena antrean CDS).
-  Tanpa CDSAPI_KEY, angin dilewati dan peta OLR tetap terbit.
-
-Metode: anomali (OLR: klimatologi 3 harmonik; angin: mean + harmonik tahunan/semitahunan) -> filter ruang-waktu Wheeler & Kiladis (1999)
+Metode: anomali thd klimatologi (3 harmonik) -> filter ruang-waktu Wheeler & Kiladis (1999)
   MJO   : timur,  k=1-5,  periode 30-96 hari
   Kelvin: timur,  k=1-14, periode 2,5-30 hari, kedalaman ekuivalen 8-90 m
   ER n=1: barat,  k=1-10, periode 9-72 hari,   kedalaman ekuivalen 8-90 m
 
 Keluaran per gelombang di data/waves/: {w}.png, {w}.json, {w}-vec.json, {w}-hov.png
-
-Catatan 429: server PSL membatasi laju permintaan. Semua pembukaan dataset dan unduhan
-dibungkus retry (backoff eksponensial) dan diberi jeda antar permintaan (REQ_DELAY).
 """
 import json
-import os
 import sys
-import tempfile
 import time
-import zipfile
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -44,18 +28,14 @@ from scipy.ndimage import zoom
 PSL = "https://psl.noaa.gov/thredds/dodsC/Datasets/"
 OLR_URL = PSL + "olr_cdr_day/olr.day.mean.v2.nc"          # NOAA OLR CDR v2, 1°, jeda ±2 hari
 OLR_LTM = PSL + "olr_cdr_day/olr.day.ltm.v2.1991-2020.nc"
+WND_URL = PSL + "ncep.reanalysis/Dailies/pressure/{v}.{y}.nc"
+WND_LTM = PSL + "ncep.reanalysis.derived/pressure/{v}.day.ltm.1991-2020.nc"
 
 NDAYS = 1500                      # ~4 tahun: untuk filter + sigma referensi
-OLR_STEP, LTM_STEP = 60, 30       # hari per permintaan OPeNDAP (kecil = jarang terpotong)
-WIND_MAX_LAG = 5                  # angin (ERA5T tertinggal ~5 hari) boleh tertinggal maksimal sekian hari dari OLR
-WIND_DAYS = 420                   # panjang deret angin (>365 hari agar harmonik tahunan terpasang baik)
-ERA5_DATASET = "reanalysis-era5-pressure-levels"
-ERA5_CACHE = Path("data/cache/era5")
-ERA5_SETTLED_DAYS = 45            # bulan yang lebih tua dari ini dianggap final -> di-cache
-ERA5T_BACK = 8                    # mundur sampai sekian hari bila hari terakhir ERA5T belum terbit
+OLR_STEP, LTM_STEP, WND_STEP = 90, 60, 366   # hari per permintaan OPeNDAP (belah otomatis bila rusak)
+REQ_PAUSE = 1.0                   # detik jeda antar permintaan (hindari HTTP 429 dari server PSL)
+WIND_MAX_LAG = 3                  # angin boleh tertinggal maksimal sekian hari dari OLR
 MAX_AGE_DAYS = 7                  # tolak data lebih tua dari ini
-REQ_DELAY = 1.5                   # detik jeda antar permintaan OPeNDAP (hindari 429 Too Many Requests)
-RETRY_N = 6                       # jumlah percobaan per permintaan
 LAT_T = np.arange(-30, 30.1, 2.5)
 LON_T = np.arange(0, 360, 2.5)
 LAT = (-30, 30)                   # domain filter
@@ -71,7 +51,7 @@ VMAX = dict(mjo=30, kelvin=15, rossby=15)                 # W/m2 skala warna
 HOV_BAND = dict(mjo=(-10, 10), kelvin=(-10, 10), rossby=(-15, 15))
 UPSTREAM = dict(mjo=(60, 95), kelvin=(60, 95), rossby=(141, 176))  # kotak hulu
 LAGS = dict(mjo=range(4, 15), kelvin=range(1, 7), rossby=range(2, 11))
-SRC = "NOAA OLR CDR (terinterpolasi) + ERA5T 850 hPa · filter Wheeler-Kiladis"
+SRC = "NOAA PSL · OLR terinterpolasi + NCEP/NCAR R1 · filter Wheeler-Kiladis"
 
 
 # --------------------------------------------------------------- filter
@@ -82,10 +62,10 @@ def band_mask(nt, nx, kind):
     af, as_ = np.abs(f), np.abs(s)
     east, west = (f * s) > 0, (f * s) < 0
 
-    def kel(h):                                     # garis dispersi Kelvin, siklus/hari
+    def kel(h):                                      # garis dispersi Kelvin, siklus/hari
         return np.sqrt(G * h) * as_ / (2 * np.pi * A) * 86400
 
-    def er(h):                                      # garis dispersi ER n=1, siklus/hari
+    def er(h):                                       # garis dispersi ER n=1, siklus/hari
         k, c = as_ / A, np.sqrt(G * h)
         return BETA * k / (k ** 2 + 3 * BETA / c) / (2 * np.pi) * 86400
 
@@ -119,25 +99,39 @@ def wk_filter(x, kind, ntaper=30, npad=30, ext="ramp"):
 
 
 # --------------------------------------------------------------- data
-def retry(fn, n=RETRY_N):
-    """Jalankan fn dengan backoff eksponensial (15, 30, 60, 120, 240 dtk).
-    429 Too Many Requests butuh waktu tunggu jauh lebih lama daripada beberapa detik."""
+def retry(fn, n=6):
+    """Ulangi dengan jeda eksponensial (10,20,40,80,120 dtk). Menangani unduhan terpotong dan
+    HTTP 429/5xx dari server PSL."""
     for i in range(n):
         try:
             return fn()
-        except Exception as e:                      # unduhan OPeNDAP terpotong, 429, dll.
-            wait = min(15 * 2 ** i, 240)
-            print(f"percobaan {i + 1}/{n} gagal: {e}"
-                  + (f" — tunggu {wait} dtk" if i < n - 1 else ""), file=sys.stderr)
+        except Exception as e:
+            wait = min(10 * 2 ** i, 120)
+            print(f"percobaan {i + 1}/{n} gagal: {str(e)[:150]}" + (f" — tunggu {wait} dtk" if i < n - 1 else ""),
+                  file=sys.stderr)
             if i < n - 1:
                 time.sleep(wait)
     raise RuntimeError("unduhan gagal setelah beberapa percobaan")
 
 
 def open_ds(url, **kw):
-    """open_dataset dengan jeda + retry (server PSL membalas 429 bila terlalu sering)."""
-    time.sleep(REQ_DELAY)
+    """xr.open_dataset dengan percobaan ulang (open pun bisa ditolak 429)."""
     return retry(lambda: xr.open_dataset(url, cache=False, **kw))
+
+
+def download_static(dods_url):
+    """
+    Mengunduh file utuh lewat FileServer NOAA untuk menghindari 429 OPeNDAP.
+    Hanya butuh 1 HTTP request per file alih-alih puluhan request chunking.
+    """
+    file_url = dods_url.replace("/dodsC/", "/fileServer/")
+    local_path = OUT.parent / file_url.split("/")[-1]
+    
+    if not local_path.exists():
+        print(f"Mengunduh {local_path.name} secara lokal...", file=sys.stderr)
+        retry(lambda: urllib.request.urlretrieve(file_url, local_path))
+        
+    return xr.open_dataset(local_path, cache=False, decode_times=False)
 
 
 def first_var(ds):
@@ -148,7 +142,7 @@ def first_var(ds):
 
 
 def to_grid(da):
-    """Ke grid 2,5° (sama dengan grid angin ERA5 yang diminta): interpolasi linear separabel, bujur melingkar,
+    """Ke grid 2,5° (sama dengan angin NCEP): interpolasi linear separabel, bujur melingkar,
     lintang dijepit (ekstrapolasi konstan di tepi). Tanpa xarray.interp."""
     if da.sizes["lat"] == len(LAT_T) and da.sizes["lon"] == len(LON_T):
         return da
@@ -166,26 +160,18 @@ def to_grid(da):
                         coords={"time": da["time"], "lat": LAT_T, "lon": LON_T}, attrs=da.attrs)
 
 
-def sub(da):
-    """Potong lintang (urutan asli bisa menurun), muat ke memori, urutkan naik.
-    Diberi jeda sebelum unduhan agar tidak kena rate limit."""
-    time.sleep(REQ_DELAY)
-    lat = da.lat.values
-    sl = slice(LAT[1], LAT[0]) if lat[0] > lat[-1] else slice(*LAT)
-    return da.sel(lat=sl).load().sortby("lat")
-
-
 def valid_sub(piece, lo, hi, tries=3, frac_ok=0.01):
     """Muat potongan dan validasi rentang [lo,hi].
     Unduhan OPeNDAP yang terpotong ("DATADDS packet is apparently too short") TIDAK melempar
     exception: library C hanya mencetak ERR lalu mengisi sisanya dengan sampah memori. Jadi:
-      1) muat ulang sampai `tries` kali (dengan jeda agar server pulih);
+      1) muat ulang sampai `tries` kali;
       2) bila masih rusak, belah potongan (waktu) jadi dua dan muat masing-masing -> permintaan
          lebih kecil jarang terpotong;
       3) potongan 1 langkah yang tetap rusak: bila hanya sedikit (<= frac_ok) -> jadikan NaN,
          bila banyak -> hentikan (lebih baik tidak menulis apa pun daripada menulis sampah)."""
     last = None
     for k in range(tries):
+        time.sleep(REQ_PAUSE)
         out = retry(lambda: sub(piece))
         v = out.values
         bad = (v < lo) | (v > hi)                   # NaN -> False (NaN asli dibiarkan)
@@ -195,7 +181,6 @@ def valid_sub(piece, lo, hi, tries=3, frac_ok=0.01):
         print(f"  potongan ({piece.sizes['time']} langkah) berisi {nbad} nilai di luar rentang "
               f"— unduh ulang ({k + 1}/{tries})", file=sys.stderr)
         last = (out, bad, nbad)
-        time.sleep(10 * (k + 1))                    # beri waktu server pulih sebelum unduh ulang
     n = piece.sizes["time"]
     if n > 1:
         h = n // 2
@@ -213,6 +198,13 @@ def load_chunked(da, lo, hi, step):
     n = da.sizes["time"]
     return xr.concat([valid_sub(da.isel(time=slice(a, min(a + step, n))), lo, hi)
                       for a in range(0, n, step)], "time")
+
+
+def sub(da):
+    """Potong lintang (urutan asli bisa menurun), muat ke memori, urutkan naik."""
+    lat = da.lat.values
+    sl = slice(LAT[1], LAT[0]) if lat[0] > lat[-1] else slice(*LAT)
+    return da.sel(lat=sl).load().sortby("lat")
 
 
 def clim_smooth(ltm):
@@ -259,7 +251,9 @@ def load_olr():
     da = da.where((da >= 50) & (da <= 400))            # nilai isian/ngawur -> NaN
     da = fix_time(to_grid(da))
     da = da.interpolate_na(dim="time", limit=5)         # celah pendek: interpolasi linear
-    dl = open_ds(OLR_LTM, decode_times=False)
+    
+    # Perbaikan HTTP 429 OPeNDAP: Unduh statis
+    dl = download_static(OLR_LTM)
     lv = first_var(dl)
     ltm = load_chunked(dl[lv], 50, 400, LTM_STEP)
     ltm = to_grid(ltm.where((ltm >= 50) & (ltm <= 400)))
@@ -284,132 +278,19 @@ def load_olr():
     return anom, da.time.values, da.lat.values, da.lon.values
 
 
-# --------------------------------------------------------------- angin ERA5T (CDS)
-def harmonic_anomaly(x, t):
-    """Anomali per titik grid: buang rata-rata + harmonik tahunan & semitahunan (kuadrat terkecil).
-    Pita filter (2,5-96 hari) sudah membuang sisa siklus musiman, jadi tidak perlu klimatologi
-    terpisah (dan tak ada risiko ketidakcocokan dengan klimatologi R1)."""
-    nt = len(t)
-    w = 2 * np.pi * pd.DatetimeIndex(t).dayofyear.values / 365.25
-    X = np.stack([np.ones(nt)] + [f(k * w) for k in (1, 2) for f in (np.cos, np.sin)], 1)
-    flat = x.reshape(nt, -1).astype(np.float64)
-    flat = np.where(np.isfinite(flat), flat, np.nanmean(flat, axis=0, keepdims=True))
-    beta = np.linalg.lstsq(X, flat, rcond=None)[0]
-    return (flat - X @ beta).reshape(x.shape)
-
-
-def _norm_era5(ds):
-    """Samakan struktur berkas CDS lama/baru: waktu, lintang/bujur, level tunggal, expver."""
-    if "valid_time" in ds.dims:
-        ds = ds.drop_vars("time", errors="ignore").rename(valid_time="time")
-    ren = {a: b for a, b in (("latitude", "lat"), ("longitude", "lon"),
-                             ("u_component_of_wind", "u"), ("v_component_of_wind", "v")) if a in ds.variables}
-    ds = ds.rename(ren)
-    for lv in ("pressure_level", "level"):
-        if lv in ds.dims:
-            ds = ds.isel({lv: 0})
-    if "expver" in ds.dims:                         # ERA5 final + ERA5T bercampur: ambil yang tidak NaN
-        ds = ds.mean("expver", skipna=True)
-    ds = ds.drop_vars([c for c in ("pressure_level", "level", "number", "expver") if c in ds.coords],
-                      errors="ignore")
-    return ds[["u", "v"]]
-
-
-def _era5_daily(path, workdir):
-    """Berkas CDS (netCDF atau zip berisi netCDF) -> rata-rata harian (hanya hari dengan 4 data), grid LAT_T x LON_T."""
-    p = Path(path)
-    files = [p]
-    if zipfile.is_zipfile(p):                       # CDS kadang membungkus ERA5 + ERA5T dalam zip
-        z = Path(workdir) / "z"
-        with zipfile.ZipFile(p) as zf:
-            zf.extractall(z)
-        files = sorted(z.glob("**/*.nc"))
-        if not files:
-            raise RuntimeError("zip dari CDS tidak berisi berkas .nc")
+def load_wind(var, t0, t1):
     parts = []
-    for f in files:
-        with xr.open_dataset(f) as ds:
-            parts.append(_norm_era5(ds).load())
-    ds = parts[0] if len(parts) == 1 else xr.concat(parts, "time")
-    ds = ds.sortby("time")
-    ds = ds.isel(time=~ds.indexes["time"].duplicated())
-    cnt = ds["u"].isel(lat=0, lon=0).resample(time="1D").count()
-    day = ds.resample(time="1D").mean()
-    day = day.sel(time=cnt.time.values[cnt.values == 4])   # numpy murni: hindari koordinat skalar lat/lon ikut terbawa
-    day = day.sortby("lat").sortby("lon").reindex(lat=LAT_T, lon=LON_T, method="nearest", tolerance=0.05)
-    return day
-
-
-def _era5_month(client, y, m, last_day):
-    req = {
-        "product_type": ["reanalysis"],
-        "variable": ["u_component_of_wind", "v_component_of_wind"],
-        "pressure_level": ["850"],
-        "year": [str(y)], "month": [f"{m:02d}"],
-        "day": [f"{d:02d}" for d in range(1, last_day + 1)],
-        "time": ["00:00", "06:00", "12:00", "18:00"],
-        "data_format": "netcdf", "download_format": "unarchived",
-        "area": [LAT[1], 0, LAT[0], 357.5],         # [utara, barat, selatan, timur]
-        "grid": [2.5, 2.5],
-    }
-    with tempfile.TemporaryDirectory() as td:
-        f = Path(td) / "era5.nc"
-        client.retrieve(ERA5_DATASET, req, str(f))
-        return _era5_daily(f, td)
-
-
-def load_wind(t1):
-    """Angin 850 hPa anomali harian dari ERA5/ERA5T. Keluaran: ((ua, waktu), (va, waktu)),
-    ua/va berbentuk (waktu, 25 lintang naik, 144 bujur) sama dengan grid OLR."""
-    if not (os.environ.get("CDSAPI_KEY") or (Path.home() / ".cdsapirc").exists()):
-        raise RuntimeError("CDSAPI_KEY belum diatur (lihat catatan di awal berkas)")
-    import cdsapi
-    client = cdsapi.Client()
-    t1 = pd.Timestamp(t1).floor("D")
-    start = t1 - pd.Timedelta(days=WIND_DAYS)
-    parts = []
-    for per in pd.period_range(start, t1, freq="M"):
-        y, m = per.year, per.month
-        mend = per.end_time.floor("D")
-        settled = mend < t1 - pd.Timedelta(days=ERA5_SETTLED_DAYS)
-        cache = ERA5_CACHE / f"uv850_{y}{m:02d}.nc"
-        if settled and cache.exists():
-            parts.append(xr.load_dataset(cache))
-            continue
-        if settled:                                 # bulan final: unduh penuh (dengan retry) lalu cache
-            ds = retry(lambda: _era5_month(client, y, m, per.days_in_month))
-            if ds.sizes["time"] == per.days_in_month:
-                ERA5_CACHE.mkdir(parents=True, exist_ok=True)
-                ds.to_netcdf(cache)
-        else:                                       # bulan terkini: hari terakhir ERA5T bisa belum terbit
-            ds, last = None, min(mend, t1).day
-            for d in range(last, max(last - ERA5T_BACK, 0), -1):
-                try:
-                    ds = _era5_month(client, y, m, d)
-                    break
-                except Exception as e:
-                    print(f"  ERA5T {y}-{m:02d} s.d. tgl {d} belum tersedia/gagal: {str(e)[:150]}", file=sys.stderr)
-            if ds is None:
-                print(f"  ERA5T {y}-{m:02d}: dilewati", file=sys.stderr)
-                continue
-        parts.append(ds)
-    if not parts:
-        raise RuntimeError("tidak ada data ERA5 yang berhasil diunduh")
-    ds = xr.concat(parts, "time").sortby("time")
-    ds = ds.isel(time=~ds.indexes["time"].duplicated()).sel(time=slice(start, t1))
-    tt = ds.time.values
-    nt = ds.sizes["time"]
-    if nt < 0.9 * WIND_DAYS:
-        raise RuntimeError(f"deret angin terlalu pendek: {nt} hari (perlu >= {int(0.9 * WIND_DAYS)})")
-    if nt != int((tt[-1] - tt[0]) / np.timedelta64(1, "D")) + 1:
-        raise RuntimeError("deret angin tidak kontinu (ada hari hilang)")
-    u, v = ds["u"].values, ds["v"].values
-    nan = max(float(np.isnan(u).mean()), float(np.isnan(v).mean()))
-    if nan > 0.01 or np.nanmax(np.abs([np.nanmax(np.abs(u)), np.nanmax(np.abs(v))])) > 100:
-        raise RuntimeError(f"data angin tidak masuk akal: NaN={nan:.1%}")
-    print(f"angin ERA5: {pd.Timestamp(tt[0]).date()} .. {pd.Timestamp(tt[-1]).date()} ({nt} hari) "
-          f"std u={np.nanstd(u):.1f} v={np.nanstd(v):.1f} m/s")
-    return (harmonic_anomaly(u, tt), tt), (harmonic_anomaly(v, tt), tt)
+    for y in range(pd.Timestamp(t0).year, pd.Timestamp(t1).year + 1):
+        ds = open_ds(WND_URL.format(v=var, y=y))[var].sel(level=850)
+        parts.append(load_chunked(ds, -100, 100, WND_STEP))
+    da = xr.concat(parts, "time")
+    da = fix_time(da.where(abs(da) < 100)).sel(time=slice(t0, None))
+    
+    # Perbaikan HTTP 429 OPeNDAP: Unduh statis
+    dl = download_static(WND_LTM.format(v=var))
+    ltm = load_chunked(dl[var].sel(level=850), -100, 100, LTM_STEP)
+    ltm = ltm.where(abs(ltm) < 100)
+    return anomaly(da, ltm), da.time.values
 
 
 # --------------------------------------------------------------- produk
@@ -583,10 +464,10 @@ def main():
     if age > MAX_AGE_DAYS:
         sys.exit(f"OLR terakhir {pd.Timestamp(t1).date()} ({age} hari lalu): terlalu usang, tidak ada yang ditulis")
     try:
-        wnd = load_wind(t1)
+        wnd = (load_wind("uwnd", t0, t1), load_wind("vwnd", t0, t1))
         print(f"angin: {pd.Timestamp(wnd[0][1][0]).date()} .. {pd.Timestamp(wnd[0][1][-1]).date()} (OLR sampai {pd.Timestamp(t1).date()})")
     except Exception as e:
-        print(f"angin ERA5 tidak tersedia: {e}", file=sys.stderr)
+        print(f"angin NCEP tidak tersedia: {e}", file=sys.stderr)
         wnd = None
     for w in WAVES:
         process(w, olr, wnd)
