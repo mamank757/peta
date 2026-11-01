@@ -31,6 +31,7 @@ WND_URL = PSL + "ncep.reanalysis/Dailies/pressure/{v}.{y}.nc"
 WND_LTM = PSL + "ncep.reanalysis.derived/pressure/{v}.day.ltm.1991-2020.nc"
 
 NDAYS = 1500                      # ~4 tahun: untuk filter + sigma referensi
+OLR_STEP, LTM_STEP, WND_STEP = 60, 30, 120   # hari per permintaan OPeNDAP (kecil = jarang terpotong)
 MAX_AGE_DAYS = 7                  # tolak data lebih tua dari ini
 LAT_T = np.arange(-30, 30.1, 2.5)
 LON_T = np.arange(0, 360, 2.5)
@@ -131,15 +132,43 @@ def to_grid(da):
                         coords={"time": da["time"], "lat": LAT_T, "lon": LON_T}, attrs=da.attrs)
 
 
-def valid_sub(piece, lo, hi, tries=3):
-    """Muat potongan; bila ada nilai di luar [lo,hi] (unduhan rusak), muat ulang."""
+def valid_sub(piece, lo, hi, tries=3, frac_ok=0.01):
+    """Muat potongan dan validasi rentang [lo,hi].
+    Unduhan OPeNDAP yang terpotong ("DATADDS packet is apparently too short") TIDAK melempar
+    exception: library C hanya mencetak ERR lalu mengisi sisanya dengan sampah memori. Jadi:
+      1) muat ulang sampai `tries` kali;
+      2) bila masih rusak, belah potongan (waktu) jadi dua dan muat masing-masing -> permintaan
+         lebih kecil jarang terpotong;
+      3) potongan 1 langkah yang tetap rusak: bila hanya sedikit (<= frac_ok) -> jadikan NaN,
+         bila banyak -> hentikan (lebih baik tidak menulis apa pun daripada menulis sampah)."""
+    last = None
     for k in range(tries):
         out = retry(lambda: sub(piece))
-        bad = int(np.nansum((out.values < lo) | (out.values > hi)))
-        if bad == 0:
+        v = out.values
+        bad = (v < lo) | (v > hi)                   # NaN -> False (NaN asli dibiarkan)
+        nbad = int(bad.sum())
+        if nbad == 0:
             return out
-        print(f"  potongan berisi {bad} nilai di luar rentang — unduh ulang ({k + 1}/{tries})", file=sys.stderr)
-    return out
+        print(f"  potongan ({piece.sizes['time']} langkah) berisi {nbad} nilai di luar rentang "
+              f"— unduh ulang ({k + 1}/{tries})", file=sys.stderr)
+        last = (out, bad, nbad)
+    n = piece.sizes["time"]
+    if n > 1:
+        h = n // 2
+        return xr.concat([valid_sub(piece.isel(time=slice(0, h)), lo, hi, tries, frac_ok),
+                          valid_sub(piece.isel(time=slice(h, None)), lo, hi, tries, frac_ok)], "time")
+    out, bad, nbad = last
+    if nbad / bad.size > frac_ok:
+        raise RuntimeError(f"unduhan tetap rusak: {nbad}/{bad.size} nilai di luar [{lo},{hi}] pada 1 langkah waktu")
+    print(f"  {nbad} nilai rusak dijadikan NaN (1 langkah waktu)", file=sys.stderr)
+    return out.copy(data=np.where(bad, np.nan, out.values).astype(out.dtype))
+
+
+def load_chunked(da, lo, hi, step):
+    """Unduh sepanjang sumbu waktu dalam potongan kecil (permintaan besar sering terpotong)."""
+    n = da.sizes["time"]
+    return xr.concat([valid_sub(da.isel(time=slice(a, min(a + step, n))), lo, hi)
+                      for a in range(0, n, step)], "time")
 
 
 def sub(da):
@@ -155,8 +184,21 @@ def clim_smooth(ltm):
     return np.fft.irfft(f, n=ltm.shape[0], axis=0)
 
 
+def fill_circular(a):
+    """Isi NaN pada klimatologi (sumbu 0 = hari-dalam-tahun, melingkar). Tanpa ini satu NaN
+    saja membuat rfft di clim_smooth menjadi NaN untuk seluruh deret piksel itu."""
+    if not np.isnan(a).any():
+        return a
+    T = a.shape[0]
+    flat = a.reshape(T, -1).astype(np.float64)
+    cols = np.isnan(flat).any(0)
+    df = pd.DataFrame(np.concatenate([flat[:, cols]] * 3, 0)).interpolate(limit_direction="both")
+    flat[:, cols] = df.values[T:2 * T]
+    return flat.reshape(a.shape)
+
+
 def anomaly(da, ltm):
-    c = clim_smooth(ltm.values)
+    c = clim_smooth(fill_circular(ltm.values))
     doy = np.minimum(da.time.dt.dayofyear.values, c.shape[0]) - 1
     return da.values - c[doy]
 
@@ -168,13 +210,11 @@ def fix_time(da):
 
 
 def load_olr():
-    ds = xr.open_dataset(OLR_URL)
+    ds = xr.open_dataset(OLR_URL, cache=False)
     var = first_var(ds)
     da = ds[var]
     n = da.sizes["time"]
-    starts = list(range(max(0, n - NDAYS), n, 250))
-    parts = [valid_sub(da.isel(time=slice(a, min(a + 250, n))), 50, 400) for a in starts]
-    da = xr.concat(parts, "time")
+    da = load_chunked(da.isel(time=slice(max(0, n - NDAYS), n)), 50, 400, OLR_STEP)
     raw = da.values
     out = int(np.nansum((raw < 50) | (raw > 400)))
     print(f"variabel={var} satuan={da.attrs.get('units')} min={np.nanmin(raw):.1f} max={np.nanmax(raw):.1f} "
@@ -182,11 +222,14 @@ def load_olr():
     da = da.where((da >= 50) & (da <= 400))            # nilai isian/ngawur -> NaN
     da = fix_time(to_grid(da))
     da = da.interpolate_na(dim="time", limit=5)         # celah pendek: interpolasi linear
-    dl = xr.open_dataset(OLR_LTM, decode_times=False)
+    dl = xr.open_dataset(OLR_LTM, decode_times=False, cache=False)
     lv = first_var(dl)
-    ltm = valid_sub(dl[lv], 50, 400)
+    ltm = load_chunked(dl[lv], 50, 400, LTM_STEP)
     ltm = to_grid(ltm.where((ltm >= 50) & (ltm <= 400)))
     lv_ = ltm.values
+    nan_l = float(np.isnan(lv_).mean())
+    if nan_l > 0.01:                                # jangan lanjut dengan klimatologi bolong
+        sys.exit(f"KLIMATOLOGI RUSAK: NaN={nan_l:.1%} setelah unduh/validasi — tidak ada yang ditulis")
     print(f"klimatologi: variabel={lv} langkah={ltm.shape[0]} min={np.nanmin(lv_):.1f} max={np.nanmax(lv_):.1f} NaN={np.isnan(lv_).mean():.1%}")
     anom = anomaly(da, ltm)
     t = pd.to_datetime(da.time.values)
@@ -207,12 +250,12 @@ def load_olr():
 def load_wind(var, t0, t1):
     parts = []
     for y in range(pd.Timestamp(t0).year, pd.Timestamp(t1).year + 1):
-        ds = xr.open_dataset(WND_URL.format(v=var, y=y))[var].sel(level=850)
-        parts.append(valid_sub(ds, -100, 100))
+        ds = xr.open_dataset(WND_URL.format(v=var, y=y), cache=False)[var].sel(level=850)
+        parts.append(load_chunked(ds, -100, 100, WND_STEP))
     da = xr.concat(parts, "time")
     da = fix_time(da.where(abs(da) < 100)).sel(time=slice(t0, None))
-    dl = xr.open_dataset(WND_LTM.format(v=var), decode_times=False)[var].sel(level=850)
-    ltm = valid_sub(dl, -100, 100)
+    dl = xr.open_dataset(WND_LTM.format(v=var), decode_times=False, cache=False)[var].sel(level=850)
+    ltm = load_chunked(dl, -100, 100, LTM_STEP)
     ltm = ltm.where(abs(ltm) < 100)
     return anomaly(da, ltm), da.time.values
 
