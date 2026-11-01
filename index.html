@@ -23,11 +23,6 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .mode-btn:hover { background:rgba(0,255,136,.1); border-color:rgba(0,255,136,.5); }
 .mode-btn.active { background:#00ff88; color:#060b13; border-color:#00ff88; box-shadow:0 0 15px rgba(0,255,136,.4); }
  
-/* SAKLAR LAPISAN (mode gabungan) */
-.layer-toggle { position:absolute; top:128px; left:15px; z-index:1250; display:flex; flex-direction:column; gap:6px; background:rgba(8,15,35,.92); backdrop-filter:blur(12px); border:1px solid rgba(0,255,136,.25); border-radius:10px; padding:8px 12px; font-size:.72rem; font-weight:600; color:#fff; }
-.layer-toggle label { display:flex; align-items:center; gap:6px; cursor:pointer; }
-.layer-toggle input { accent-color:#00ff88; }
- 
 .wave-source-badge { position:absolute; top:130px; right:15px; z-index:1250; background:rgba(8,15,35,.92); backdrop-filter:blur(12px); border-radius:8px; padding:5px 10px; font-size:.65rem; font-weight:700; letter-spacing:.5px; align-items:center; gap:5px; transition:opacity .3s; display:none; }
 .wave-source-badge.gas { border:1px solid rgba(0,255,136,.35); color:#00ff88; display:flex; }
 .wave-source-badge.fallback { border:1px solid rgba(255,200,0,.35); color:#ffcc00; display:flex; }
@@ -37,7 +32,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .wind-time-box input[type=range] { width:100%; accent-color:#71f7ff; }
 .wind-time-box .src { font-weight:400; color:rgba(255,255,255,.55); font-size:.58rem; }
  
-.wave-info-badge { position:absolute; top:170px; left:50%; transform:translateX(-50%); z-index:1150; background:rgba(8,15,35,.92); backdrop-filter:blur(16px); border:1px solid rgba(113,247,255,.25); border-radius:12px; padding:10px 18px; color:#71f7ff; font-size:.78rem; font-weight:600; text-align:center; max-width:420px; width:calc(100% - 30px); display:none; line-height:1.5; box-sizing:border-box; }
+.wave-info-badge { position:absolute; top:170px; left:50%; transform:translateX(-50%); z-index:1150; background:rgba(8,15,35,.92); backdrop-filter:blur(16px); border:1px solid rgba(113,247,255,.25); border-radius:12px; padding:10px 18px; color:#71f7ff; font-size:.78rem; font-weight:600; text-align:center; max-width:420px; width:calc(100% - 30px); display:none; flex-direction:column; align-items:center; line-height:1.5; box-sizing:border-box; }
 .wave-info-badge span { color:rgba(255,255,255,.7); font-weight:400; }
  
 .forecast { position:absolute; bottom:15px; left:15px; z-index:1100; width:430px; background:rgba(8,15,30,.92); backdrop-filter:blur(22px); border-radius:20px; border:1px solid rgba(255,255,255,.1); padding:18px; color:#fff; box-sizing:border-box; transition:all .4s cubic-bezier(.4,0,.2,1); }
@@ -47,20 +42,20 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .toggle-btn { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#71f7ff; padding:4px 10px; border-radius:6px; font-size:.75rem; cursor:pointer; font-weight:600; transition:all .3s ease; }
 .toggle-btn:hover { background:rgba(255,255,255,.2); }
 .radar-status-badge { background:rgba(0,255,136,.15); border:1px solid rgba(0,255,136,.3); color:#00ff88; padding:4px 10px; border-radius:6px; font-size:.7rem; font-weight:700; text-transform:uppercase; }
-.collapsible-content { max-height:540px; overflow:hidden; transition:max-height .4s ease-in-out, opacity .3s ease-in-out, margin-top .3s ease; opacity:1; margin-top:15px; }
+.collapsible-content { max-height:min(70dvh, 780px); overflow-y:auto; transition:max-height .4s ease-in-out, opacity .3s ease-in-out, margin-top .3s ease; opacity:1; margin-top:15px; }
 .forecast.collapsed .collapsible-content { max-height:0; opacity:0; margin-top:0; pointer-events:none; }
 .chart-container { position:relative; width:100%; height:170px; }
  
 .gas-wave-info { display:none; margin-bottom:10px; border-radius:10px; padding:10px 14px; flex-direction:column; gap:0; }
 .gas-wave-info.active { display:flex; }
-.gas-wave-info.mjo-style { background:rgba(0,255,136,.05); border:1px solid rgba(0,255,136,.2); }
-.gas-wave-info.kelvin-style { background:rgba(0,200,255,.05); border:1px solid rgba(0,200,255,.2); }
-.gas-wave-info.rossby-style { background:rgba(180,100,255,.05); border:1px solid rgba(180,100,255,.2); }
+.gas-wave-info.mjo-style { background:rgba(0,212,255,.05); border:1px solid rgba(0,212,255,.2); }
+.gas-wave-info.kelvin-style { background:rgba(0,204,255,.05); border:1px solid rgba(0,204,255,.2); }
+.gas-wave-info.rossby-style { background:rgba(204,102,255,.05); border:1px solid rgba(204,102,255,.2); }
 .gas-wave-row { display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.05); }
 .gas-wave-row:last-child { border-bottom:none; }
 .gas-wave-label { font-size:.68rem; color:rgba(255,255,255,.45); }
 .gas-wave-value { font-size:.78rem; font-weight:700; text-align:right; }
-.gas-wave-value.mjo-color { color:#00ff88; }
+.gas-wave-value.mjo-color { color:#00d4ff; }
 .gas-wave-value.kelvin-color { color:#00ccff; }
 .gas-wave-value.rossby-color { color:#cc66ff; }
 .gas-wave-value.warn { color:#ff9944; }
@@ -83,26 +78,32 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .wave-loading.active { display:block; }
 @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 .pulse { animation:pulse 1.5s infinite; }
+
+/* Komponen Tambahan Filter Gelombang Python */
+.wlsw { display:flex; gap:12px; justify-content:center; margin-top:6px; font-size:.68rem; color:#fff; }
+.wlsw label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+.wlsw input { accent-color:#00ff88; }
+.hov-wrap { position:relative; background:#0b162c; border-radius:8px; overflow:hidden; line-height:0; }
+.hov-wrap img { width:100%; height:150px; display:block; }
+.hov-box { position:absolute; top:0; bottom:0; border:1px dashed rgba(0,255,136,.85); border-width:0 1px; pointer-events:none; }
+.hov-d { position:absolute; left:4px; font-size:.58rem; line-height:1; color:rgba(255,255,255,.75); }
+.hov-ax { display:flex; justify-content:space-between; font-size:.58rem; color:rgba(255,255,255,.5); margin-top:3px; }
  
 @media(max-width:768px) {
     .radar-modes { top:10px; left:10px; right:10px; gap:5px; }
     .mode-btn { padding:8px 10px; font-size:.72rem; flex:1 1 calc(33% - 10px); }
     .forecast { left:10px; right:10px; width:calc(100% - 20px); bottom:20px; padding:14px; }
+    .forecast:not(.collapsed) .collapsible-content { max-height:min(calc(100dvh - 330px), 780px); }
+    body.panel-open .wave-info-badge, body.panel-open .wave-source-badge { display:none !important; }
+    body.panel-open.wave-mode .leaflet-control-zoom { display:none; }
     .leaflet-control-zoom { transition:transform .4s cubic-bezier(.4,0,.2,1); transform:translateY(-80px); }
     body.panel-open .leaflet-control-zoom { transform:translateY(-380px); }
     .wave-source-badge { top:120px; right:10px; }
     .wind-time-box { top:158px; right:10px; width:170px; }
-    .layer-toggle { top:118px; left:10px; }
 }
-/* Penegasan visual citra satelit: awan dibuat lebih terang, hujan lebih kontras */
-.leaflet-tile.layer-awan {
-    filter: brightness(1.7) contrast(1.4) saturate(1.2)
-            drop-shadow(0 0 2px rgba(255,255,255,.28));
-}
-.leaflet-tile.layer-hujan {
-    filter: saturate(2.8) contrast(1.55) brightness(1.15)
-            drop-shadow(0 0 3px rgba(0,0,0,.75));
-}
+/* Penegasan visual citra satelit OWM */
+.leaflet-tile.layer-awan { filter: brightness(1.7) contrast(1.4) saturate(1.2) drop-shadow(0 0 2px rgba(255,255,255,.28)); }
+.leaflet-tile.layer-hujan { filter: saturate(2.8) contrast(1.55) brightness(1.15) drop-shadow(0 0 3px rgba(0,0,0,.75)); }
 </style>
 </head>
 <body>
@@ -116,19 +117,21 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
  
 <div id="geoBanner"><span class="pulse">📡</span> Mendeteksi lokasi otomatis...</div>
  
- 
- 
 <div class="wave-source-badge" id="waveSourceBadge"><span class="pulse">⏳</span> Memuat data...</div>
  
 <div class="wind-time-box" id="windTimeBox">
     <div id="windTimeLabel">Sekarang</div>
     <input type="range" id="windTimeSlider" min="0" max="24" step="1" value="0" aria-label="Jam prakiraan angin">
-    <div class="src">ECMWF IFS 9 km · Open-Meteo (CC BY 4.0)</div>
+    <div class="src">ECMWF IFS 9 km · Open-Meteo</div>
 </div>
  
 <div class="wave-info-badge" id="waveInfoBadge">
     <div id="waveInfoText">Memuat data gelombang...</div>
     <div id="wavePhaseChip" style="margin-top:6px;"></div>
+    <div class="wlsw" id="waveToggles" style="display:none;">
+        <label><input type="checkbox" id="wtOlr" checked> OLR tersaring</label>
+        <label><input type="checkbox" id="wtVec" checked> Angin 850 hPa</label>
+    </div>
 </div>
  
 <div id="map"></div>
@@ -146,24 +149,36 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
         <div class="gas-wave-info" id="gasWavePanel">
             <div class="gas-wave-row"><span class="gas-wave-label">📡 Sumber Data</span><span class="gas-wave-value" id="gwSource">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">📅 Tanggal Data</span><span class="gas-wave-value" id="gwTanggal">—</span></div>
-            <div class="gas-wave-row"><span class="gas-wave-label" id="gwMetricLabel">📊 Indeks</span><span class="gas-wave-value" id="gwMetric">—</span></div>
-            <div class="gas-wave-row"><span class="gas-wave-label" id="gwDetailLabel">🔬 Detail</span><span class="gas-wave-value" id="gwDetail">—</span></div>
+            <div class="gas-wave-row"><span class="gas-wave-label" id="gwMetricLabel">🌀 Status & Label</span><span class="gas-wave-value" id="gwMetric">—</span></div>
+            <div class="gas-wave-row"><span class="gas-wave-label" id="gwDetailLabel">📊 OLR Tersaring</span><span class="gas-wave-value" id="gwDetail">—</span></div>
+            <div class="gas-wave-row"><span class="gas-wave-label">📉 Minimum 7 Hari</span><span class="gas-wave-value" id="gwPeak">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">↗️ Arah Propagasi</span><span class="gas-wave-value" id="gwArah">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">⚠️ Dampak Prakiraan</span><span class="gas-wave-value" id="gwImpact">—</span></div>
+            <div class="gas-wave-row"><span class="gas-wave-label">🎯 Keandalan Tepi</span><span class="gas-wave-value" id="gwRel">—</span></div>
         </div>
  
         <div id="standardChartSection">
             <div class="chart-container"><canvas id="forecastChart"></canvas></div>
         </div>
  
-        <div class="wave-loading pulse" id="waveLoadingIndicator">⏳ Mengambil data gelombang atmosfer...</div>
+        <div class="wave-loading pulse" id="waveLoadingIndicator">⏳ Mengambil data atmosfer satelit...</div>
         <div class="wave-data-panel" id="waveDataPanel">
-            <div class="wave-stat-row"><span class="wave-stat-label">Fase / Status Aktif</span><span class="wave-stat-value" id="wdPhase">—</span></div>
-            <div class="wave-stat-row"><span class="wave-stat-label">Amplitudo / Indeks</span><span class="wave-stat-value" id="wdAmplitude">—</span></div>
-            <div class="wave-stat-row"><span class="wave-stat-label">Parameter Kunci</span><span class="wave-stat-value" id="wdOLR">—</span></div>
-            <div class="wave-stat-row"><span class="wave-stat-label">Dampak Prakiraan</span><span class="wave-stat-value" id="wdImpact">—</span></div>
+            <div class="wave-stat-row"><span class="wave-stat-label">Status Fase / Aktif</span><span class="wave-stat-value" id="wdPhase">—</span></div>
+            <div class="wave-stat-row"><span class="wave-stat-label">Indeks (zKalibrasi)</span><span class="wave-stat-value" id="wdAmplitude">—</span></div>
+            <div class="wave-stat-row"><span class="wave-stat-label">Data Pendukung</span><span class="wave-stat-value" id="wdOLR">—</span></div>
             <div class="wave-phase-bar"><div class="wave-phase-fill" id="wdPhaseFill"></div></div>
             <div style="margin-top:10px;"><div class="chart-container" style="height:120px;"><canvas id="waveChart"></canvas></div></div>
+            
+            <div id="hovBlock" style="margin-top:10px; display:none;">
+                <div style="font-size:.62rem;color:rgba(255,255,255,.55);margin-bottom:4px">Hovmöller 90 hari — OLR tersaring (biru = konvektif, merah = kering)</div>
+                <div class="hov-wrap">
+                    <img id="hovImg" alt="Hovmöller">
+                    <div class="hov-box" id="hovBox"></div>
+                    <span class="hov-d" id="hovT0" style="top:3px"></span>
+                    <span class="hov-d" id="hovT1" style="bottom:3px"></span>
+                </div>
+                <div class="hov-ax"><span id="hovLon0"></span><span>garis putus: Indonesia 95–141°BT</span><span id="hovLon1"></span></div>
+            </div>
         </div>
  
         <div class="legend">
@@ -178,33 +193,41 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 /* ================================================================
    KONFIGURASI
 ================================================================ */
-const GAS_ENDPOINTS = {
-    mjo:    'https://script.google.com/macros/s/AKfycbyR7Kv31T_AXM2rgetTs3bI1NIvmF8Mv4-iDoNdRWrLVxqlb59y2PkSGAHjBt8R5q4kxQ/exec',
-    kelvin: 'https://script.google.com/macros/s/AKfycbyPJViMQGWZ15HUYyS5pCU2MiBLnmj9EQGUzw1YcOvVH274iZx6TXC_j7Tu6sLacBXQcg/exec',
-    rossby: 'https://script.google.com/macros/s/AKfycbyuSb0XwlrNX6ZkcdMRxvi7iq8SAYhxwnEsHqS01LUfIiUpn9e_d68ULGe6Zqt4Crqpug/exec'
-};
- 
+const DATA_BASE = './data/';
+const WAVES_BASE = './data/waves/';
+
 const urlParams = new URLSearchParams(window.location.search);
 let markerLat = parseFloat(urlParams.get('lat')) || -5.1477;
 let markerLon = parseFloat(urlParams.get('lon')) || 119.4327;
  
-// CATATAN KEAMANAN: batasi API key ini per-domain di dashboard OpenWeatherMap.
+// OWM API
 const owmApiKey = 'a6da7e4d60b79f9bc5e5a35f7ccc5885';
 let activeLayerName = 'gabungan';
-const wx = { awan: true, hujan: true, angin: true };   // saklar lapisan mode gabungan
+const wx = { awan: true, hujan: true, angin: true };
 let owmTileLayers = {};
-let waveOverlayLayer = null;
-let waveChartInstance = null;
 let markerObj = null;
 let map = null;
 let forecastChart = null;
-let windVelocityLayer = null;
- 
-// TTL cache disamakan dengan GAS (6 jam)
-const gasCache = { mjo: null, kelvin: null, rossby: null };
-const GAS_TTL_MS = { mjo: 6 * 3600000, kelvin: 6 * 3600000, rossby: 6 * 3600000 };
-const gasCacheTS = { mjo: 0, kelvin: 0, rossby: 0 };
- 
+
+// Wave Python Layers
+const WAVES = ['mjo', 'kelvin', 'rossby'];
+const VMAX = { mjo: 30, kelvin: 15, rossby: 15 };
+const WAVE_COLORS = { mjo: '#00d4ff', kelvin: '#00ccff', rossby: '#cc66ff' };
+const WAVE_NAMES = { mjo: 'MJO', kelvin: 'Kelvin Wave', rossby: 'Rossby Wave (ER n=1)' };
+const OLR_GRAD = 'linear-gradient(to right,#08306b,#4292c6,#fff,#fb6a4a,#a50f15)';
+
+let waveImgLayer = null;
+let waveVecLayer = null;
+let waveChartInstance = null;
+let waveStore = {};
+
+/* Helper Numbers */
+const n = (x, d = 1) => (typeof x === 'number' && isFinite(x)) ? x.toFixed(d) : '—';
+const sg = (x, d = 1) => n(x, d) === '—' ? '—' : (x >= 0 ? '+' : '') + Number(x).toFixed(d);
+const esc = s => String(s ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const windOk = m => m.vektor && m.tanggalAngin && Math.abs(Date.parse(m.tanggal) - Date.parse(m.tanggalAngin)) <= 3 * 864e5;
+const fl = lon => lon > 180 ? (360 - lon) + '°BB' : lon + '°BT';
+
 /* ================================================================
    PETA
 ================================================================ */
@@ -220,41 +243,34 @@ function initMap(lat, lon) {
     map = L.map('map', { zoomControl: false }).setView([lat, lon], 9);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.on('moveend', onWindMove);
+    
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16
     }).addTo(map);
+    
     markerObj = L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
 
-    // --- TAMBAHAN KODE PEMBACA PROVINCES.JSON ---
+    // GeoJSON Batas Provinsi
     fetch('provinces.json')
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             L.geoJSON(data, {
-                style: {
-                    color: "#00ff88", 
-                    weight: 1,        
-                    opacity: 0.4,     
-                    fillOpacity: 0    
-                },
-                interactive: false    
+                style: { color: "#00ff88", weight: 1, opacity: 0.4, fillOpacity: 0 },
+                interactive: false
             }).addTo(map);
         })
         .catch(err => console.error("Gagal memuat provinces.json: ", err));
-    // --------------------------------------------
 
-    // zIndex: awan di bawah, hujan di atas; partikel angin (canvas) otomatis paling atas
-    // Awan diperkuat agar pola tutupan awan terlihat jelas pada basemap gelap.
     owmTileLayers['awan'] = L.tileLayer(
         `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
         { opacity: 0.72, zIndex: 3, className: 'layer-awan' }
     );
-
-    // Hujan tetap berada di atas awan dengan warna radar yang lebih tegas.
     owmTileLayers['hujan'] = L.tileLayer(
         `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
         { opacity: 0.98, zIndex: 4, className: 'layer-hujan' }
     );
-    applyWeatherLayers();          // awan + hujan + angin langsung tampil
+    
+    applyWeatherLayers();
     updateLegendUI('gabungan');
     initForecastChart();
     loadForecastMetrics();
@@ -263,25 +279,18 @@ function initMap(lat, lon) {
 /* ================================================================
    LAPISAN GABUNGAN (awan + hujan + angin)
 ================================================================ */
-function windActive() {
-    return activeLayerName === 'angin_windy' || (activeLayerName === 'gabungan' && wx.angin);
-}
- 
-function removeWeatherLayers() {
-    ['awan', 'hujan'].forEach(k => owmTileLayers[k]?.remove());
-}
+function windActive() { return activeLayerName === 'gabungan' && wx.angin; }
+function removeWeatherLayers() { ['awan', 'hujan'].forEach(k => owmTileLayers[k]?.remove()); }
  
 function applyWeatherLayers() {
     if (!map || activeLayerName !== 'gabungan') return;
     ['awan', 'hujan'].forEach(k => {
         const l = owmTileLayers[k];
-        if (!l) return;
         if (wx[k] && !map.hasLayer(l)) l.addTo(map);
         if (!wx[k] && map.hasLayer(l)) l.remove();
     });
-    if (wx.angin) {
-        loadWindyAnimation();
-    } else {
+    if (wx.angin) loadWindyAnimation();
+    else {
         stopWindAnimation();
         document.getElementById('waveSourceBadge').style.display = 'none';
     }
@@ -289,36 +298,27 @@ function applyWeatherLayers() {
 }
  
 /* ================================================================
-   ANIMASI ANGIN
+   ANIMASI ANGIN OWM (ECMWF)
 ================================================================ */
-// Folder data angin. Bila halaman dibuka lewat pratinjau/iframe, isi alamat penuh, mis.
-// 'https://USERNAME.github.io/REPO/data/'
-const WIND_DATA_BASE = './data/';
 const WIND_DETAIL_MIN_ZOOM = 8;
 const WIND_REFRESH_MS = 10 * 60 * 1000;
-let windPacks = {};
-let windTier = null;
-let windOffsetH = 0;
-let windTimer = null;
-let windRetry = null;
-const windFail = {};         // tier -> {until, code}
+let windPacks = {}, windTier = null, windOffsetH = 0;
+let windTimer = null, windRetry = null, windFail = {};
+let weatherVelocityLayer = null;
  
 async function loadWindPack(tier) {
     const c = windPacks[tier];
     if (c && Date.now() - c.fetched < WIND_REFRESH_MS) return c;
-    // Cooldown setelah gagal/429: jangan menghujani server; pakai data lama bila ada
     const f = windFail[tier];
     if (f && Date.now() < f.until) {
         if (c) return c;
-        throw new Error(`wind-${tier}.json dibatasi server (HTTP ${f.code}), mencoba lagi otomatis`);
+        throw new Error(`wind-${tier}.json dibatasi server`);
     }
-    const res = await fetch(`${WIND_DATA_BASE}wind-${tier}.json?t=${Date.now()}`, { cache: 'no-store' });
+    const res = await fetch(`${DATA_BASE}wind-${tier}.json?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) {
-        const ra = parseInt(res.headers.get('Retry-After'), 10);
-        const waitS = res.status === 429 ? (ra > 0 ? ra : 60) : 30;
-        windFail[tier] = { until: Date.now() + waitS * 1000, code: res.status };
+        windFail[tier] = { until: Date.now() + 30000, code: res.status };
         if (c) return c;
-        throw new Error(`wind-${tier}.json HTTP ${res.status} — ${res.url}`);
+        throw new Error(`HTTP ${res.status}`);
     }
     delete windFail[tier];
     const pack = await res.json();
@@ -331,7 +331,7 @@ async function loadWindPack(tier) {
 function buildVelocityData(pack, tMs) {
     const T = pack.timesMs, n = T.length;
     let i = 0, w = 0;
-    if (tMs >= T[n - 1]) { i = n - 1; }
+    if (tMs >= T[n - 1]) i = n - 1;
     else if (tMs > T[0]) {
         while (i < n - 2 && T[i + 1] <= tMs) i++;
         w = (tMs - T[i]) / (T[i + 1] - T[i]);
@@ -365,7 +365,7 @@ function fmtWITA(ms, withDay) {
 async function loadWindyAnimation(forceReload) {
     const badge = document.getElementById('waveSourceBadge');
     const box = document.getElementById('windTimeBox');
-    if (!windVelocityLayer) {
+    if (!weatherVelocityLayer) {
         badge.className = 'wave-source-badge loading';
         badge.innerHTML = `<span class="pulse">⏳</span> Memuat angin ECMWF...`;
         badge.style.display = 'flex';
@@ -373,51 +373,43 @@ async function loadWindyAnimation(forceReload) {
     try {
         if (forceReload) windPacks = {};
         const [detail, regional] = await Promise.all([loadWindPack('detail'), loadWindPack('regional')]);
-        if (!windActive()) return;   // mode/saklar sudah berubah
+        if (!windActive()) return; 
  
         const tier = pickWindTier(detail);
         const pack = tier === 'detail' ? detail : regional;
         const tMs = Date.now() + windOffsetH * 3600000;
         const data = buildVelocityData(pack, tMs);
  
-        if (!windVelocityLayer || windTier !== tier) {
-            if (windVelocityLayer) windVelocityLayer.remove();
-            windVelocityLayer = L.velocityLayer({
+        if (!weatherVelocityLayer || windTier !== tier) {
+            if (weatherVelocityLayer) weatherVelocityLayer.remove();
+            weatherVelocityLayer = L.velocityLayer({
                 displayValues: true,
                 displayOptions: {
                     velocityType: 'Angin 10 m', position: 'bottomleft', emptyString: 'Tidak ada data angin',
-                    angleConvention: 'meteoCW', displayPosition: 'bottomleft',
-                    displayEmptyString: 'Tidak ada data', speedUnit: 'm/s'
+                    angleConvention: 'meteoCW', displayPosition: 'bottomleft', speedUnit: 'm/s'
                 },
-                data: data,
-                maxVelocity: 15,
-                velocityScale: tier === 'detail' ? 0.006 : 0.005,
-                particleAge: 90,
-                lineWidth: 1.5,
+                data: data, maxVelocity: 15, velocityScale: tier === 'detail' ? 0.006 : 0.005,
+                particleAge: 90, lineWidth: 1.5,
                 colorScale: ["#3288bd", "#66c2a5", "#abdda4", "#e6f598", "#fee08b", "#fdae61", "#f46d43", "#d53e4f"]
             });
-            windVelocityLayer.addTo(map);
+            weatherVelocityLayer.addTo(map);
             windTier = tier;
         } else {
-            windVelocityLayer.setData(data);
+            weatherVelocityLayer.setData(data);
         }
  
         badge.className = 'wave-source-badge gas';
         badge.innerHTML = `✅ ECMWF 9 km · grid ${tier === 'detail' ? 'detail 0,125°' : 'regional 0,75°'} · ${fmtWITA(tMs, false)}`;
-        document.getElementById('windTimeLabel').textContent =
-            windOffsetH === 0 ? 'Sekarang · ' + fmtWITA(tMs, false) : `+${windOffsetH} jam · ${fmtWITA(tMs, true)}`;
+        document.getElementById('windTimeLabel').textContent = windOffsetH === 0 ? 'Sekarang · ' + fmtWITA(tMs, false) : `+${windOffsetH} jam · ${fmtWITA(tMs, true)}`;
         box.style.display = 'flex';
  
         clearInterval(windTimer);
         windTimer = setInterval(() => { if (windActive()) loadWindyAnimation(); }, WIND_REFRESH_MS);
     } catch (err) {
-        console.error("Gagal memuat data angin:", err);
         badge.className = 'wave-source-badge fallback';
-        badge.innerHTML = `⚠️ Angin: ${String(err.message || err).slice(0, 200)}`;
+        badge.innerHTML = `⚠️ Angin: ${err.message || 'Gagal memuat'}`;
         clearTimeout(windRetry);
-        windRetry = setTimeout(() => {
-            if (windActive()) loadWindyAnimation();
-        }, 60000);
+        windRetry = setTimeout(() => { if (windActive()) loadWindyAnimation(); }, 60000);
     }
 }
  
@@ -427,26 +419,19 @@ async function onWindMove() {
 }
  
 function stopWindAnimation() {
-    clearInterval(windTimer);
-    windTimer = null;
-    if (windVelocityLayer) { windVelocityLayer.remove(); windVelocityLayer = null; }
+    clearInterval(windTimer); windTimer = null;
+    if (weatherVelocityLayer) { weatherVelocityLayer.remove(); weatherVelocityLayer = null; }
     windTier = null;
-    const box = document.getElementById('windTimeBox');
-    if (box) box.style.display = 'none';
+    document.getElementById('windTimeBox').style.display = 'none';
 }
  
-document.addEventListener('DOMContentLoaded', () => {
-    const sl = document.getElementById('windTimeSlider');
-    let deb = null;
-    sl.addEventListener('input', () => {
-        windOffsetH = parseInt(sl.value, 10);
-        clearTimeout(deb);
-        deb = setTimeout(() => { if (windActive()) loadWindyAnimation(); }, 120);
-    });
+document.getElementById('windTimeSlider').addEventListener('input', (e) => {
+    windOffsetH = parseInt(e.target.value, 10);
+    if (windActive()) loadWindyAnimation();
 });
  
 /* ================================================================
-   GEOLOCATION
+   GEOLOCATION & UI PANEL
 ================================================================ */
 function detectLocation() {
     const banner = document.getElementById('geoBanner');
@@ -459,8 +444,7 @@ function detectLocation() {
     }
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            markerLat = pos.coords.latitude;
-            markerLon = pos.coords.longitude;
+            markerLat = pos.coords.latitude; markerLon = pos.coords.longitude;
             banner.innerHTML = `✅ Lokasi GPS terdeteksi (±${Math.round(pos.coords.accuracy)}m)`;
             setTimeout(() => banner.classList.add('hidden'), 3500);
             initMap(markerLat, markerLon);
@@ -468,10 +452,8 @@ function detectLocation() {
             if (forecastChart) loadForecastMetrics();
         },
         (err) => {
-            const reason = err.code === 2 ? 'GPS tidak tersedia' : err.code === 3 ? 'Waktu habis' : 'Izin ditolak';
-            banner.innerHTML = `⚠️ ${reason} — pakai koordinat default`;
-            banner.style.borderColor = 'rgba(255,180,0,0.4)';
-            banner.style.color = '#ffcc00';
+            banner.innerHTML = `⚠️ GPS ditolak/gagal — pakai koordinat default`;
+            banner.style.color = '#ffcc00'; banner.style.borderColor = 'rgba(255,180,0,0.4)';
             setTimeout(() => banner.classList.add('hidden'), 4000);
             initMap(markerLat, markerLon);
             updateLocationInfo(markerLat, markerLon, false);
@@ -481,34 +463,17 @@ function detectLocation() {
 }
  
 function updateLocationInfo(lat, lon, isGPS) {
-    document.getElementById('locationInfo').innerHTML =
-        `${isGPS ? '📡 GPS' : '📍 Default'} &nbsp;${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+    document.getElementById('locationInfo').innerHTML = `${isGPS ? '📡 GPS' : '📍 Default'} &nbsp;${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
 }
  
-/* ================================================================
-   TOGGLE PANEL
-================================================================ */
 function toggleForecast() {
     const panel = document.getElementById('forecastPanel');
     const btn = document.getElementById('toggleBtnText');
     panel.classList.toggle('collapsed');
     document.body.classList.toggle('panel-open');
     btn.innerText = panel.classList.contains('collapsed') ? 'Tampilkan' : 'Sembunyikan';
-    setTimeout(() => {
-        if (forecastChart) forecastChart.resize();
-        if (waveChartInstance) waveChartInstance.resize();
-    }, 420);
+    setTimeout(() => { forecastChart?.resize(); waveChartInstance?.resize(); }, 420);
 }
- 
-/* ================================================================
-   WAVE OVERLAY LAYERS (lapisan pendukung, bukan sinyal gelombang)
-================================================================ */
-const waveOverlays = {
-    mjo:    () => L.tileLayer(`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,        { opacity: 0.55 }),
-    kelvin: () => L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`, { opacity: 0.70 }),
-    rossby: () => L.tileLayer(`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,          { opacity: 0.50 })
-};
-const waveMapView = { mjo: [0, 120, 3], kelvin: [-2, 120, 4], rossby: [-5, 115, 4] };
  
 /* ================================================================
    LEGENDA
@@ -516,14 +481,11 @@ const waveMapView = { mjo: [0, 120, 3], kelvin: [-2, 120, 4], rossby: [-5, 115, 
 const RAIN_GRAD = 'linear-gradient(to right, #1d3ede, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f)';
 const WIND_GRAD = 'linear-gradient(to right, #3288bd, #abdda4, #fee08b, #f46d43, #d53e4f)';
 const CLOUD_GRAD = 'linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.9))';
+ 
 const legendConfig = {
     awan:   { gradient: CLOUD_GRAD, labels: ['Cerah', 'Berawan Tipis', 'Mendung Pekat'] },
     hujan:  { gradient: RAIN_GRAD,  labels: ['Gerimis', 'Ringan', 'Sedang', 'Lebat', 'Ekstrem'] },
-    mjo:    { gradient: CLOUD_GRAD, labels: ['Cerah', 'Berawan', 'Awan tebal (proxy konveksi)'] },
-    kelvin: { gradient: RAIN_GRAD,  labels: ['Gerimis', 'Ringan', 'Sedang', 'Lebat', 'Ekstrem'] },
-    rossby: { gradient: WIND_GRAD,  labels: ['Tenang', 'Sedang', 'Kencang', 'Sangat Kencang', 'Badai'] },
-    angin:  { gradient: WIND_GRAD,  labels: ['Tenang', 'Sedang', 'Kencang', 'Sangat Kencang', 'Badai'] },
-    angin_windy: { gradient: WIND_GRAD, labels: ['Tenang', 'Sedang', 'Kencang', 'Sangat Kencang', 'Badai'] }
+    angin:  { gradient: WIND_GRAD,  labels: ['Tenang', 'Sedang', 'Kencang', 'Sangat Kencang', 'Badai'] }
 };
  
 function updateLegendUI(mode) {
@@ -534,400 +496,233 @@ function updateLegendUI(mode) {
         if (wx.awan)  rows.push(['☁️ Awan', 'awan']);
         if (wx.hujan) rows.push(['🌧️ Hujan', 'hujan']);
         if (wx.angin) rows.push(['🌬️ Angin 10 m', 'angin']);
-        g.style.display = 'none';
-        s.style.display = 'block';
+        g.style.display = 'none'; s.style.display = 'block';
         s.innerHTML = rows.map(([t, k]) =>
-            `<div style="margin-top:6px">
-               <div style="font-size:.62rem;opacity:.8;margin-bottom:3px">${t}</div>
-               <div class="gradient" style="background:${legendConfig[k].gradient}"></div>
-               <div class="scale">${legendConfig[k].labels.map(l => `<span>${l}</span>`).join('')}</div>
-             </div>`).join('');
+            `<div style="margin-top:6px"><div style="font-size:.62rem;opacity:.8;margin-bottom:3px">${t}</div>
+             <div class="gradient" style="background:${legendConfig[k].gradient}"></div>
+             <div class="scale">${legendConfig[k].labels.map(l => `<span>${l}</span>`).join('')}</div></div>`).join('');
         return;
     }
-    g.style.display = ''; s.style.display = '';
-    const cfg = legendConfig[mode] || legendConfig['awan'];
-    g.style.background = cfg.gradient;
-    s.innerHTML = cfg.labels.map(l => `<span>${l}</span>`).join('');
+    if (WAVES.includes(mode)) {
+        const v = waveStore[mode]?.meta?.vmax ?? VMAX[mode];
+        g.style.display = ''; g.style.background = OLR_GRAD; s.style.display = '';
+        s.innerHTML = [`−${v} W/m² (konvektif)`, '0', `+${v} W/m² (tertekan)`].map(t => `<span>${t}</span>`).join('');
+        return;
+    }
 }
  
 /* ================================================================
-   WAVE META — helper, klasifikasi & template
+   GELOMBANG PYTHON — Fetch, Render Panel, Update Layers
 ================================================================ */
-const num    = (x, d = 2) => (x === null || x === undefined || x === '' || !isFinite(Number(x))) ? '—' : Number(x).toFixed(d);
-const signed = (x, d = 1) => num(x, d) === '—' ? '—' : (Number(x) >= 0 ? '+' : '') + Number(x).toFixed(d);
- 
-// Lokasi pusat konveksi MJO per fase (skema RMM/OMI standar)
-const MJO_PHASES = ['', 'Belahan Barat & Afrika', 'Samudra Hindia (barat)', 'Samudra Hindia (timur)',
-    'Maritime Continent', 'Maritime Continent', 'Pasifik Barat', 'Pasifik Barat', 'Belahan Barat & Afrika'];
- 
-function mjoImpact(phase, amp) {
-    if (!(amp >= 1))                return { warn: false, text: '⚖️ MJO lemah (amplitudo < 1) — sinyal tidak dominan' };
-    if (phase === 4 || phase === 5) return { warn: true,  text: '⚠️ Fase basah Maritime Continent — peluang hujan meningkat' };
-    if (phase === 3 || phase === 6) return { warn: false, text: '🌦 Fase transisi — peluang hujan meningkat sedang' };
-    return                                 { warn: false, text: '🌤 Fase kering Maritime Continent — hujan cenderung berkurang' };
-}
- 
-// Kelvin (proxy u850 dari GAS): aktif = sinyal kuat DAN propagasi ke timur terkonfirmasi
-function kelvinState(g) {
-    return { aktif: Boolean(g.aktif), sigma: Number(g.anomaliU850),
-             indeks: Number(g.indeksKelvin), r: Number(g.korelasiPropagasi) };
-}
- 
-function dataAgeDays(tanggal) {
-    if (!tanggal) return null;
-    let t = Date.parse(tanggal);
-    if (isNaN(t)) {
-        const m = String(tanggal).match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
-        if (m) t = Date.UTC(+m[3], +m[2] - 1, +m[1]);
-    }
-    return isNaN(t) ? null : (Date.now() - t) / 86400000;
-}
- 
-// Validasi respons GAS: nilai hilang/ngawur -> null
-function validateGas(mode, g) {
-    if (!g || typeof g !== 'object') return null;
-    const fin = v => v !== null && v !== '' && isFinite(Number(v));
-    let ok = false;
-    if (mode === 'mjo')    ok = Number.isInteger(Number(g.fase)) && g.fase >= 1 && g.fase <= 8 && fin(g.amplitudo) && Number(g.amplitudo) >= 0;
-    if (mode === 'kelvin') ok = fin(g.indeksKelvin) && fin(g.anomaliU850);
-    if (mode === 'rossby') ok = fin(g.vortisitas) && fin(g.anomaliAngin);
-    if (!ok) console.warn(`[GAS ${mode}] respons tidak valid:`, g);
-    return ok ? g : null;
-}
- 
-const waveMeta = {
-    mjo: {
-        name: 'MJO', color: '#00d4ff', chartColor: '#00d4ff',
-        chartLabel: 'Anomali curah hujan harian LOKAL (mm) — bukan indeks MJO',
-        infoHtml: (phase, amp, imp) =>
-            `MJO <b>Fase ${phase}</b> (${MJO_PHASES[phase]}) — amplitudo <b>${num(amp, 2)}</b> <span style="color:#00ff88;font-size:0.7em;">[NOAA]</span>.<br><span>${imp.text}</span>`,
-        panelStyle: 'mjo-style', valueClass: 'mjo-color'
-    },
-    kelvin: {
-        name: 'Kelvin Wave', color: '#00ccff', chartColor: '#00ccff',
-        chartLabel: 'Prakiraan hujan LOKAL per 3 jam (mm)',
-        infoHtml: (st) =>
-            `Kelvin Wave <b>${st.aktif ? 'Terdeteksi (proxy)' : 'Belum terkonfirmasi'}</b> — anomali u850 <b>${num(st.sigma, 2)} m/s</b> · korelasi propagasi <b>${num(st.r, 2)}</b> <span style="color:#ffcc00;font-size:0.7em;">[proxy Open-Meteo]</span>.<br>
-            <span>${st.aktif ? '〰️ Pola bergerak ke timur — peluang hujan meningkat 1–3 hari.'
-                             : 'Pola u850 lemah atau belum terbukti bergerak ke timur.'}</span>`,
-        panelStyle: 'kelvin-style', valueClass: 'kelvin-color'
-    },
-    rossby: {
-        name: 'Rossby Wave', color: '#cc66ff', chartColor: '#cc66ff',
-        chartLabel: 'Angin meridional v850 LOKAL (m/s): + utara, − selatan',
-        infoHtml: (aktif, vort) =>
-            `Rossby Wave <b>${aktif ? 'Terdeteksi (proxy)' : 'Lemah'}</b> — vortisitas <b>${num(vort, 2)} × 10⁻⁵ s⁻¹</b> <span style="color:#ffcc00;font-size:0.7em;">[proxy Open-Meteo]</span>.<br>
-            <span>${aktif ? '🌊 Pola bergerak ke barat — dapat mengganggu sirkulasi monsun Asia Tenggara.'
-                          : 'Rossby Wave saat ini tidak signifikan.'}</span>`,
-        panelStyle: 'rossby-style', valueClass: 'rossby-color'
-    }
-};
- 
-/* ================================================================
-   WAVE CHART (data lokal Open-Meteo)
-================================================================ */
-function renderWaveChart(label, color, data, labels) {
-    const ctx = document.getElementById('waveChart').getContext('2d');
-    if (waveChartInstance) { waveChartInstance.destroy(); waveChartInstance = null; }
-    waveChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                label, data,
-                backgroundColor: data.map(v => v >= 0 ? color + 'aa' : 'rgba(255,80,80,0.6)'),
-                borderColor: color, borderWidth: 1, borderRadius: 3
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                title: { display: true, text: label, color: 'rgba(255,255,255,0.55)', font: { size: 9, weight: '400' }, padding: { bottom: 4 } },
-                tooltip: { backgroundColor: 'rgba(8,15,30,0.9)', titleColor: color, borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 }
-            },
-            scales: {
-                x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 9 }, maxRotation: 0, autoSkip: true }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                y: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
-            }
-        }
-    });
-}
- 
-async function fetchLocalForecast() {
-    const url = 'https://api.open-meteo.com/v1/forecast'
-        + `?latitude=${markerLat}&longitude=${markerLon}`
-        + '&daily=precipitation_sum'
-        + '&hourly=precipitation,wind_speed_850hPa,wind_direction_850hPa'
-        + '&wind_speed_unit=ms&timezone=auto&forecast_days=14';
+async function fetchWaveData(mode) {
     try {
-        const r = await fetch(url);
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return await r.json();
-    } catch (e) {
-        console.warn('[Open-Meteo] gagal:', e.message);
-        return null;
-    }
-}
- 
-const r1 = x => Math.round(x * 10) / 10;
- 
-function chartMJO(om) {
-    const rain = (om?.daily?.precipitation_sum || []).slice(0, 14);
-    const valid = rain.filter(v => v != null);
-    if (!valid.length) return { labels: [], data: [] };
-    const mean = valid.reduce((a, b) => a + b, 0) / valid.length;
-    return { labels: rain.map((_, i) => i === 0 ? 'Hari ini' : `H+${i}`), data: rain.map(d => r1((d ?? mean) - mean)) };
-}
-function chartKelvin(om) {
-    const p = om?.hourly?.precipitation || [], t = om?.hourly?.time || [];
-    const labels = [], data = [];
-    for (let i = 0; i + 2 < Math.min(p.length, 48); i += 3) {
-        data.push(r1((p[i] ?? 0) + (p[i + 1] ?? 0) + (p[i + 2] ?? 0)));
-        labels.push(`${(t[i] || '').slice(8, 10)}/${(t[i] || '').slice(11, 13)}h`);
-    }
-    return { labels, data };
-}
-function chartRossby(om) {
-    const sp = om?.hourly?.wind_speed_850hPa || [], dr = om?.hourly?.wind_direction_850hPa || [], t = om?.hourly?.time || [];
-    const labels = [], data = [];
-    for (let i = 0; i < Math.min(sp.length, 120); i += 6) {
-        if (sp[i] == null || dr[i] == null) continue;
-        data.push(r1(-sp[i] * Math.cos(dr[i] * Math.PI / 180)));
-        labels.push(`${(t[i] || '').slice(8, 10)}/${(t[i] || '').slice(11, 13)}h`);
-    }
-    return { labels, data };
-}
- 
-/* ================================================================
-   GAS FETCH — cache + validasi
-================================================================ */
-async function fetchGAS(mode) {
-    const now = Date.now();
-    if (gasCache[mode] && (now - gasCacheTS[mode] < GAS_TTL_MS[mode])) {
-        return { data: gasCache[mode], source: 'cache' };
-    }
-    const endpoint = GAS_ENDPOINTS[mode];
-    if (!endpoint || endpoint.includes('YOUR_')) {
-        return { data: null, source: 'fallback', error: 'Endpoint belum dikonfigurasi' };
-    }
-    try {
-        const url = endpoint.includes('?') ? endpoint + '&action=get' : endpoint + '?action=get';
-        const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+        const res = await fetch(`${WAVES_BASE}${mode}.json?t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (json.error) throw new Error('GAS: ' + json.error);
-        if (validateGas(mode, json)) { gasCache[mode] = json; gasCacheTS[mode] = now; }
-        return { data: json, source: 'gas' };
-    } catch (err) {
-        console.warn(`[GAS ${mode}] Gagal:`, err.message);
-        return { data: null, source: 'fallback', error: err.message };
+        const meta = await res.json();
+        waveStore[mode] = { meta, t: Date.now() };
+        return meta;
+    } catch (e) {
+        if (waveStore[mode]) return waveStore[mode].meta;
+        throw e;
     }
 }
- 
-function setWaveBadge(mode, source, g) {
-    const badge = document.getElementById('waveSourceBadge');
-    const label = { mjo: 'NOAA ROMI/OMI', kelvin: 'Proxy u850', rossby: 'Proxy v850' }[mode];
-    badge.style.display = 'flex';
-    if (!g) { badge.className = 'wave-source-badge fallback'; badge.innerHTML = '⚠️ Data tidak tersedia'; return; }
-    const age = dataAgeDays(g.tanggal);
-    if (age !== null && age > 4) {
-        badge.className = 'wave-source-badge fallback';
-        badge.innerHTML = `⚠️ ${label} · data ${Math.floor(age)} hari lalu`;
-        return;
+
+async function updateWaveLayers(mode, m) {
+    if (activeLayerName !== mode) return;
+    const showOlr = document.getElementById('wtOlr').checked;
+    const isWindOk = windOk(m);
+    const showVec = document.getElementById('wtVec').checked && isWindOk;
+    
+    document.getElementById('wtVec').disabled = !isWindOk;
+    document.getElementById('wtVec').parentElement.style.opacity = isWindOk ? '1' : '0.45';
+
+    // Image Overlay (OLR)
+    if (showOlr && (!waveImgLayer || waveImgLayer._mode !== mode)) {
+        if (waveImgLayer) waveImgLayer.remove();
+        waveImgLayer = L.imageOverlay(`${WAVES_BASE}${mode}.png?v=${m.tanggal}`, m.bounds, { opacity: 0.85, zIndex: 5, interactive: false }).addTo(map);
+        waveImgLayer._mode = mode;
+    } else if (!showOlr && waveImgLayer) {
+        waveImgLayer.remove(); waveImgLayer = null;
     }
-    badge.className = 'wave-source-badge gas';
-    badge.innerHTML = `✅ ${label} · harian · ${source === 'cache' ? 'cache' : 'via GAS'}`;
-}
- 
-/* ================================================================
-   PANEL INFO GAS
-================================================================ */
-function updateGasPanel(mode, g) {
-    const panel = document.getElementById('gasWavePanel');
-    if (!g) { panel.classList.remove('active'); return; }
-    const meta = waveMeta[mode], vc = meta.valueClass;
-    panel.className = `gas-wave-info active ${meta.panelStyle}`;
-    const set = (id, text, cls) => { const el = document.getElementById(id); el.className = `gas-wave-value ${cls || vc}`; el.textContent = text; };
-    const lbl = (id, text) => { document.getElementById(id).textContent = text; };
-    set('gwTanggal', g.tanggal || '—');
- 
-    if (mode === 'mjo') {
-        const phase = Number(g.fase), amp = Number(g.amplitudo), imp = mjoImpact(phase, amp);
-        set('gwSource', 'NOAA PSL ' + (g.sumberIndeks || 'ROMI/OMI') + ' (harian)');
-        lbl('gwMetricLabel', '🌀 Fase & Lokasi');   set('gwMetric', g.labelFase || `Fase ${phase} — ${MJO_PHASES[phase]}`);
-        lbl('gwDetailLabel', '📊 Amplitudo');        set('gwDetail', `${num(amp, 3)} (${amp >= 1 ? 'Aktif' : 'Lemah'})`);
-        set('gwArah', 'Bergerak ke Timur (propagasi intra-musiman)');
-        set('gwImpact', imp.text, imp.warn ? 'warn' : 'safe');
-    } else if (mode === 'kelvin') {
-        const st = kelvinState(g);
-        set('gwSource', 'Open-Meteo u850 (proxy)');
-        lbl('gwMetricLabel', '〰️ Status & Label');  set('gwMetric', g.label || (st.aktif ? 'Terdeteksi' : 'Lemah'));
-        lbl('gwDetailLabel', '💨 Anomali u850');      set('gwDetail', `${num(st.sigma, 2)} m/s (indeks ${num(st.indeks, 2)} · r=${num(st.r, 2)})`);
-        set('gwArah', g.arah || '—');
-        set('gwImpact', g.dampak || '—', st.aktif ? 'warn' : 'safe');
-    } else if (mode === 'rossby') {
-        const aktif = Boolean(g.aktif);
-        set('gwSource', 'Open-Meteo v850 (proxy)');
-        lbl('gwMetricLabel', '🌊 Status & Label');  set('gwMetric', g.label || (aktif ? 'Terdeteksi' : 'Lemah'));
-        lbl('gwDetailLabel', '🌀 Vortisitas & Angin'); set('gwDetail', `Vort: ${num(g.vortisitas, 3)} × 10⁻⁵ s⁻¹ | σ v850: ${num(g.anomaliAngin, 2)} m/s`);
-        set('gwArah', g.arah || '—');
-        set('gwImpact', g.dampak || (aktif ? 'Gangguan sirkulasi monsun' : 'Monsun relatif stabil'), aktif ? 'warn' : 'safe');
+
+    // Vector Layer (Anomali Angin)
+    if (showVec && (!waveVecLayer || waveVecLayer._mode !== mode)) {
+        if (waveVecLayer) waveVecLayer.remove();
+        try {
+            const r = await fetch(`${WAVES_BASE}${mode}-vec.json?v=${m.tanggalAngin}`, { cache: 'no-cache' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const data = await r.json();
+            if (activeLayerName !== mode || !document.getElementById('wtVec').checked) return;
+            waveVecLayer = L.velocityLayer({
+                displayValues: false, data: data, maxVelocity: 5, velocityScale: 0.02, particleAge: 90, lineWidth: 1.5,
+                colorScale: ['#ffffff', '#d6f0ff', '#fff2a8', '#ffd166', '#ff9f1c', '#ff5d5d']
+            }).addTo(map);
+            waveVecLayer._mode = mode;
+        } catch(e) { console.warn('Gagal memuat vektor gelombang:', e); }
+    } else if (!showVec && waveVecLayer) {
+        waveVecLayer.remove(); waveVecLayer = null;
     }
-    panel.classList.add('active');
 }
- 
-/* ================================================================
-   LOAD WAVE DATA (MJO / Kelvin / Rossby)
-   Bila data tidak tersedia, ditampilkan "tidak tersedia" — tidak diestimasi dari cuaca lokal.
-================================================================ */
-async function loadWaveData(mode) {
-    const loading = document.getElementById('waveLoadingIndicator');
-    const wavePanel = document.getElementById('waveDataPanel');
-    const infoBadge = document.getElementById('waveInfoBadge');
- 
-    loading.classList.add('active');
-    wavePanel.classList.remove('active');
+
+['wtOlr', 'wtVec'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+        const m = waveStore[activeLayerName]?.meta;
+        if (m) updateWaveLayers(activeLayerName, m);
+    });
+});
+
+function renderWavePanel(mode, m) {
+    const col = WAVE_COLORS[mode];
+    const rel = m.keandalan, t7 = m.ringkas7hari || { nilai: [] };
+    const z = m.zKalibrasi;
+    const isAktif = m.aktif;
+    
+    // Dampak Logic
+    const dampak = (m.fase === 'konvektif' && !isAktif)
+        ? 'Sinyal konvektif belum terkonfirmasi (keandalan/propagasi lemah) — bukan dasar prakiraan hujan'
+        : m.dampak;
+    const age = (Date.now() - Date.parse(m.tanggal)) / 864e5;
+
+    // Badge Sumber
+    const sb = document.getElementById('waveSourceBadge'); 
+    sb.style.display = 'flex';
+    if (age > 6 || rel === 'rendah') {
+        sb.className = 'wave-source-badge fallback';
+        sb.innerHTML = age > 6 ? `⚠️ NOAA OLR · data ${Math.floor(age)} hari lalu` : '⚠️ NOAA OLR · keandalan tepi rendah';
+    } else {
+        sb.className = 'wave-source-badge gas'; 
+        sb.innerHTML = `✅ NOAA OLR · filter W-K · ${esc(m.tanggal)}`;
+    }
+
+    // Info Text & Chip
+    document.getElementById('waveInfoText').innerHTML = `${WAVE_NAMES[mode]} — <b>${esc(m.label)}</b>: OLR tersaring <b>${sg(m.nilaiBox)} W/m²</b> (z ${sg(z, 2)}σ) <span style="color:#00ff88;font-size:.7em">[NOAA]</span>.<br><span>${esc(dampak)}</span>`;
+    document.getElementById('wavePhaseChip').innerHTML = `<span style="display:inline-block;text-align:center;background:${isAktif?col:'#888'}22;border:1px solid ${isAktif?col:'#888'}55;color:${isAktif?col:'#888'};padding:3px 12px;border-radius:6px;font-size:.72rem;font-weight:700">${WAVE_NAMES[mode]}: ${isAktif ? 'AKTIF' : 'TIDAK AKTIF'} · keandalan ${esc(rel)}</span>`;
+
+    // Panel Tabel Atas
+    const gp = document.getElementById('gasWavePanel');
+    gp.className = `gas-wave-info active ${mode}-style`;
+    const set = (id, t, cls) => { const e = document.getElementById(id); e.className = 'gas-wave-value ' + (cls || mode + '-color'); e.textContent = t; };
+    set('gwSource', 'NOAA OLR CDR + NCEP R1 · W-K');
+    set('gwTanggal', m.tanggal + (m.tanggalAngin && m.tanggalAngin !== m.tanggal ? ` (angin ${m.tanggalAngin}${windOk(m) ? '' : ' · usang'})` : ''));
+    set('gwMetric', m.label);
+    set('gwDetail', `${sg(m.nilaiBox)} W/m² · z ${sg(z, 2)}σ (±${n(m.galatZ, 2)}σ)`);
+    set('gwPeak', `${sg(t7.minimum)} W/m² (z ${sg(t7.zMinimum, 2)}σ)` + (t7.hariLalu == null ? '' : t7.hariLalu === 0 ? ' · hari ini' : ` · ${t7.hariLalu} hari lalu`));
+    set('gwRel', `${rel} (r=${n(m.keandalanTepi?.korelasi, 2)})`, rel === 'baik' ? 'safe' : 'warn');
+    set('gwArah', m.arah);
+    set('gwImpact', dampak, isAktif ? 'warn' : 'safe');
+
+    // Panel Diagram Bawah
+    const pc = m.fase === 'konvektif' ? col : m.fase === 'tertekan' ? '#ff9944' : '#888888';
+    document.getElementById('wdPhase').innerText = `${isAktif ? 'Aktif' : 'Tidak aktif'} — ${m.fase.toUpperCase()}`;
+    document.getElementById('wdAmplitude').innerText = `${sg(z, 2)}σ (${sg(m.nilaiBox)} W/m²)`;
+    document.getElementById('wdOLR').innerText = windOk(m)
+        ? `u850 ${sg(m.anomaliU850, 2)} · v850 ${sg(m.anomaliAngin, 2)} m/s · ζ ${sg(m.vortisitas, 2)}×10⁻⁵ s⁻¹`
+        : `korelasi propagasi r=${n(m.korelasiPropagasi, 2)}`;
+    document.getElementById('wdPhaseFill').style.width = Math.min(Math.abs(z) / 2, 1) * 100 + '%';
+    document.getElementById('wdPhaseFill').style.background = pc;
+
+    // Bar Chart
+    const vals = t7.nilai || [];
+    const d0 = Date.parse(m.tanggal);
+    const labels = vals.map((_, i) => new Date(d0 - (vals.length - 1 - i) * 864e5).toISOString().slice(5, 10).replace('-', '/'));
+    if (waveChartInstance) waveChartInstance.destroy();
+    const tick = { color: 'rgba(255,255,255,.5)', font: { size: 9 } }, grid = { color: 'rgba(255,255,255,.04)' };
+    waveChartInstance = new Chart(document.getElementById('waveChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels, datasets: [{ data: vals, borderColor: col, borderWidth: 1, borderRadius: 3,
+            backgroundColor: vals.map(v => v <= 0 ? col + 'cc' : 'rgba(255,153,68,.65)') }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false },
+            title: { display: true, text: 'OLR tersaring 7 hari (W/m²) — negatif = konvektif', color: 'rgba(255,255,255,.55)', font: { size: 9, weight: '400' }, padding: { bottom: 4 } } },
+            scales: { x: { ticks: tick, grid }, y: { ticks: tick, grid } } }
+    });
+
+    // Hovmoller Diagram
+    const hb = document.getElementById('hovBlock');
+    if (m.hov) {
+        hb.style.display = 'block';
+        const sp = m.hov.lon1 - m.hov.lon0;
+        document.getElementById('hovImg').src = `${WAVES_BASE}${mode}-hov.png?v=${m.tanggal}`;
+        document.getElementById('hovBox').style.left = (95 - m.hov.lon0) / sp * 100 + '%';
+        document.getElementById('hovBox').style.width = 46 / sp * 100 + '%';
+        document.getElementById('hovT0').textContent = m.hov.tanggal0;
+        document.getElementById('hovT1').textContent = m.hov.tanggal1;
+        document.getElementById('hovLon0').textContent = fl(m.hov.lon0);
+        document.getElementById('hovLon1').textContent = fl(m.hov.lon1);
+    } else {
+        hb.style.display = 'none';
+    }
+
+    document.getElementById('waveLoadingIndicator').classList.remove('active');
+    document.getElementById('waveDataPanel').classList.add('active');
+}
+
+async function handleWaveData(mode) {
+    const ld = document.getElementById('waveLoadingIndicator');
+    ld.classList.add('active');
+    document.getElementById('waveDataPanel').classList.remove('active');
     document.getElementById('gasWavePanel').classList.remove('active');
-    infoBadge.style.display = 'flex';
-    infoBadge.style.flexDirection = 'column';
-    infoBadge.style.alignItems = 'center';
-    infoBadge.style.justifyContent = 'center';
-    document.getElementById('waveInfoText').innerHTML = '<span class="pulse">⏳ Memuat data gelombang...</span>';
+    document.getElementById('waveInfoText').innerHTML = '<span class="pulse">⏳ Memuat data gelombang Python...</span>';
     document.getElementById('wavePhaseChip').innerHTML = '';
- 
+
     try {
-        const [om, gasRes] = await Promise.all([fetchLocalForecast(), fetchGAS(mode)]);
+        const m = await fetchWaveData(mode);
         if (activeLayerName !== mode) return;
- 
-        const g = validateGas(mode, gasRes.data);
-        setWaveBadge(mode, gasRes.source, g);
-        updateGasPanel(mode, g);
- 
-        const meta = waveMeta[mode];
-        const chip = (c, t) => `<span style="background:${c}22;border:1px solid ${c}55;color:${c};padding:3px 12px;border-radius:6px;font-size:0.72rem;font-weight:700;">${t}</span>`;
-        let wdPhase, wdAmpl, wdKey, wdImpact, phasePercent, phaseColor, infoHtml, chipHtml;
- 
-        if (!g) {
-            wdPhase = 'Data tidak tersedia'; wdAmpl = '—'; wdKey = '—'; wdImpact = 'Tidak dapat dinilai';
-            phasePercent = 0; phaseColor = '#888888';
-            infoHtml = `<span style="color:#ffcc00">⚠️ Data ${meta.name} tidak tersedia${gasRes.error ? ` (${gasRes.error})` : ''}. Status tidak diestimasi dari cuaca lokal.</span>`;
-            chipHtml = chip('#888888', `${meta.name}: data tidak tersedia`);
- 
-        } else if (mode === 'mjo') {
-            const phase = Number(g.fase), amp = Number(g.amplitudo), imp = mjoImpact(phase, amp);
-            wdPhase  = `Fase ${phase} — ${MJO_PHASES[phase]}`;
-            wdAmpl   = `${num(amp, 2)} (${amp >= 1 ? 'Aktif' : 'Lemah'})`;
-            wdKey    = amp >= 1 ? `Konveksi di ${MJO_PHASES[phase]}` : 'Tidak signifikan';
-            wdImpact = imp.text;
-            phasePercent = (phase / 8) * 100;
-            phaseColor   = imp.warn ? '#00ff88' : (amp >= 1 ? '#00d4ff' : '#888888');
-            infoHtml = meta.infoHtml(phase, amp, imp);
-            chipHtml = chip(imp.warn ? '#00ff88' : '#ffcc00', `📡 NOAA: Fase ${phase} — ${MJO_PHASES[phase]}`);
- 
-        } else if (mode === 'kelvin') {
-            const st = kelvinState(g);
-            wdPhase  = st.aktif ? 'Terdeteksi — propagasi ke timur' : 'Belum terkonfirmasi / lemah';
-            wdAmpl   = `${num(st.indeks, 3)} (${st.aktif ? 'Aktif' : 'Lemah'})`;
-            wdKey    = `Anomali u850: ${num(st.sigma, 2)} m/s`;
-            wdImpact = st.aktif ? '〰️ Hujan berpeluang meningkat 1–3 hari' : '✅ Kondisi relatif stabil';
-            phasePercent = Math.min(st.indeks / 3 * 100, 100);
-            phaseColor   = st.aktif ? '#00ccff' : '#888888';
-            infoHtml = meta.infoHtml(st);
-            chipHtml = chip(phaseColor, `Proxy u850: Kelvin ${st.aktif ? 'TERDETEKSI' : 'LEMAH'}`);
- 
-        } else {   // rossby
-            const aktif = Boolean(g.aktif), vort = Number(g.vortisitas), sig = Number(g.anomaliAngin);
-            wdPhase  = aktif ? 'Terdeteksi — propagasi ke barat' : 'Lemah / Tidak Signifikan';
-            wdAmpl   = `${num(vort, 3)} × 10⁻⁵ s⁻¹`;
-            wdKey    = `σ anomali v850: ${num(sig, 2)} m/s`;
-            wdImpact = aktif ? '🌊 Gangguan sirkulasi monsun' : '✅ Monsun relatif stabil';
-            phasePercent = Math.min(Math.abs(sig) / 6 * 100, 100);
-            phaseColor   = aktif ? '#cc66ff' : '#888888';
-            infoHtml = meta.infoHtml(aktif, vort);
-            chipHtml = chip(phaseColor, `Proxy v850: Rossby Wave ${aktif ? 'TERDETEKSI' : 'LEMAH'}`);
-        }
- 
-        document.getElementById('waveInfoText').innerHTML = infoHtml;
-        document.getElementById('wavePhaseChip').innerHTML = chipHtml;
-        document.getElementById('wdPhase').innerText     = wdPhase;
-        document.getElementById('wdAmplitude').innerText = wdAmpl;
-        document.getElementById('wdOLR').innerText       = wdKey;
-        document.getElementById('wdImpact').innerText    = wdImpact;
-        document.getElementById('wdPhaseFill').style.width      = (phasePercent || 0) + '%';
-        document.getElementById('wdPhaseFill').style.background = phaseColor;
- 
-        const chart = ({ mjo: chartMJO, kelvin: chartKelvin, rossby: chartRossby })[mode](om);
-        loading.classList.remove('active');
-        wavePanel.classList.add('active');
-        renderWaveChart(meta.chartLabel + (om ? '' : ' — data lokal tidak tersedia'), meta.chartColor, chart.data, chart.labels);
- 
-    } catch (err) {
-        console.error('loadWaveData error:', err);
-        loading.classList.remove('active');
-        document.getElementById('waveInfoText').innerHTML =
-            `<span style="color:rgba(255,100,100,0.8)">⚠️ Gagal: ${err.message || 'Coba lagi.'}</span>`;
+        renderWavePanel(mode, m);
+        updateWaveLayers(mode, m);
+    } catch (e) {
+        if (activeLayerName !== mode) return;
+        ld.classList.remove('active');
+        const sb = document.getElementById('waveSourceBadge'); 
+        sb.className = 'wave-source-badge fallback'; sb.style.display = 'flex';
+        sb.innerHTML = '⚠️ Data gelombang gagal dimuat';
+        document.getElementById('waveInfoText').innerHTML = `<span style="color:#ffcc00">⚠️ Data ${WAVE_NAMES[mode]} tidak tersedia (${esc(e.message)}).</span>`;
     }
 }
  
 /* ================================================================
-   SWITCH MODE
+   SWITCH MODE TABS
 ================================================================ */
 const panelTitles = {
-    awan:   '📈 Curah Hujan 24 Jam',
-    hujan:  '📈 Curah Hujan 24 Jam',
     gabungan: '🛰️ Gabungan · Curah Hujan 24 Jam',
-    mjo:      '🌀 MJO NOAA · Fase & Amplitudo (peta: awan)',
-    kelvin:   '〰️ Kelvin Wave · proxy u850 (peta: hujan)',
-    rossby:   '🌊 Rossby Wave · proxy v850 (peta: angin)',
-    angin_windy: '🌬️ Angin 10 m (ECMWF IFS 9 km)'
+    mjo:      '🌀 MJO · OLR 30–96 hari',
+    kelvin:   '〰️ Kelvin Wave · OLR',
+    rossby:   '🌊 Rossby (ER n=1) · OLR'
 };
  
 function switchRadarLayer(mode, element) {
     if (!map) return;
-    const isWave  = ['mjo', 'kelvin', 'rossby'].includes(mode);
-    const isWindy = (mode === 'angin_windy');
+    const isWave  = WAVES.includes(mode);
     const isCombo = (mode === 'gabungan');
  
     removeWeatherLayers();
-    if (waveOverlayLayer) { waveOverlayLayer.remove(); waveOverlayLayer = null; }
-    if (!isWindy && !isCombo) stopWindAnimation();
+    if (!isCombo) stopWindAnimation();
+    if (waveImgLayer) { waveImgLayer.remove(); waveImgLayer = null; }
+    if (waveVecLayer) { waveVecLayer.remove(); waveVecLayer = null; }
  
     activeLayerName = mode;
+    document.body.classList.toggle('wave-mode', isWave);
  
-    document.getElementById('standardChartSection').style.display = (isWave || isWindy) ? 'none' : 'block';
+    document.getElementById('standardChartSection').style.display = isWave ? 'none' : 'block';
     document.getElementById('waveDataPanel').classList.remove('active');
     document.getElementById('waveLoadingIndicator').classList.remove('active');
     document.getElementById('waveInfoBadge').style.display = isWave ? 'flex' : 'none';
+    document.getElementById('waveToggles').style.display = isWave ? 'flex' : 'none';
     document.getElementById('gasWavePanel').classList.remove('active');
  
     const badge = document.getElementById('waveSourceBadge');
-    if (isWindy) {
-        loadWindyAnimation();
-    } else if (isCombo) {
-        badge.className = 'wave-source-badge';
+    if (isCombo) {
         badge.style.display = 'none';
-        map.setView([markerLat, markerLon], 9);
         applyWeatherLayers();
     } else if (isWave) {
         badge.className = 'wave-source-badge loading';
         badge.innerHTML = `<span class="pulse">⏳</span> Memuat ${mode.toUpperCase()}...`;
         badge.style.display = 'flex';
-        waveOverlayLayer = waveOverlays[mode]();
-        waveOverlayLayer.addTo(map);
-        const [lat, lon, zoom] = waveMapView[mode];
-        map.setView([lat, lon], zoom);
-        loadWaveData(mode);
-    } else {
-        badge.className = 'wave-source-badge';
-        badge.style.display = 'none';
-        owmTileLayers[mode]?.addTo(map);
-        map.setView([markerLat, markerLon], 9);
+        handleWaveData(mode);
     }
  
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     element.classList.add('active');
-    document.getElementById('radarBadge').innerText = mode.toUpperCase().replace('_WINDY', '');
+    document.getElementById('radarBadge').innerText = mode.toUpperCase();
     document.getElementById('panelChartTitle').innerText = panelTitles[mode] || '📈 Data Atmosfer';
     updateLegendUI(mode);
 }
@@ -936,8 +731,7 @@ function switchRadarLayer(mode, element) {
    FORECAST CHART (curah hujan 24 jam)
 ================================================================ */
 function initForecastChart() {
-    const ctx = document.getElementById('forecastChart').getContext('2d');
-    forecastChart = new Chart(ctx, {
+    forecastChart = new Chart(document.getElementById('forecastChart').getContext('2d'), {
         type: 'line',
         data: {
             labels: [],
@@ -953,12 +747,8 @@ function initForecastChart() {
             layout: { padding: { left: -5, right: 5, top: 10, bottom: 0 } },
             plugins: {
                 legend: { display: false },
-                tooltip: {
-                    mode: 'index', intersect: false,
-                    backgroundColor: 'rgba(8,15,30,0.9)', titleColor: '#71f7ff',
-                    borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
-                    callbacks: { label: c => ` ${c.parsed.y.toFixed(2)} mm` }
-                }
+                tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(8,15,30,0.9)', titleColor: '#71f7ff',
+                           borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, callbacks: { label: c => ` ${c.parsed.y.toFixed(2)} mm` } }
             },
             scales: {
                 x: { ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
@@ -992,6 +782,5 @@ window.addEventListener('resize', () => {
 detectLocation();
 setInterval(() => { if (forecastChart) loadForecastMetrics(); }, 300000);
 </script>
- <script src="waves-connect.js"></script>
 </body>
 </html>
