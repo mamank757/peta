@@ -1,7 +1,7 @@
 {
  "gelombang": "rossby",
  "tanggal": "2026-10-28",
- "sumber": "NOAA PSL · OLR terinterpolasi + NCEP/NCAR R1 · filter Wheeler-Kiladis",
+ "sumber": "NOAA OLR CDR v2 (PSL) · filter Wheeler-Kiladis",
  "satuan": "W/m²",
  "vmax": 15,
  "bounds": [
@@ -59,11 +59,11 @@
   "hariLalu": 0,
   "tanggalMinimum": "2026-10-28"
  },
- "vektor": true,
- "anomaliU850": -0.86,
- "anomaliAngin": 0.18,
- "vortisitas": -0.029,
- "tanggalAngin": "2026-03-17",
+ "vektor": false,
+ "anomaliU850": null,
+ "anomaliAngin": null,
+ "vortisitas": null,
+ "vektorAlasan": "angin NCEP/NCAR R1 berakhir 2026-03-17 (dihentikan NOAA 2026-03-17, CDAS->CORe); tidak dipakai agar tidak menampilkan angin usang",
  "arah": "Barat (ER n=1)",
  "label": "Fase konvektif di atas Indonesia (estimasi tepi kurang andal)",
  "dampak": "Peluang hujan meningkat (OLR tersaring negatif)"

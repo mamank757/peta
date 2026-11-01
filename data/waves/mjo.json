@@ -1,7 +1,7 @@
 {
  "gelombang": "mjo",
  "tanggal": "2026-10-28",
- "sumber": "NOAA PSL · OLR terinterpolasi + NCEP/NCAR R1 · filter Wheeler-Kiladis",
+ "sumber": "NOAA OLR CDR v2 (PSL) · filter Wheeler-Kiladis",
  "satuan": "W/m²",
  "vmax": 30,
  "bounds": [
@@ -59,11 +59,11 @@
   "hariLalu": 0,
   "tanggalMinimum": "2026-10-28"
  },
- "vektor": true,
- "anomaliU850": 0.73,
- "anomaliAngin": -0.13,
- "vortisitas": -0.057,
- "tanggalAngin": "2026-03-17",
+ "vektor": false,
+ "anomaliU850": null,
+ "anomaliAngin": null,
+ "vortisitas": null,
+ "vektorAlasan": "angin NCEP/NCAR R1 berakhir 2026-03-17 (dihentikan NOAA 2026-03-17, CDAS->CORe); tidak dipakai agar tidak menampilkan angin usang",
  "arah": "Timur (30-96 hari)",
  "label": "Sinyal lemah/netral",
  "dampak": "Tidak dominan"
