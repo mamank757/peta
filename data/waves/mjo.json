@@ -21,7 +21,11 @@
  "galatZ": 0.44,
  "fase": "netral",
  "aktif": false,
+ "koherensiHulu": 0.92,
  "korelasiPropagasi": 0.92,
+ "dominansi": 0.35,
+ "dominansiPersentil": 0,
+ "opasitas": 0.9,
  "indeksKelvin": 0.21,
  "hov": {
   "hari": 90,
@@ -55,10 +59,11 @@
   "hariLalu": 0,
   "tanggalMinimum": "2026-10-28"
  },
- "vektor": false,
- "anomaliU850": null,
- "anomaliAngin": null,
- "vortisitas": null,
+ "vektor": true,
+ "anomaliU850": 0.73,
+ "anomaliAngin": -0.13,
+ "vortisitas": -0.057,
+ "tanggalAngin": "2026-03-17",
  "arah": "Timur (30-96 hari)",
  "label": "Sinyal lemah/netral",
  "dampak": "Tidak dominan"

@@ -21,7 +21,11 @@
  "galatZ": 0.87,
  "fase": "konvektif",
  "aktif": false,
+ "koherensiHulu": 0.93,
  "korelasiPropagasi": 0.93,
+ "dominansi": 0.27,
+ "dominansiPersentil": 92,
+ "opasitas": 0.5,
  "indeksKelvin": 1.04,
  "hov": {
   "hari": 90,
@@ -55,10 +59,11 @@
   "hariLalu": 0,
   "tanggalMinimum": "2026-10-28"
  },
- "vektor": false,
- "anomaliU850": null,
- "anomaliAngin": null,
- "vortisitas": null,
+ "vektor": true,
+ "anomaliU850": -0.86,
+ "anomaliAngin": 0.18,
+ "vortisitas": -0.029,
+ "tanggalAngin": "2026-03-17",
  "arah": "Barat (ER n=1)",
  "label": "Fase konvektif di atas Indonesia (estimasi tepi kurang andal)",
  "dampak": "Peluang hujan meningkat (OLR tersaring negatif)"
