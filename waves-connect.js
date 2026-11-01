@@ -14,7 +14,8 @@ const $ = id => document.getElementById(id);
 const n = (x, d = 1) => (typeof x === 'number' && isFinite(x)) ? x.toFixed(d) : '—';
 const sg = (x, d = 1) => n(x, d) === '—' ? '—' : (x >= 0 ? '+' : '') + x.toFixed(d);
 const esc = s => String(s ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const windOk = m => m.vektor && m.tanggalAngin && Math.abs(Date.parse(m.tanggal) - Date.parse(m.tanggalAngin)) <= 3 * 864e5;
+const WIND_MAX_LAG_DAYS = 5;   // samakan dengan WIND_MAX_LAG di build_waves.py (ERA5T tertinggal ~5 hari)
+const windOk = m => m.vektor && m.tanggalAngin && Math.abs(Date.parse(m.tanggal) - Date.parse(m.tanggalAngin)) <= WIND_MAX_LAG_DAYS * 864e5;
 const fl = lon => lon > 180 ? (360 - lon) + '°BB' : lon + '°BT';
 
 /* ---------- UI tambahan (disuntik, HTML asli tidak perlu diubah) ---------- */
@@ -143,7 +144,7 @@ function render(w, m) {
 
   $('gasWavePanel').className = `gas-wave-info active ${w}-style`;
   const set = (id, t, cls) => { const e = $(id); e.className = 'gas-wave-value ' + (cls || w + '-color'); e.textContent = t; };
-  set('gwSource', 'NOAA OLR CDR + NCEP R1 · W-K');
+  set('gwSource', 'NOAA OLR CDR + ERA5T · W-K');
   set('gwTanggal', m.tanggal + (m.tanggalAngin && m.tanggalAngin !== m.tanggal ? ` (angin ${m.tanggalAngin}${windOk(m) ? '' : ' · usang, tidak dipakai'})` : ''));
   $('gwMetricLabel').textContent = '🌀 Status & Label'; set('gwMetric', m.label);
   $('gwDetailLabel').textContent = '📊 OLR Tersaring (Indonesia)';
