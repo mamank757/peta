@@ -582,9 +582,12 @@ function renderWavePanel(mode, m) {
     const isAktif = m.aktif;
     
     // Dampak Logic
+        const lewat = t7.zMinimum != null && t7.zMinimum <= -1 && (t7.hariLalu ?? 0) >= 1;
     const dampak = (m.fase === 'konvektif' && !isAktif)
         ? 'Sinyal konvektif belum terkonfirmasi (keandalan estimasi tepi rendah) — bukan dasar prakiraan hujan'
-        : m.dampak;
+        : (!isAktif && lewat)
+            ? `Selubung konvektif melintas ${t7.hariLalu} hari lalu (puncak z ${sg(t7.zMinimum, 2)}σ); kini sudah lewat/melemah`
+            : m.dampak;
     const age = (Date.now() - Date.parse(m.tanggal)) / 864e5;
 
     // Badge Sumber
