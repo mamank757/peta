@@ -55,11 +55,10 @@
   "hariLalu": 0,
   "tanggalMinimum": "2026-10-28"
  },
- "vektor": true,
- "anomaliU850": 0.73,
- "anomaliAngin": -0.13,
- "vortisitas": -0.057,
- "tanggalAngin": "2026-03-17",
+ "vektor": false,
+ "anomaliU850": null,
+ "anomaliAngin": null,
+ "vortisitas": null,
  "arah": "Timur (30-96 hari)",
  "label": "Sinyal lemah/netral",
  "dampak": "Tidak dominan"
