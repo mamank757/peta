@@ -3,67 +3,34 @@ on:
   schedule:
     - cron: "30 3 * * *"        # harian 03:30 UTC (11:30 WITA)
   workflow_dispatch:
-
-# Memberikan izin yang diperlukan untuk commit ke repo dan deploy ke Pages
 permissions:
   contents: write
-  pages: write
-  id-token: write
-
-# Konfigurasi konkurensi agar deployment tidak bertabrakan jika di-trigger manual berdekatan
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    
+    timeout-minutes: 60
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python 3.12
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-          
-      - name: Install dependencies
-        run: pip install numpy scipy pandas xarray netCDF4 pillow
-        
-      - name: Cache LTM NetCDF files
-        uses: actions/cache@v4
-        with:
-          path: data/*.nc
-          key: ltm-data-1991-2020-v1
-          
-      - name: Run Wave Analysis
-        run: python scripts/build_waves.py
-        
-      - name: Commit hasil pemrosesan (Opsional)
+      - run: pip install numpy scipy pandas xarray netCDF4 pydap pillow
+      - name: Bangun peta gelombang (maks 3 percobaan)
+        run: |
+          for i in 1 2 3; do
+            python scripts/build_waves.py && exit 0
+            echo "Percobaan $i gagal; ulangi dalam 120 detik"
+            sleep 120
+          done
+          exit 1
+      - name: Commit hasil
         run: |
           git config user.name "wave-bot"
           git config user.email "wave-bot@users.noreply.github.com"
+          git pull --rebase --autostash || true
           git add data/waves
           if ! git diff --cached --quiet; then
-            git commit -m "update data gelombang $(date -u +%F)"
+            git commit -m "waves $(date -u +%F)"
             git push
           fi
-
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact untuk Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Mengunggah seluruh root direktori (termasuk index.html dan folder data/)
-          path: '.'
-
-      - name: Deploy ke GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
