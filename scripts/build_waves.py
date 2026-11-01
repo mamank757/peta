@@ -12,6 +12,9 @@ Metode: anomali thd klimatologi (3 harmonik) -> filter ruang-waktu Wheeler & Kil
   ER n=1: barat,  k=1-10, periode 9-72 hari,   kedalaman ekuivalen 8-90 m
 
 Keluaran per gelombang di data/waves/: {w}.png, {w}.json, {w}-vec.json, {w}-hov.png
+
+Catatan 429: server PSL membatasi laju permintaan. Semua pembukaan dataset dan unduhan
+dibungkus retry (backoff eksponensial) dan diberi jeda antar permintaan (REQ_DELAY).
 """
 import json
 import sys
@@ -34,6 +37,8 @@ NDAYS = 1500                      # ~4 tahun: untuk filter + sigma referensi
 OLR_STEP, LTM_STEP, WND_STEP = 60, 30, 120   # hari per permintaan OPeNDAP (kecil = jarang terpotong)
 WIND_MAX_LAG = 3                  # angin boleh tertinggal maksimal sekian hari dari OLR
 MAX_AGE_DAYS = 7                  # tolak data lebih tua dari ini
+REQ_DELAY = 1.5                   # detik jeda antar permintaan OPeNDAP (hindari 429 Too Many Requests)
+RETRY_N = 6                       # jumlah percobaan per permintaan
 LAT_T = np.arange(-30, 30.1, 2.5)
 LON_T = np.arange(0, 360, 2.5)
 LAT = (-30, 30)                   # domain filter
@@ -97,14 +102,25 @@ def wk_filter(x, kind, ntaper=30, npad=30, ext="ramp"):
 
 
 # --------------------------------------------------------------- data
-def retry(fn, n=4):
+def retry(fn, n=RETRY_N):
+    """Jalankan fn dengan backoff eksponensial (15, 30, 60, 120, 240 dtk).
+    429 Too Many Requests butuh waktu tunggu jauh lebih lama daripada beberapa detik."""
     for i in range(n):
         try:
             return fn()
-        except Exception as e:                      # unduhan OPeNDAP terpotong dll.
-            print(f"percobaan {i + 1}/{n} gagal: {e}", file=sys.stderr)
-            time.sleep(5 * (i + 1))
+        except Exception as e:                      # unduhan OPeNDAP terpotong, 429, dll.
+            wait = min(15 * 2 ** i, 240)
+            print(f"percobaan {i + 1}/{n} gagal: {e}"
+                  + (f" — tunggu {wait} dtk" if i < n - 1 else ""), file=sys.stderr)
+            if i < n - 1:
+                time.sleep(wait)
     raise RuntimeError("unduhan gagal setelah beberapa percobaan")
+
+
+def open_ds(url, **kw):
+    """open_dataset dengan jeda + retry (server PSL membalas 429 bila terlalu sering)."""
+    time.sleep(REQ_DELAY)
+    return retry(lambda: xr.open_dataset(url, cache=False, **kw))
 
 
 def first_var(ds):
@@ -133,11 +149,20 @@ def to_grid(da):
                         coords={"time": da["time"], "lat": LAT_T, "lon": LON_T}, attrs=da.attrs)
 
 
+def sub(da):
+    """Potong lintang (urutan asli bisa menurun), muat ke memori, urutkan naik.
+    Diberi jeda sebelum unduhan agar tidak kena rate limit."""
+    time.sleep(REQ_DELAY)
+    lat = da.lat.values
+    sl = slice(LAT[1], LAT[0]) if lat[0] > lat[-1] else slice(*LAT)
+    return da.sel(lat=sl).load().sortby("lat")
+
+
 def valid_sub(piece, lo, hi, tries=3, frac_ok=0.01):
     """Muat potongan dan validasi rentang [lo,hi].
     Unduhan OPeNDAP yang terpotong ("DATADDS packet is apparently too short") TIDAK melempar
     exception: library C hanya mencetak ERR lalu mengisi sisanya dengan sampah memori. Jadi:
-      1) muat ulang sampai `tries` kali;
+      1) muat ulang sampai `tries` kali (dengan jeda agar server pulih);
       2) bila masih rusak, belah potongan (waktu) jadi dua dan muat masing-masing -> permintaan
          lebih kecil jarang terpotong;
       3) potongan 1 langkah yang tetap rusak: bila hanya sedikit (<= frac_ok) -> jadikan NaN,
@@ -153,6 +178,7 @@ def valid_sub(piece, lo, hi, tries=3, frac_ok=0.01):
         print(f"  potongan ({piece.sizes['time']} langkah) berisi {nbad} nilai di luar rentang "
               f"— unduh ulang ({k + 1}/{tries})", file=sys.stderr)
         last = (out, bad, nbad)
+        time.sleep(10 * (k + 1))                    # beri waktu server pulih sebelum unduh ulang
     n = piece.sizes["time"]
     if n > 1:
         h = n // 2
@@ -170,13 +196,6 @@ def load_chunked(da, lo, hi, step):
     n = da.sizes["time"]
     return xr.concat([valid_sub(da.isel(time=slice(a, min(a + step, n))), lo, hi)
                       for a in range(0, n, step)], "time")
-
-
-def sub(da):
-    """Potong lintang (urutan asli bisa menurun), muat ke memori, urutkan naik."""
-    lat = da.lat.values
-    sl = slice(LAT[1], LAT[0]) if lat[0] > lat[-1] else slice(*LAT)
-    return da.sel(lat=sl).load().sortby("lat")
 
 
 def clim_smooth(ltm):
@@ -211,7 +230,7 @@ def fix_time(da):
 
 
 def load_olr():
-    ds = xr.open_dataset(OLR_URL, cache=False)
+    ds = open_ds(OLR_URL)
     var = first_var(ds)
     da = ds[var]
     n = da.sizes["time"]
@@ -223,7 +242,7 @@ def load_olr():
     da = da.where((da >= 50) & (da <= 400))            # nilai isian/ngawur -> NaN
     da = fix_time(to_grid(da))
     da = da.interpolate_na(dim="time", limit=5)         # celah pendek: interpolasi linear
-    dl = xr.open_dataset(OLR_LTM, decode_times=False, cache=False)
+    dl = open_ds(OLR_LTM, decode_times=False)
     lv = first_var(dl)
     ltm = load_chunked(dl[lv], 50, 400, LTM_STEP)
     ltm = to_grid(ltm.where((ltm >= 50) & (ltm <= 400)))
@@ -251,11 +270,11 @@ def load_olr():
 def load_wind(var, t0, t1):
     parts = []
     for y in range(pd.Timestamp(t0).year, pd.Timestamp(t1).year + 1):
-        ds = xr.open_dataset(WND_URL.format(v=var, y=y), cache=False)[var].sel(level=850)
+        ds = open_ds(WND_URL.format(v=var, y=y))[var].sel(level=850)
         parts.append(load_chunked(ds, -100, 100, WND_STEP))
     da = xr.concat(parts, "time")
     da = fix_time(da.where(abs(da) < 100)).sel(time=slice(t0, None))
-    dl = xr.open_dataset(WND_LTM.format(v=var), decode_times=False, cache=False)[var].sel(level=850)
+    dl = open_ds(WND_LTM.format(v=var), decode_times=False)[var].sel(level=850)
     ltm = load_chunked(dl, -100, 100, LTM_STEP)
     ltm = ltm.where(abs(ltm) < 100)
     return anomaly(da, ltm), da.time.values
