@@ -1,52 +1,63 @@
-name: Update Wind Grid Data (ECMWF IFS 9 km)
-
+name: update-wind
 on:
   schedule:
-    # 2x sehari (setelah run ECMWF 00Z & 12Z tersedia). Tiap eksekusi ~3.400 panggilan API;
-    # batas gratis Open-Meteo 10.000/hari, jadi JANGAN menambah frekuensi tanpa mengecilkan grid.
-    - cron: '30 6,18 * * *'
-  workflow_dispatch:       # eksekusi manual (hitungannya ikut kuota harian!)
+    # Berjalan setiap 6 jam (00:15, 06:15, 12:15, 18:15 UTC) menyesuaikan siklus update ECMWF
+    - cron: "15 0,6,12,18 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
-  group: update-wind
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build-and-update:
+  build-and-deploy-wind:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
+    timeout-minutes: 15
+    
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
           cache: pip
-          cache-dependency-path: scripts/requirements.txt
-
-      - name: Install Python Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r scripts/requirements.txt
-
-      - name: Jalankan Script Pengolah Angin
+          
+      - name: Install dependencies
+        # Sesuaikan requirements jika process_wind.py butuh library lain
+        run: pip install requests numpy pandas
+        
+      - name: Run ECMWF Wind Processing
         run: python scripts/process_wind.py
-
-      - name: Commit dan Push Perubahan
+        
+      - name: Commit hasil data angin
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add data/wind-detail.json data/wind-regional.json
-          if git diff --cached --quiet; then
-            echo "Tidak ada perubahan data"
-          else
-            git commit -m "Auto-update: angin ECMWF $(date -u +'%Y-%m-%d %H:%MZ')"
-            git pull --rebase origin "${GITHUB_REF_NAME}"
+          git config user.name "wind-bot"
+          git config user.email "wind-bot@users.noreply.github.com"
+          # Menambahkan semua file JSON angin yang dihasilkan
+          git add data/wind-*.json
+          if ! git diff --cached --quiet; then
+            git commit -m "update data angin ECMWF $(date -u +%F %H:%M)"
             git push
           fi
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact untuk Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy ke GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
