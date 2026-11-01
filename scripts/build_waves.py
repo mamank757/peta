@@ -4,7 +4,7 @@ Peta gelombang ekuator (MJO, Kelvin, Rossby) dari data NOAA.
 
 Sumber (semua NOAA PSL THREDDS/OPeNDAP):
   OLR harian NOAA CDR v2 (1°, digrid ke 2,5°): Datasets/olr_cdr_day/olr.day.mean.v2.nc (+ klimatologi 1991-2020)
-  Angin 850 hPa harian (NCEP/NCAR R1): Datasets/ncep.reanalysis/Dailies/pressure/{u,v}wnd.YYYY.nc
+  Angin 850 hPa (opsional): NCEP/NCAR R1 DIHENTIKAN 2026-03-17 (CDAS->CORe); dipakai hanya bila masih segar.
 
 Metode: anomali thd klimatologi (3 harmonik) -> filter ruang-waktu Wheeler & Kiladis (1999)
   MJO   : timur,  k=1-5,  periode 30-96 hari
@@ -52,7 +52,7 @@ VMAX = dict(mjo=30, kelvin=15, rossby=15)                 # W/m2 skala warna
 HOV_BAND = dict(mjo=(-10, 10), kelvin=(-10, 10), rossby=(-15, 15))
 UPSTREAM = dict(mjo=(60, 95), kelvin=(60, 95), rossby=(141, 176))  # kotak hulu
 LAGS = dict(mjo=range(4, 15), kelvin=range(1, 7), rossby=range(2, 11))
-SRC = "NOAA PSL · OLR terinterpolasi + NCEP/NCAR R1 · filter Wheeler-Kiladis"
+SRC = "NOAA OLR CDR v2 (PSL) · filter Wheeler-Kiladis"
 
 
 # --------------------------------------------------------------- filter
@@ -238,6 +238,13 @@ def harmonic_anomaly(da):
     X = np.column_stack([np.ones(len(ang))] + [f(k * ang) for k in (1, 2, 3) for f in (np.cos, np.sin)])
     Y = np.nan_to_num(da.values.reshape(len(ang), -1))
     return (Y - X @ np.linalg.lstsq(X, Y, rcond=None)[0]).reshape(da.shape)
+
+
+def wind_fresh(t1):
+    """Tanggal terakhir berkas angin tahun berjalan; segar bila selisih <= MAX_AGE_DAYS dari OLR."""
+    url = WND_URL.format(v="uwnd", y=pd.Timestamp(t1).year)
+    last = _fetch(url, lambda ds: (pd.Timestamp(ds["time"].values[-1]).normalize(), 0, 1))
+    return last, (pd.Timestamp(t1) - last).days <= MAX_AGE_DAYS
 
 
 def load_wind(var, t0, t1):
@@ -460,10 +467,17 @@ def main():
     age = (pd.Timestamp.now().normalize() - pd.Timestamp(t1)).days
     if age > MAX_AGE_DAYS:
         sys.exit(f"OLR terakhir {pd.Timestamp(t1).date()} ({age} hari lalu): terlalu usang, tidak ada yang ditulis")
+    global WIND_ERR
     try:
-        wnd = (load_wind("uwnd", t0, t1), load_wind("vwnd", t0, t1))
+        last, fresh = wind_fresh(t1)
+        if not fresh:
+            WIND_ERR = (f"angin NCEP/NCAR R1 berakhir {last.date()} (dihentikan NOAA 2026-03-17, CDAS->CORe); "
+                        f"tidak dipakai agar tidak menampilkan angin usang")
+            print(f"ANGIN DILEWATI: {WIND_ERR}")
+            wnd = None
+        else:
+            wnd = (load_wind("uwnd", t0, t1), load_wind("vwnd", t0, t1))
     except Exception as e:
-        global WIND_ERR
         WIND_ERR = f"{type(e).__name__}: {str(e)[:200]}"
         print(f"ANGIN NCEP TIDAK TERSEDIA: {WIND_ERR}")
         traceback.print_exc()
