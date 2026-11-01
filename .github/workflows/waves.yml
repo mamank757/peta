@@ -16,6 +16,14 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install numpy scipy pandas xarray netCDF4 pillow
+      
+      # TAMBAHAN PENTING: Cache file statis klimatologi (LTM) agar tidak diunduh setiap hari
+      - name: Cache LTM NetCDF files
+        uses: actions/cache@v4
+        with:
+          path: data/*.nc
+          key: ltm-data-1991-2020-v1
+          
       - run: python scripts/build_waves.py
       - name: Commit hasil
         run: |
