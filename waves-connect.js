@@ -9,13 +9,11 @@ const NAME = { mjo: 'MJO', kelvin: 'Kelvin Wave', rossby: 'Rossby Wave (ER n=1)'
 const OLR_GRAD = 'linear-gradient(to right,#08306b,#4292c6,#fff,#fb6a4a,#a50f15)';
 const store = {};
 let imgLayer = null, vecLayer = null;
-let wantVec = true;          // pilihan pengguna untuk lapisan angin (terpisah dari ketersediaan data)
 const $ = id => document.getElementById(id);
 const n = (x, d = 1) => (typeof x === 'number' && isFinite(x)) ? x.toFixed(d) : '—';
 const sg = (x, d = 1) => n(x, d) === '—' ? '—' : (x >= 0 ? '+' : '') + x.toFixed(d);
 const esc = s => String(s ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const WIND_MAX_LAG_DAYS = 5;   // samakan dengan WIND_MAX_LAG di build_waves.py (ERA5T tertinggal ~5 hari)
-const windOk = m => m.vektor && m.tanggalAngin && Math.abs(Date.parse(m.tanggal) - Date.parse(m.tanggalAngin)) <= WIND_MAX_LAG_DAYS * 864e5;
+const windOk = m => m.vektor && m.tanggalAngin && Math.abs(Date.parse(m.tanggal) - Date.parse(m.tanggalAngin)) <= 3 * 864e5;
 const fl = lon => lon > 180 ? (360 - lon) + '°BB' : lon + '°BT';
 
 /* ---------- UI tambahan (disuntik, HTML asli tidak perlu diubah) ---------- */
@@ -23,7 +21,6 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .forecast:not(.collapsed) .collapsible-content{max-height:min(70dvh,780px);overflow-y:auto}
 .wlsw{display:flex;gap:12px;justify-content:center;margin-top:6px;font-size:.68rem;color:#fff}
 .wlsw label{display:flex;align-items:center;gap:4px;cursor:pointer}.wlsw input{accent-color:#00ff88}
-.wlsw label.off{cursor:not-allowed}
 .hov-wrap{position:relative;background:#0b162c;border-radius:8px;overflow:hidden;line-height:0}
 .hov-wrap img{width:100%;height:150px;display:block}
 .hov-box{position:absolute;top:0;bottom:0;border:1px dashed rgba(0,255,136,.85);border-width:0 1px;pointer-events:none}
@@ -32,8 +29,8 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .hov-ax{display:flex;justify-content:space-between;font-size:.58rem;color:rgba(255,255,255,.5);margin-top:3px}
 </style>`);
 $('wavePhaseChip').insertAdjacentHTML('afterend',
-  `<div class="wlsw"><label><input type="checkbox" id="wtOlr" checked> <span>OLR tersaring</span></label>
-   <label id="wtVecLbl"><input type="checkbox" id="wtVec" checked> <span id="wtVecTxt">Angin 850 hPa (anomali)</span></label></div>`);
+  `<div class="wlsw"><label><input type="checkbox" id="wtOlr" checked> OLR tersaring</label>
+   <label><input type="checkbox" id="wtVec" checked> Angin 850 hPa (anomali)</label></div>`);
 $('gasWavePanel').insertAdjacentHTML('beforeend',
   `<div class="gas-wave-row"><span class="gas-wave-label">📉 Minimum 7 Hari</span><span class="gas-wave-value" id="gwPeak">—</span></div>
    <div class="gas-wave-row"><span class="gas-wave-label">🎯 Keandalan Tepi</span><span class="gas-wave-value" id="gwRel">—</span></div>`);
@@ -106,57 +103,44 @@ async function layers(w, m) {
     vecLayer._k = vk;
   } catch (e) { console.warn(`[${w}] vektor tidak dimuat:`, e.message); }
 }
-
-const refreshLayers = () => { const m = store[activeLayerName]?.meta; if (m) layers(activeLayerName, m); };
-$('wtOlr').addEventListener('change', refreshLayers);
-$('wtVec').addEventListener('change', () => { wantVec = $('wtVec').checked; refreshLayers(); });
-
-/* Saklar angin mengikuti ketersediaan data: bila angin tidak ada/usang -> tidak dicentang,
-   dinonaktifkan, dan labelnya jujur. Pilihan pengguna (wantVec) dipulihkan saat data ada lagi. */
-function syncVecToggle(m) {
-  const ok = windOk(m), cb = $('wtVec');
-  cb.disabled = !ok;
-  cb.checked = ok && wantVec;
-  $('wtVecLbl').classList.toggle('off', !ok);
-  $('wtVecLbl').style.opacity = ok ? '' : '.5';
-  $('wtVecTxt').textContent = ok ? 'Angin 850 hPa (anomali)' : 'Angin 850 hPa (tidak tersedia)';
-}
+['wtOlr', 'wtVec'].forEach(id => $(id).addEventListener('change', () => {
+  const m = store[activeLayerName]?.meta; if (m) layers(activeLayerName, m);
+}));
 
 /* ---------- panel ---------- */
 function render(w, m) {
-  const col = COL[w], z = m.zKalibrasi, zr = m.z, rel = m.keandalan, t7 = m.ringkas7hari || { nilai: [] };
+  const col = COL[w], z = m.zKalibrasi, rel = m.keandalan, t7 = m.ringkas7hari || { nilai: [] };
   const fase = { konvektif: 'Konvektif (basah)', tertekan: 'Tertekan (kering)', netral: 'Netral' }[m.fase];
   const dampak = (m.fase === 'konvektif' && !m.aktif)
     ? 'Sinyal konvektif belum terkonfirmasi (keandalan/propagasi belum cukup) — bukan dasar prakiraan hujan'
     : m.dampak;
   const age = (Date.now() - Date.parse(m.tanggal)) / 864e5;
 
-  syncVecToggle(m);
+  $('wtVec').disabled = !windOk(m); $('wtVec').parentElement.style.opacity = windOk(m) ? '' : '.45';
   const sb = $('waveSourceBadge'); sb.style.display = 'flex';
   if (age > 6 || rel === 'rendah') {
     sb.className = 'wave-source-badge fallback';
     sb.innerHTML = age > 6 ? `⚠️ NOAA OLR · data ${Math.floor(age)} hari lalu` : '⚠️ NOAA OLR · keandalan tepi rendah';
   } else { sb.className = 'wave-source-badge gas'; sb.innerHTML = `✅ NOAA OLR · filter W-K · ${esc(m.tanggal)}`; }
 
-  $('waveInfoText').innerHTML = `${NAME[w]} — <b>${esc(m.label)}</b>: OLR tersaring <b>${sg(m.nilaiBox)} W/m²</b> (z ${sg(z, 2)}σ terkalibrasi) <span style="color:#00ff88;font-size:.7em">[NOAA]</span>.<br><span>${esc(dampak)}</span>`;
+  $('waveInfoText').innerHTML = `${NAME[w]} — <b>${esc(m.label)}</b>: OLR tersaring <b>${sg(m.nilaiBox)} W/m²</b> (z ${sg(z, 2)}σ) <span style="color:#00ff88;font-size:.7em">[NOAA]</span>.<br><span>${esc(dampak)}</span>`;
   const c = m.aktif ? col : '#888888';
   $('wavePhaseChip').innerHTML = `<span style="display:inline-block;text-align:center;background:${c}22;border:1px solid ${c}55;color:${c};padding:3px 12px;border-radius:6px;font-size:.72rem;font-weight:700">${NAME[w]}: ${m.aktif ? 'AKTIF' : 'TIDAK AKTIF'} · keandalan ${esc(rel)}</span>`;
 
   $('gasWavePanel').className = `gas-wave-info active ${w}-style`;
   const set = (id, t, cls) => { const e = $(id); e.className = 'gas-wave-value ' + (cls || w + '-color'); e.textContent = t; };
-  set('gwSource', 'NOAA OLR CDR + ERA5T · W-K');
+  set('gwSource', 'NOAA OLR CDR + NCEP R1 · W-K');
   set('gwTanggal', m.tanggal + (m.tanggalAngin && m.tanggalAngin !== m.tanggal ? ` (angin ${m.tanggalAngin}${windOk(m) ? '' : ' · usang, tidak dipakai'})` : ''));
   $('gwMetricLabel').textContent = '🌀 Status & Label'; set('gwMetric', m.label);
   $('gwDetailLabel').textContent = '📊 OLR Tersaring (Indonesia)';
-  // z terkalibrasi = z mentah dikali kemiringan hasil uji tepi (dipakai untuk status); z mentah ditampilkan pembanding
-  set('gwDetail', `${sg(m.nilaiBox)} W/m² · z ${sg(z, 2)}σ terkalibrasi (mentah ${sg(zr, 2)}σ, ±${n(m.galatZ, 2)}σ)`);
-  set('gwPeak', `${sg(t7.minimum)} W/m² (z mentah ${sg(t7.zMinimum, 2)}σ)` + (t7.hariLalu == null ? '' : t7.hariLalu === 0 ? ' · hari ini' : ` · ${t7.hariLalu} hari lalu`));
+  set('gwDetail', `${sg(m.nilaiBox)} W/m² · z ${sg(z, 2)}σ (±${n(m.galatZ, 2)}σ)`);
+  set('gwPeak', `${sg(t7.minimum)} W/m² (z ${sg(t7.zMinimum, 2)}σ)` + (t7.hariLalu == null ? '' : t7.hariLalu === 0 ? ' · hari ini' : ` · ${t7.hariLalu} hari lalu`));
   set('gwRel', `${rel} (r=${n(m.keandalanTepi?.korelasi, 2)})`, rel === 'baik' ? 'safe' : 'warn');
   set('gwArah', m.arah); set('gwImpact', dampak, m.aktif ? 'warn' : 'safe');
 
   const pc = m.fase === 'konvektif' ? col : m.fase === 'tertekan' ? '#ff9944' : '#888888';
   $('wdPhase').innerText = `${m.aktif ? 'Aktif' : 'Tidak aktif'} — ${fase}`;
-  $('wdAmplitude').innerText = `${sg(z, 2)}σ terkalibrasi (${sg(m.nilaiBox)} W/m²)`;
+  $('wdAmplitude').innerText = `${sg(z, 2)}σ (${sg(m.nilaiBox)} W/m²)`;
   $('wdOLR').innerText = windOk(m)
     ? `u850 ${sg(m.anomaliU850, 2)} · v850 ${sg(m.anomaliAngin, 2)} m/s · ζ ${sg(m.vortisitas, 2)}×10⁻⁵ s⁻¹`
     : `korelasi propagasi r=${n(m.korelasiPropagasi, 2)}`;
