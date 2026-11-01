@@ -178,6 +178,10 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
                     <span class="hov-d" id="hovT1" style="bottom:3px"></span>
                 </div>
                 <div class="hov-ax"><span id="hovLon0"></span><span>garis putus: Indonesia 95–141°BT</span><span id="hovLon1"></span></div>
+                             <div class="hov-ax"><span id="hovLon0"></span><span>garis putus: Indonesia 95–141°BT</span><span id="hovLon1"></span></div>
+            </div>
+            <div id="waveNote" style="margin-top:8px;font-size:.6rem;line-height:1.4;color:rgba(255,255,255,.45)"></div>
+        </div>
             </div>
         </div>
  
@@ -214,7 +218,7 @@ const WAVES = ['mjo', 'kelvin', 'rossby'];
 const VMAX = { mjo: 30, kelvin: 15, rossby: 15 };
 const WAVE_COLORS = { mjo: '#00d4ff', kelvin: '#00ccff', rossby: '#cc66ff' };
 const WAVE_NAMES = { mjo: 'MJO', kelvin: 'Kelvin Wave', rossby: 'Rossby Wave (ER n=1)' };
-const OLR_GRAD = 'linear-gradient(to right,#08306b,#4292c6,#fff,#fb6a4a,#a50f15)';
+const OLR_GRAD = 'linear-gradient(to right,#08306b,#4292c6,#d6dce2,#fb6a4a,#a50f15)';
 
 let waveImgLayer = null;
 let waveVecLayer = null;
@@ -533,13 +537,13 @@ async function updateWaveLayers(mode, m) {
     const isWindOk = windOk(m);
     const showVec = document.getElementById('wtVec').checked && isWindOk;
     
-    document.getElementById('wtVec').disabled = !isWindOk;
-    document.getElementById('wtVec').parentElement.style.opacity = isWindOk ? '1' : '0.45';
+        document.getElementById('wtVec').disabled = !isWindOk;
+    document.getElementById('wtVec').parentElement.style.display = isWindOk ? '' : 'none';
 
     // Image Overlay (OLR)
     if (showOlr && (!waveImgLayer || waveImgLayer._mode !== mode)) {
         if (waveImgLayer) waveImgLayer.remove();
-        waveImgLayer = L.imageOverlay(`${WAVES_BASE}${mode}.png?v=${m.tanggal}`, m.bounds, { opacity: 0.85, zIndex: 5, interactive: false }).addTo(map);
+        waveImgLayer = L.imageOverlay(`${WAVES_BASE}${mode}.png?v=${m.tanggal}`, m.bounds, { opacity: m.opasitas ?? 0.85, zIndex: 5, interactive: false }).addTo(map);
         waveImgLayer._mode = mode;
     } else if (!showOlr && waveImgLayer) {
         waveImgLayer.remove(); waveImgLayer = null;
@@ -579,7 +583,7 @@ function renderWavePanel(mode, m) {
     
     // Dampak Logic
     const dampak = (m.fase === 'konvektif' && !isAktif)
-        ? 'Sinyal konvektif belum terkonfirmasi (keandalan/propagasi lemah) — bukan dasar prakiraan hujan'
+        ? 'Sinyal konvektif belum terkonfirmasi (keandalan estimasi tepi rendah) — bukan dasar prakiraan hujan'
         : m.dampak;
     const age = (Date.now() - Date.parse(m.tanggal)) / 864e5;
 
@@ -602,7 +606,7 @@ function renderWavePanel(mode, m) {
     const gp = document.getElementById('gasWavePanel');
     gp.className = `gas-wave-info active ${mode}-style`;
     const set = (id, t, cls) => { const e = document.getElementById(id); e.className = 'gas-wave-value ' + (cls || mode + '-color'); e.textContent = t; };
-    set('gwSource', 'NOAA OLR CDR + NCEP R1 · W-K');
+    set('gwSource', 'NOAA OLR CDR v2 · filter W-K');
     set('gwTanggal', m.tanggal + (m.tanggalAngin && m.tanggalAngin !== m.tanggal ? ` (angin ${m.tanggalAngin}${windOk(m) ? '' : ' · usang'})` : ''));
     set('gwMetric', m.label);
     set('gwDetail', `${sg(m.nilaiBox)} W/m² · z ${sg(z, 2)}σ (±${n(m.galatZ, 2)}σ)`);
@@ -613,11 +617,14 @@ function renderWavePanel(mode, m) {
 
     // Panel Diagram Bawah
     const pc = m.fase === 'konvektif' ? col : m.fase === 'tertekan' ? '#ff9944' : '#888888';
-    document.getElementById('wdPhase').innerText = `${isAktif ? 'Aktif' : 'Tidak aktif'} — ${m.fase.toUpperCase()}`;
+        const faseTxt = (m.fase === 'konvektif' && !isAktif)
+        ? 'Konvektif (belum terkonfirmasi)'
+        : `${isAktif ? 'Aktif' : 'Tidak aktif'} — ${m.fase.toUpperCase()}`;
+    document.getElementById('wdPhase').innerText = faseTxt;
     document.getElementById('wdAmplitude').innerText = `${sg(z, 2)}σ (${sg(m.nilaiBox)} W/m²)`;
-    document.getElementById('wdOLR').innerText = windOk(m)
+        document.getElementById('wdOLR').innerText = windOk(m)
         ? `u850 ${sg(m.anomaliU850, 2)} · v850 ${sg(m.anomaliAngin, 2)} m/s · ζ ${sg(m.vortisitas, 2)}×10⁻⁵ s⁻¹`
-        : `korelasi propagasi r=${n(m.korelasiPropagasi, 2)}`;
+        : `dominansi sinyal ${n(m.dominansi, 2)} · persentil ${m.dominansiPersentil ?? '—'} (vs 4 tahun)`;
     document.getElementById('wdPhaseFill').style.width = Math.min(Math.abs(z) / 2, 1) * 100 + '%';
     document.getElementById('wdPhaseFill').style.background = pc;
 
@@ -652,6 +659,9 @@ function renderWavePanel(mode, m) {
         hb.style.display = 'none';
     }
 
+    document.getElementById('waveLoadingIndicator').classList.remove('active');
+    document.getElementById('waveDataPanel').classList.add('active');
+     document.getElementById('waveNote').textContent = m.catatan || '';
     document.getElementById('waveLoadingIndicator').classList.remove('active');
     document.getElementById('waveDataPanel').classList.add('active');
 }
