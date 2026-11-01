@@ -17,6 +17,7 @@ import importlib.util
 import json
 import sys
 import time
+import traceback
 import warnings
 from pathlib import Path
 
@@ -228,14 +229,32 @@ def load_olr():
     return anom, da.time.values, da.lat.values, da.lon.values
 
 
+WIND_ERR = None
+
+
+def harmonic_anomaly(da):
+    """Cadangan bila klimatologi LTM tak terbaca: buang rata-rata + 3 harmonik tahunan (kuadrat terkecil)."""
+    ang = pd.to_datetime(da.time.values).dayofyear.values / 365.25 * 2 * np.pi
+    X = np.column_stack([np.ones(len(ang))] + [f(k * ang) for k in (1, 2, 3) for f in (np.cos, np.sin)])
+    Y = np.nan_to_num(da.values.reshape(len(ang), -1))
+    return (Y - X @ np.linalg.lstsq(X, Y, rcond=None)[0]).reshape(da.shape)
+
+
 def load_wind(var, t0, t1):
     lev = lambda d: d.sel(level=850)
     parts = [fetch_series(WND_URL.format(v=var, y=y), -100, 100, 100, var=var, sel=lev)
              for y in range(pd.Timestamp(t0).year, pd.Timestamp(t1).year + 1)]
     da = xr.concat(parts, "time")
     da = fix_time(da.where(abs(da) < 100)).sel(time=slice(t0, None))
-    ltm = fetch_series(WND_LTM.format(v=var), -100, 100, 100, var=var, sel=lev, decode_times=False)
-    return anomaly(da, ltm.where(abs(ltm) < 100)), da.time.values
+    try:
+        ltm = fetch_series(WND_LTM.format(v=var), -100, 100, 100, var=var, sel=lev, decode_times=False)
+        an = anomaly(da, ltm.where(abs(ltm) < 100))
+    except Exception as e:
+        print(f"  klimatologi angin {var} gagal ({str(e)[:100]}) — pakai harmonik dari data sendiri", file=sys.stderr)
+        an = harmonic_anomaly(da)
+    print(f"{var}: {pd.Timestamp(da.time.values[0]).date()} .. {pd.Timestamp(da.time.values[-1]).date()} "
+          f"std_anom={np.nanstd(an):.1f} m/s")
+    return an, da.time.values
 
 
 # --------------------------------------------------------------- produk
@@ -244,6 +263,25 @@ def box_mean(F, lat, lon, lat_rng, lon_rng):
     lo = (lon >= lon_rng[0]) & (lon <= lon_rng[1])
     w = np.cos(np.deg2rad(lat[la]))[None, :, None]
     return (F[:, la][:, :, lo] * w).sum((1, 2)) / (w.sum() * lo.sum())
+
+
+PERIOD = dict(mjo=(30, 96), kelvin=(2.5, 30), rossby=(9, 72))
+
+
+def band_1d(x, tmin, tmax):
+    f = np.fft.rfftfreq(len(x))
+    m = (f >= 1 / tmax) & (f <= 1 / tmin)
+    return np.fft.irfft(np.fft.rfft(x - x.mean()) * m, n=len(x))
+
+
+def dominance(raw, ser, wave, win=90, step=10):
+    """Rasio varians: deret tersaring-gelombang / deret mentah pada pita periode yang sama (jendela 90 hari).
+    Mengembalikan (nilai terkini, persentil terhadap riwayat ~4 tahun)."""
+    bs = band_1d(np.nan_to_num(raw), *PERIOD[wave])
+    ends = list(range(len(ser) - 60, win + 60, -step))[::-1]
+    r = np.array([ser[e - win:e].var() / max(bs[e - win:e].var(), 1e-9) for e in ends])
+    cur = ser[-win:].var() / max(bs[-win:].var(), 1e-9)
+    return float(cur), float((r < cur).mean() * 100)
 
 
 def lag_corr(up, ds, lags, n=90):
@@ -266,7 +304,7 @@ def edge_skill(anom_rows, wave, lat_r, lon, ref, sigma, ext="ramp", n_lo=180, n_
                 rmseSigma=round(float(np.sqrt(np.mean((est - tru) ** 2)) / sigma), 2), n=int(len(est)))
 
 
-STOPS = [(-1, (8, 48, 107)), (-0.5, (66, 146, 198)), (0, (255, 255, 255)),
+STOPS = [(-1, (8, 48, 107)), (-0.5, (66, 146, 198)), (0, (214, 220, 226)),
          (0.5, (251, 106, 74)), (1, (165, 15, 21))]
 
 
@@ -274,13 +312,23 @@ def to_rgba(field, vmax):
     z = np.clip(field / vmax, -1, 1)
     xs = [s[0] for s in STOPS]
     rgb = np.stack([np.interp(z, xs, [s[1][c] for s in STOPS]) for c in range(3)], -1)
-    a = 0.9 * np.clip(np.abs(z) / 0.25, 0, 1) * 255
+    a = (0.30 + 0.62 * np.clip(np.abs(z) / 0.35, 0, 1)) * 255      # dasar 30%: garis nol tidak jadi pita gelap
     return np.dstack([rgb, a]).astype(np.uint8)
 
 
-def save_png(field, vmax, path, zf, flip=True):
+def edge_fade(ny, nx, px):
+    """Bobot 0..1 (smoothstep) yang memudar ke nol dalam px piksel dari tepi gambar."""
+    dy = np.minimum(np.arange(ny), ny - 1 - np.arange(ny)) / px
+    dx = np.minimum(np.arange(nx), nx - 1 - np.arange(nx)) / px
+    d = np.clip(np.minimum(dy[:, None], dx[None, :]), 0, 1)
+    return d * d * (3 - 2 * d)
+
+
+def save_png(field, vmax, path, zf, flip=True, fade=False):
     f = zoom(field, zf, order=3 if np.isscalar(zf) else 1)
     img = to_rgba(f, vmax)
+    if fade:
+        img[..., 3] = (img[..., 3] * edge_fade(*img.shape[:2], px=3 * zf)).astype(np.uint8)
     Image.fromarray(img[::-1] if flip else img, "RGBA").save(path, optimize=True)
 
 
@@ -337,12 +385,14 @@ def process(wave, olr, wnd):
     z = val / sigma
     zc = z * min(max(skill["kalibrasi"], 0.0), 1.2)       # estimasi terkalibrasi (prediktor linear terbaik)
     rho = lag_corr(up, ser, LAGS[wave])
+    rawb_ = box_mean(anom, lat, lon, BOX["lat"], BOX["lon"])
+    dom, dom_pct = dominance(rawb_, ser, wave)
     keandalan = "baik" if skill["korelasi"] >= 0.85 else ("sedang" if skill["korelasi"] >= 0.6 else "rendah")
     print(f"  [{wave}] uji tepi ramp={skills['ramp']} mirror={skills['mirror']} -> pakai {best} ({keandalan})")
     print(f"  [{wave}] 7 hari terakhir: {np.round(ser[-7:], 1).tolist()}")
 
     # peta OLR tersaring (hari terakhir) + Hovmoller 90 hari
-    save_png(F[-1][la][:, lo], vmax, OUT / f"{wave}.png", 4)
+    save_png(F[-1][la][:, lo], vmax, OUT / f"{wave}.png", 4, fade=True)
     hb = (lat >= HOV_BAND[wave][0]) & (lat <= HOV_BAND[wave][1])
     w = np.cos(np.deg2rad(lat[hb]))[None, :, None]
     hov = (F[-90:][:, hb] * w).sum(1) / w.sum()
@@ -354,14 +404,15 @@ def process(wave, olr, wnd):
                  hariLalu=int(6 - k), tanggalMinimum=str(pd.Timestamp(times[-7 + k]).date()))
     fase = "konvektif" if zc <= -1 else ("tertekan" if zc >= 1 else "netral")
     propagates = rho >= 0.5 if wave != "mjo" else True
-    aktif = bool(zc <= -1 and propagates and keandalan != "rendah")
+    aktif = bool(zc <= -1 and keandalan != "rendah")
 
     la_s, lo_s = lat[la], lon[lo]
     meta = dict(
         gelombang=wave, tanggal=date, sumber=SRC, satuan="W/m²", vmax=vmax,
         bounds=[[float(la_s[0]) - 1.25, float(lo_s[0]) - 1.25], [float(la_s[-1]) + 1.25, float(lo_s[-1]) + 1.25]],
         nilaiBox=round(val, 2), sigma=round(sigma, 2), z=round(z, 2), zKalibrasi=round(zc, 2), galatZ=skill["rmseSigma"], fase=fase, aktif=aktif,
-        korelasiPropagasi=round(rho, 2), indeksKelvin=round(max(0.0, -zc), 2),
+        koherensiHulu=round(rho, 2), korelasiPropagasi=round(rho, 2),
+        dominansi=round(dom, 2), dominansiPersentil=round(dom_pct), opasitas={"baik": 0.9, "sedang": 0.75, "rendah": 0.5}[keandalan], indeksKelvin=round(max(0.0, -zc), 2),
         hov=dict(hari=90, lon0=float(lo_s[0]), lon1=float(lo_s[-1]),
                  tanggal0=str(pd.Timestamp(times[-90]).date()), tanggal1=date),
         catatan="3-5 hari terakhir kurang andal (efek tepi filter). Bukan pengganti produk resmi CPC.",
@@ -383,7 +434,11 @@ def process(wave, olr, wnd):
             meta.update(vektor=True, tanggalAngin=wdate, anomaliU850=round(float(u_box), 2),
                         anomaliAngin=round(float(v_box), 2), vortisitas=round(float(zb), 3))
         except Exception as e:                      # angin gagal: peta OLR tetap terbit
-            print(f"[{wave}] angin dilewati: {e}", file=sys.stderr)
+            meta["vektorAlasan"] = f"{type(e).__name__}: {str(e)[:200]}"
+            print(f"[{wave}] ANGIN DILEWATI: {meta['vektorAlasan']}")
+            traceback.print_exc()
+    else:
+        meta["vektorAlasan"] = WIND_ERR or "angin tidak dimuat"
 
     arah = {"mjo": "Timur (30-96 hari)", "kelvin": "Timur (±15-20 m/s)", "rossby": "Barat (ER n=1)"}[wave]
     meta["arah"] = arah
@@ -395,7 +450,7 @@ def process(wave, olr, wnd):
                       "tertekan": "Hujan cenderung berkurang",
                       "netral": "Tidak dominan"}[fase]
     (OUT / f"{wave}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1))
-    print(f"[{wave}] {date} nilai={val:.1f} W/m2 z={z:.2f} zKalibrasi={zc:.2f} (±{skill['rmseSigma']}σ) r={rho:.2f} {fase}")
+    print(f"[{wave}] {date} nilai={val:.1f} W/m2 z={z:.2f} zKalibrasi={zc:.2f} (±{skill['rmseSigma']}σ) dominansi={dom:.2f} (persentil {dom_pct:.0f}) {fase}")
 
 
 def main():
@@ -408,7 +463,10 @@ def main():
     try:
         wnd = (load_wind("uwnd", t0, t1), load_wind("vwnd", t0, t1))
     except Exception as e:
-        print(f"angin NCEP tidak tersedia: {e}", file=sys.stderr)
+        global WIND_ERR
+        WIND_ERR = f"{type(e).__name__}: {str(e)[:200]}"
+        print(f"ANGIN NCEP TIDAK TERSEDIA: {WIND_ERR}")
+        traceback.print_exc()
         wnd = None
     for w in WAVES:
         process(w, olr, wnd)
