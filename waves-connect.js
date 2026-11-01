@@ -13,6 +13,7 @@ const $ = id => document.getElementById(id);
 const n = (x, d = 1) => (typeof x === 'number' && isFinite(x)) ? x.toFixed(d) : '—';
 const sg = (x, d = 1) => n(x, d) === '—' ? '—' : (x >= 0 ? '+' : '') + x.toFixed(d);
 const esc = s => String(s ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const windOk = m => m.vektor && m.tanggalAngin && Math.abs(Date.parse(m.tanggal) - Date.parse(m.tanggalAngin)) <= 3 * 864e5;
 const fl = lon => lon > 180 ? (360 - lon) + '°BB' : lon + '°BT';
 
 /* ---------- UI tambahan (disuntik, HTML asli tidak perlu diubah) ---------- */
@@ -24,7 +25,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .hov-wrap img{width:100%;height:150px;display:block}
 .hov-box{position:absolute;top:0;bottom:0;border:1px dashed rgba(0,255,136,.85);border-width:0 1px;pointer-events:none}
 .hov-d{position:absolute;left:4px;font-size:.58rem;line-height:1;color:rgba(255,255,255,.75)}
-@media(max-width:768px){.forecast:not(.collapsed) .collapsible-content{max-height:min(calc(100dvh - 330px),780px)}body.panel-open .wave-info-badge,body.panel-open .wave-source-badge{display:none!important}}
+@media(max-width:768px){.forecast:not(.collapsed) .collapsible-content{max-height:min(calc(100dvh - 330px),780px)}body.panel-open .wave-info-badge,body.panel-open .wave-source-badge{display:none!important}body.panel-open.wave-mode .leaflet-control-zoom{display:none}}
 .hov-ax{display:flex;justify-content:space-between;font-size:.58rem;color:rgba(255,255,255,.5);margin-top:3px}
 </style>`);
 $('wavePhaseChip').insertAdjacentHTML('afterend',
@@ -58,7 +59,7 @@ window.updateLegendUI = mode => {
   s.innerHTML = [`−${v} W/m² (konvektif)`, '0', `+${v} W/m² (tertekan)`].map(t => `<span>${t}</span>`).join('');
 };
 const sw0 = window.switchRadarLayer;
-window.switchRadarLayer = (m, el) => { clearLayers(); sw0(m, el); };
+window.switchRadarLayer = (m, el) => { clearLayers(); document.body.classList.toggle('wave-mode', WAVES.includes(m)); sw0(m, el); };
 
 /* ---------- data ---------- */
 const valid = (w, m) => m && m.gelombang === w && Array.isArray(m.bounds) && m.bounds.length === 2 && m.tanggal &&
@@ -81,7 +82,7 @@ async function pack(w) {
 function clearLayers() { imgLayer?.remove(); vecLayer?.remove(); imgLayer = vecLayer = null; }
 
 async function layers(w, m) {
-  const key = w + m.tanggal, olr = $('wtOlr').checked, vec = $('wtVec').checked && m.vektor;
+  const key = w + m.tanggal, olr = $('wtOlr').checked, vec = $('wtVec').checked && windOk(m);
   if (imgLayer && (imgLayer._k !== key || !olr)) { imgLayer.remove(); imgLayer = null; }
   if (olr && !imgLayer) {
     imgLayer = L.imageOverlay(`${BASE}${w}.png?v=${m.tanggal}`, m.bounds, { opacity: .9, zIndex: 5, interactive: false }).addTo(map);
@@ -115,6 +116,7 @@ function render(w, m) {
     : m.dampak;
   const age = (Date.now() - Date.parse(m.tanggal)) / 864e5;
 
+  $('wtVec').disabled = !windOk(m); $('wtVec').parentElement.style.opacity = windOk(m) ? '' : '.45';
   const sb = $('waveSourceBadge'); sb.style.display = 'flex';
   if (age > 6 || rel === 'rendah') {
     sb.className = 'wave-source-badge fallback';
@@ -128,7 +130,7 @@ function render(w, m) {
   $('gasWavePanel').className = `gas-wave-info active ${w}-style`;
   const set = (id, t, cls) => { const e = $(id); e.className = 'gas-wave-value ' + (cls || w + '-color'); e.textContent = t; };
   set('gwSource', 'NOAA OLR CDR + NCEP R1 · W-K');
-  set('gwTanggal', m.tanggal + (m.tanggalAngin && m.tanggalAngin !== m.tanggal ? ` (angin ${m.tanggalAngin})` : ''));
+  set('gwTanggal', m.tanggal + (m.tanggalAngin && m.tanggalAngin !== m.tanggal ? ` (angin ${m.tanggalAngin}${windOk(m) ? '' : ' · usang, tidak dipakai'})` : ''));
   $('gwMetricLabel').textContent = '🌀 Status & Label'; set('gwMetric', m.label);
   $('gwDetailLabel').textContent = '📊 OLR Tersaring (Indonesia)';
   set('gwDetail', `${sg(m.nilaiBox)} W/m² · z ${sg(z, 2)}σ (±${n(m.galatZ, 2)}σ)`);
@@ -139,7 +141,7 @@ function render(w, m) {
   const pc = m.fase === 'konvektif' ? col : m.fase === 'tertekan' ? '#ff9944' : '#888888';
   $('wdPhase').innerText = `${m.aktif ? 'Aktif' : 'Tidak aktif'} — ${fase}`;
   $('wdAmplitude').innerText = `${sg(z, 2)}σ (${sg(m.nilaiBox)} W/m²)`;
-  $('wdOLR').innerText = m.vektor
+  $('wdOLR').innerText = windOk(m)
     ? `u850 ${sg(m.anomaliU850, 2)} · v850 ${sg(m.anomaliAngin, 2)} m/s · ζ ${sg(m.vortisitas, 2)}×10⁻⁵ s⁻¹`
     : `korelasi propagasi r=${n(m.korelasiPropagasi, 2)}`;
   $('wdImpact').innerText = dampak;
