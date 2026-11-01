@@ -17,6 +17,8 @@
  "nilaiBox": 0.51,
  "sigma": 4.76,
  "z": 0.11,
+ "zKalibrasi": 0.09,
+ "galatZ": 0.63,
  "fase": "netral",
  "aktif": false,
  "korelasiPropagasi": 0.79,
@@ -32,10 +34,27 @@
  "keandalanTepi": {
   "korelasi": 0.71,
   "kemiringan": 0.57,
+  "kalibrasi": 0.88,
   "rmseSigma": 0.63,
-  "n": 30
+  "n": 30,
+  "metodeUjung": "ramp"
  },
  "keandalan": "sedang",
+ "ringkas7hari": {
+  "nilai": [
+   0.7,
+   -0.6,
+   -4.8,
+   -8.6,
+   -6.5,
+   -1.3,
+   0.5
+  ],
+  "minimum": -8.6,
+  "zMinimum": -1.81,
+  "hariLalu": 3,
+  "tanggalMinimum": "2026-10-25"
+ },
  "vektor": true,
  "anomaliU850": 0.34,
  "anomaliAngin": -0.16,
