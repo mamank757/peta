@@ -1,6 +1,6 @@
 {
  "gelombang": "rossby",
- "tanggal": "2026-10-29",
+ "tanggal": "2026-10-30",
  "sumber": "NOAA OLR CDR v2 (PSL) · filter Wheeler-Kiladis",
  "satuan": "W/m²",
  "vmax": 15,
@@ -14,50 +14,50 @@
    211.25
   ]
  ],
- "nilaiBox": -9.38,
- "sigma": 3.15,
- "z": -2.98,
- "zKalibrasi": -1.31,
- "galatZ": 0.86,
- "fase": "konvektif",
+ "nilaiBox": -6.28,
+ "sigma": 3.14,
+ "z": -2.0,
+ "zKalibrasi": -0.68,
+ "galatZ": 0.91,
+ "fase": "netral",
  "aktif": false,
  "koherensiHulu": 0.93,
  "korelasiPropagasi": 0.93,
  "dominansi": 0.36,
  "dominansiPersentil": 98,
  "opasitas": 0.5,
- "indeksKelvin": 1.31,
+ "indeksKelvin": 0.68,
  "hov": {
   "hari": 90,
   "lon0": 30.0,
   "lon1": 210.0,
-  "tanggal0": "2026-08-01",
-  "tanggal1": "2026-10-29"
+  "tanggal0": "2026-08-02",
+  "tanggal1": "2026-10-30"
  },
  "catatan": "3-5 hari terakhir kurang andal (efek tepi filter). Bukan pengganti produk resmi CPC.",
  "keandalanTepi": {
-  "korelasi": 0.32,
-  "kemiringan": 0.24,
-  "kalibrasi": 0.44,
-  "rmseSigma": 0.86,
+  "korelasi": 0.25,
+  "kemiringan": 0.19,
+  "kalibrasi": 0.34,
+  "rmseSigma": 0.91,
   "n": 30,
   "metodeUjung": "ramp"
  },
  "keandalan": "rendah",
  "ringkas7hari": {
   "nilai": [
-   -4.4,
-   -6.4,
-   -8.0,
-   -9.2,
-   -9.9,
-   -9.9,
-   -9.4
+   -5.7,
+   -7.0,
+   -7.9,
+   -8.3,
+   -8.1,
+   -7.4,
+   -6.3
   ],
-  "minimum": -9.9,
-  "zMinimum": -3.15,
-  "hariLalu": 1,
-  "tanggalMinimum": "2026-10-28"
+  "minimum": -8.3,
+  "zMinimum": -2.63,
+  "hariLalu": 3,
+  "tanggalMinimum": "2026-10-27"
  },
  "vektor": false,
  "anomaliU850": null,
@@ -65,6 +65,6 @@
  "vortisitas": null,
  "vektorAlasan": "angin NCEP/NCAR R1 berakhir 2026-03-17 (dihentikan NOAA 2026-03-17, CDAS->CORe); tidak dipakai agar tidak menampilkan angin usang",
  "arah": "Barat (ER n=1)",
- "label": "Fase konvektif di atas Indonesia (estimasi tepi kurang andal)",
- "dampak": "Peluang hujan meningkat (OLR tersaring negatif)"
+ "label": "Sinyal lemah/netral (estimasi tepi kurang andal)",
+ "dampak": "Tidak dominan"
 }
