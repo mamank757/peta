@@ -24,6 +24,9 @@ jobs:
             sleep 120
           done
           exit 1
+      - name: Tambah riwayat gelombang (untuk model Apps Script)
+        continue-on-error: true      # kegagalan di sini tidak boleh menggagalkan peta harian
+        run: python scripts/build_riwayat.py
       - name: Commit hasil
         run: |
           git config user.name "wave-bot"
