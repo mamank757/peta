@@ -1,0 +1,33 @@
+# Jalankan MANUAL sekali (Actions -> build-riwayat -> Run workflow) untuk membangun data/waves/riwayat.json
+# dari 1997 sampai hari ini. Sesudah itu, penambahan harian dilakukan oleh waves.yml.
+name: build-riwayat
+on:
+  workflow_dispatch:
+    inputs:
+      mulai:
+        description: "Tanggal awal riwayat (YYYY-MM-DD)"
+        default: "1997-01-01"
+permissions:
+  contents: write
+jobs:
+  riwayat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy scipy pandas xarray netCDF4 pydap pillow
+      - name: Bangun riwayat (backfill)
+        run: python scripts/build_riwayat.py --backfill --mulai "${{ inputs.mulai }}"
+      - name: Commit hasil
+        run: |
+          git config user.name "wave-bot"
+          git config user.email "wave-bot@users.noreply.github.com"
+          git pull --rebase --autostash || true
+          git add data/waves/riwayat.json
+          if ! git diff --cached --quiet; then
+            git commit -m "riwayat gelombang (backfill)"
+            git push
+          fi
