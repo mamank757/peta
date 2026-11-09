@@ -1,4 +1,4 @@
-{"kolom":["tanggal","mjo","kelvin","rossby"],"sigma":{"mjo":6.787,"kelvin":3.4619,"rossby":3.1924},"ujung":"ramp","jendela":1500,"metode":"OLR tersaring Wheeler-Kiladis, estimasi waktu-nyata (hanya data sampai tanggal itu) / sigma tetap","diperbarui":"2026-11-08T02:16Z","data":[
+{"kolom":["tanggal","mjo","kelvin","rossby"],"sigma":{"mjo":6.787,"kelvin":3.4619,"rossby":3.1924},"ujung":"ramp","jendela":1500,"metode":"OLR tersaring Wheeler-Kiladis, estimasi waktu-nyata (hanya data sampai tanggal itu) / sigma tetap","diperbarui":"2026-11-09T12:01Z","data":[
 ["1997-01-01",1.729,-0.335,0.537],
 ["1997-01-02",1.946,-0.158,0.23],
 ["1997-01-03",2.182,-0.052,-0.151],
@@ -10898,5 +10898,6 @@
 ["2026-11-01",-0.834,0.323,0.196],
 ["2026-11-02",-0.811,1.217,0.335],
 ["2026-11-03",-0.41,1.947,0.323],
-["2026-11-04",-0.256,1.184,0.23]
+["2026-11-04",-0.256,1.184,0.23],
+["2026-11-05",-0.233,0.354,0.324]
 ]}

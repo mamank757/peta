@@ -1,6 +1,6 @@
 {
  "gelombang": "kelvin",
- "tanggal": "2026-11-04",
+ "tanggal": "2026-11-05",
  "sumber": "NOAA OLR CDR v2 (PSL) · filter Wheeler-Kiladis",
  "satuan": "W/m²",
  "vmax": 15,
@@ -14,16 +14,16 @@
    211.25
   ]
  ],
- "nilaiBox": 4.1,
+ "nilaiBox": 1.23,
  "sigma": 4.76,
- "z": 0.86,
- "zKalibrasi": 1.03,
- "galatZ": 0.59,
- "fase": "tertekan",
+ "z": 0.26,
+ "zKalibrasi": 0.25,
+ "galatZ": 0.62,
+ "fase": "netral",
  "aktif": false,
  "koherensiHulu": 0.76,
  "korelasiPropagasi": 0.76,
- "dominansi": 0.22,
+ "dominansi": 0.19,
  "dominansiPersentil": 0,
  "opasitas": 0.75,
  "indeksKelvin": 0.0,
@@ -31,32 +31,32 @@
   "hari": 90,
   "lon0": 30.0,
   "lon1": 210.0,
-  "tanggal0": "2026-08-07",
-  "tanggal1": "2026-11-04"
+  "tanggal0": "2026-08-08",
+  "tanggal1": "2026-11-05"
  },
  "catatan": "3-5 hari terakhir kurang andal (efek tepi filter). Bukan pengganti produk resmi CPC.",
  "keandalanTepi": {
-  "korelasi": 0.82,
-  "kemiringan": 0.53,
-  "kalibrasi": 1.25,
-  "rmseSigma": 0.59,
+  "korelasi": 0.73,
+  "kemiringan": 0.55,
+  "kalibrasi": 0.97,
+  "rmseSigma": 0.62,
   "n": 30,
   "metodeUjung": "ramp"
  },
  "keandalan": "sedang",
  "ringkas7hari": {
   "nilai": [
-   -2.7,
-   -3.7,
-   -2.0,
-   0.7,
-   5.8,
-   7.9,
-   4.1
+   -3.8,
+   -2.5,
+   -0.1,
+   5.3,
+   7.7,
+   4.3,
+   1.2
   ],
-  "minimum": -3.7,
-  "zMinimum": -0.78,
-  "hariLalu": 5,
+  "minimum": -3.8,
+  "zMinimum": -0.81,
+  "hariLalu": 6,
   "tanggalMinimum": "2026-10-30"
  },
  "vektor": false,
@@ -65,6 +65,6 @@
  "vortisitas": null,
  "vektorAlasan": "angin NCEP/NCAR R1 berakhir 2026-03-17 (dihentikan NOAA 2026-03-17, CDAS->CORe); tidak dipakai agar tidak menampilkan angin usang",
  "arah": "Timur (±15-20 m/s)",
- "label": "Fase tertekan (kering)",
- "dampak": "Hujan cenderung berkurang"
+ "label": "Sinyal lemah/netral",
+ "dampak": "Tidak dominan"
 }
