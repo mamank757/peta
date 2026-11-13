@@ -38,8 +38,9 @@ jobs:
 
       - name: Run ECMWF Wind Processing
         env:
-          RUNS_PER_DAY: "2"      # harus sama dengan jumlah cron di atas
-        run: python scripts/process_wind.py
+          RUNS_PER_DAY: "2"
+          PYTHONUNBUFFERED: "1"
+        run: python -u scripts/process_wind.py
 
       - name: Commit hasil data angin
         run: |
