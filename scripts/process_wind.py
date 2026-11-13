@@ -3,18 +3,25 @@ Ambil angin 10 m dari ECMWF IFS (9 km, model yang sama dengan default Windy)
 lewat API Open-Meteo, lalu simpan sebagai grid untuk leaflet-velocity.
 
 Dua grid dibuat (dipilih otomatis di peta sesuai zoom):
-  - detail   : Sulsel & sekitarnya, rapat (0.125 derajat ~ 14 km)
-  - regional : radius luas Indonesia tengah (0.75 derajat ~ 83 km)
+  - detail   : Sulsel & sekitarnya (0.25 derajat ~ 28 km)
+  - regional : radius luas Indonesia tengah (1.5 derajat ~ 167 km)
 
 Tiap file berisi beberapa "frame" waktu (tiap 3 jam, 36 jam ke depan).
 Browser menginterpolasi antar-frame, jadi angin selalu sesuai jam SEKARANG.
 
 ANGGARAN API (gratis, non-komersial): < 10.000 panggilan/hari, 5.000/jam,
-600/menit. Setiap titik grid dihitung 1 panggilan. Script ini memakai
-~3.400 titik per eksekusi x 2 eksekusi/hari = ~6.800/hari.
+600/menit. Setiap titik grid dihitung 1 panggilan.
+
+Perubahan dibanding versi lama:
+  - batas waktu internal (DEADLINE) -> skrip berhenti sendiri dengan pesan jelas
+  - output langsung tampil di log GitHub Actions (tanpa buffering)
+  - isi respons error dicetak; 429 "hourly"/"daily" tidak diulang percuma
+  - preflight 1 titik di awal: gagal cepat kalau kuota/endpoint bermasalah
+  - exit 1 hanya jika SEMUA grid gagal (grid yang berhasil tetap di-commit)
 """
 import datetime as dt
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -22,10 +29,14 @@ from pathlib import Path
 import numpy as np
 import requests
 
+sys.stdout.reconfigure(line_buffering=True)   # log tampil langsung di Actions
+
 # ───────────────────────── KONFIGURASI ─────────────────────────
 TIERS = {
-    "detail":   dict(lat_min=-7.75, lat_max=-1.5, lon_min=117.5, lon_max=122.5, step=0.125),
-    "regional": dict(lat_min=-12.0, lat_max=6.0,  lon_min=100.0, lon_max=139.0, step=0.75),
+    # Untuk resolusi lebih rapat: detail step=0.125, regional step=0.75
+    # (total ~3.400 titik/eksekusi, rawan kena batas kuota di runner GitHub)
+    "detail":   dict(lat_min=-7.75, lat_max=-1.5, lon_min=117.5, lon_max=122.5, step=0.25),
+    "regional": dict(lat_min=-12.0, lat_max=6.0,  lon_min=100.0, lon_max=139.0, step=1.5),
 }
 FRAME_STEP_H = 3      # jarak antar-frame (jam)
 N_FRAMES = 13         # 13 frame x 3 jam = 36 jam
@@ -34,11 +45,23 @@ PAUSE_S = 13          # jeda antar request -> ~460 titik/menit (< batas 600/meni
 MODEL = "ecmwf_ifs"   # IFS HRES 9 km
 ENDPOINTS = ["https://api.open-meteo.com/v1/ecmwf", "https://api.open-meteo.com/v1/forecast"]
 OUT_DIR = Path(__file__).resolve().parent.parent / "data"
-DAILY_RUNS = 2        # sesuai cron di workflow
+DAILY_RUNS = int(os.environ.get("RUNS_PER_DAY", "2"))   # diisi dari workflow
 FREE_DAILY_LIMIT = 10_000
+MAX_RUNTIME_S = 20 * 60                                  # menyerah setelah 20 menit
 # ───────────────────────────────────────────────────────────────
 
+DEADLINE = time.time() + MAX_RUNTIME_S
 _endpoint_idx = 0
+
+
+class QuotaExceeded(RuntimeError):
+    """Batas jam/hari API habis: mengulang tidak ada gunanya."""
+
+
+def sleep_checked(seconds):
+    if time.time() + seconds > DEADLINE:
+        raise RuntimeError(f"batas waktu {MAX_RUNTIME_S // 60} menit akan terlewati, berhenti")
+    time.sleep(seconds)
 
 
 def make_axes(t):
@@ -51,29 +74,54 @@ def make_axes(t):
     return np.round(lats, 4), np.round(lons, 4)
 
 
+def build_params(chunk):
+    return {
+        "latitude": ",".join(f"{p[0]:.4f}" for p in chunk),
+        "longitude": ",".join(f"{p[1]:.4f}" for p in chunk),
+        "hourly": "wind_speed_10m,wind_direction_10m",
+        "models": MODEL,
+        "wind_speed_unit": "ms",
+        "timezone": "GMT",
+        "past_days": 1,
+        "forecast_days": 3,
+    }
+
+
 def api_get(params):
-    """GET dengan retry untuk 429/5xx; pindah endpoint bila 400."""
+    """GET dengan retry untuk 429 'minutely'/5xx; pindah endpoint bila 400."""
     global _endpoint_idx
     for attempt in range(6):
+        if time.time() > DEADLINE:
+            raise RuntimeError(f"melewati batas waktu {MAX_RUNTIME_S // 60} menit, berhenti")
         url = ENDPOINTS[_endpoint_idx]
         try:
-            r = requests.get(url, params=params, timeout=90)
+            r = requests.get(url, params=params, timeout=60)
         except requests.RequestException as e:
             print(f"  koneksi gagal ({e}), ulang...")
-            time.sleep(10 * (attempt + 1))
+            sleep_checked(10 * (attempt + 1))
             continue
         if r.status_code == 200:
             return r.json()
+
+        body = r.text[:300]
+        print(f"  HTTP {r.status_code} dari {url}: {body}")
+
         if r.status_code == 400 and _endpoint_idx + 1 < len(ENDPOINTS):
-            print(f"  {url} -> 400 ({r.text[:120]}); coba endpoint lain")
             _endpoint_idx += 1
+            print(f"  pindah ke endpoint {ENDPOINTS[_endpoint_idx]}")
             continue
-        if r.status_code == 429 or r.status_code >= 500:
-            wait = 65 if r.status_code == 429 else 15 * (attempt + 1)
-            print(f"  HTTP {r.status_code}, tunggu {wait}s...")
-            time.sleep(wait)
+        if r.status_code == 429:
+            low = body.lower()
+            if "hourly" in low or "daily" in low:
+                raise QuotaExceeded(body)
+            wait = int(r.headers.get("Retry-After", 65)) if r.headers.get("Retry-After", "").isdigit() else 65
+            print(f"  kena batas per menit, tunggu {wait}s...")
+            sleep_checked(wait)
             continue
-        raise RuntimeError(f"HTTP {r.status_code}: {r.text[:200]}")
+        if r.status_code >= 500:
+            sleep_checked(15 * (attempt + 1))
+            continue
+        raise RuntimeError(f"HTTP {r.status_code}: {body}")
     raise RuntimeError("API tetap gagal setelah 6 percobaan")
 
 
@@ -90,17 +138,7 @@ def fetch_points(points):
     spd_all, dir_all, times = [], [], None
     for i in range(0, len(points), CHUNK):
         chunk = points[i:i + CHUNK]
-        params = {
-            "latitude": ",".join(f"{p[0]:.4f}" for p in chunk),
-            "longitude": ",".join(f"{p[1]:.4f}" for p in chunk),
-            "hourly": "wind_speed_10m,wind_direction_10m",
-            "models": MODEL,
-            "wind_speed_unit": "ms",
-            "timezone": "GMT",
-            "past_days": 1,
-            "forecast_days": 3,
-        }
-        data = api_get(params)
+        data = api_get(build_params(chunk))
         if isinstance(data, dict):     # 1 lokasi -> objek tunggal
             data = [data]
         if len(data) != len(chunk):
@@ -115,7 +153,7 @@ def fetch_points(points):
             dir_all.append(pick(h, "wind_direction_10m"))
         print(f"  {min(i + CHUNK, len(points))}/{len(points)} titik")
         if i + CHUNK < len(points):
-            time.sleep(PAUSE_S)
+            sleep_checked(PAUSE_S)
     to_f = lambda a: np.array([[np.nan if x is None else x for x in row] for row in a], dtype=float)
     return times, to_f(spd_all), to_f(dir_all)
 
@@ -187,8 +225,20 @@ def main():
     if per_day > FREE_DAILY_LIMIT * 0.9:
         print("PERINGATAN: mendekati batas harian API gratis. Kecilkan grid atau kurangi frekuensi.")
 
+    # Preflight: 1 titik, gagal cepat kalau kuota habis / endpoint salah
+    print("Preflight (1 titik)...")
+    try:
+        api_get(build_params([(-5.0, 119.5)]))
+        print("  preflight OK")
+    except QuotaExceeded as e:
+        print(f"::error::Kuota Open-Meteo habis, tidak ada gunanya lanjut: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"::error::Preflight gagal: {e}")
+        sys.exit(1)
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    failed = False
+    n_ok = 0
     for tier, t in TIERS.items():
         print(f"== Grid '{tier}' ==")
         try:
@@ -200,10 +250,14 @@ def main():
             out.write_text(json.dumps(pack, separators=(",", ":")))
             print(f"  tersimpan {out.name}: {pack['header']['nx']}x{pack['header']['ny']}, "
                   f"{len(pack['times'])} frame, {out.stat().st_size/1024:.0f} KB")
+            n_ok += 1
         except Exception as e:      # file lama dibiarkan utuh bila gagal
-            failed = True
-            print(f"  GAGAL grid '{tier}': {e}")
-    sys.exit(1 if failed else 0)
+            print(f"::warning::GAGAL grid '{tier}': {e}")
+
+    if n_ok == 0:
+        print("::error::Semua grid gagal")
+        sys.exit(1)
+    print(f"Selesai: {n_ok}/{len(TIERS)} grid berhasil")
 
 
 if __name__ == "__main__":
