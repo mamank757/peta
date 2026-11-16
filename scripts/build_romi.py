@@ -19,9 +19,14 @@ MAX_AGE_DAYS = 7
 N_JEJAK = 40
 
 
-def fase_dari(r1, r2):
-    """Sudut di bidang (ROMI1, ROMI2): 180-225° = fase 1 ... 135-180° = fase 8."""
-    ang = float(np.degrees(np.arctan2(r2, r1)) % 360)
+def ke_rmm(pc1, pc2):
+    """Konvensi NOAA PSL: ROMI(PC2) setara RMM1 dan -ROMI(PC1) setara RMM2."""
+    return pc2, -pc1
+
+
+def fase_dari(rmm1, rmm2):
+    """Sudut di bidang (RMM1, RMM2): 180-225° = fase 1 ... 135-180° = fase 8."""
+    ang = float(np.degrees(np.arctan2(rmm2, rmm1)) % 360)
     return (int(ang // 45) + 4) % 8 + 1, ang
 
 
@@ -60,12 +65,13 @@ age = (pd.Timestamp.now().normalize() - last.t).days
 if age > MAX_AGE_DAYS:
     sys.exit(f"ROMI terakhir {last.t.date()} ({age} hari lalu): usang, tidak ditulis")
 
-fase, ang = fase_dari(last.r1, last.r2)
+rmm1, rmm2 = ke_rmm(last.r1, last.r2)
+fase, ang = fase_dari(rmm1, rmm2)
 aktif = bool(last.amp >= 1)
 
 jejak = [
     dict(tanggal=str(r.t.date()), romi1=round(r.r1, 2), romi2=round(r.r2, 2),
-         amplitudo=round(r.amp, 2))
+         rmm1=round(r.r2, 2), rmm2=round(-r.r1, 2), amplitudo=round(r.amp, 2))
     for r in df.tail(N_JEJAK).itertuples()
 ]
 
@@ -74,6 +80,8 @@ meta = dict(
     tanggal=str(last.t.date()),
     romi1=round(float(last.r1), 3),
     romi2=round(float(last.r2), 3),
+    rmm1=round(float(rmm1), 3),   # = ROMI PC2
+    rmm2=round(float(rmm2), 3),   # = -ROMI PC1
     amplitudo=round(float(last.amp), 3),
     sudut=round(ang, 1),
     aktif=aktif,
@@ -86,4 +94,4 @@ meta = dict(
 )
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps(meta, ensure_ascii=False, indent=1))
-print(f"[romi] {meta['tanggal']} amp={meta['amplitudo']} fase={meta['fase']} ({meta['label']})")
+print(f"[romi] {meta['tanggal']} PC1={last.r1:.2f} PC2={last.r2:.2f} -> RMM1={rmm1:.2f} RMM2={rmm2:.2f} sudut={ang:.0f} amp={meta['amplitudo']} fase={meta['fase']} ({meta['label']})")
