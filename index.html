@@ -4,37 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Smart Farm Weather Satellite Radar</title>
- 
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-velocity@1.2.1/dist/leaflet-velocity.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/leaflet-velocity@1.2.1/dist/leaflet-velocity.min.js"></script>
- 
+
 <style>
 html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font-family:'Segoe UI',sans-serif; background:#060b13; }
 #map { width:100%; height:100dvh; z-index:1; }
- 
+
 #geoBanner { position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:1300; background:rgba(8,15,35,.96); backdrop-filter:blur(16px); border:1px solid rgba(0,255,136,.3); border-radius:12px; padding:10px 18px; color:#00ff88; font-size:.78rem; font-weight:600; white-space:nowrap; display:flex; align-items:center; gap:8px; transition:opacity .5s ease; }
 #geoBanner.hidden { opacity:0; pointer-events:none; }
- 
+
 .radar-modes { position:absolute; top:15px; left:15px; right:15px; z-index:1200; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
 .mode-btn { background:rgba(11,22,44,.85); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.8); padding:10px 16px; border-radius:999px; font-size:.82rem; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .3s ease; display:flex; align-items:center; gap:6px; }
 .mode-btn:hover { background:rgba(0,255,136,.1); border-color:rgba(0,255,136,.5); }
 .mode-btn.active { background:#00ff88; color:#060b13; border-color:#00ff88; box-shadow:0 0 15px rgba(0,255,136,.4); }
- 
+
 .wave-source-badge { position:absolute; top:130px; right:15px; z-index:1250; background:rgba(8,15,35,.92); backdrop-filter:blur(12px); border-radius:8px; padding:5px 10px; font-size:.65rem; font-weight:700; letter-spacing:.5px; align-items:center; gap:5px; transition:opacity .3s; display:none; }
 .wave-source-badge.gas { border:1px solid rgba(0,255,136,.35); color:#00ff88; display:flex; }
 .wave-source-badge.fallback { border:1px solid rgba(255,200,0,.35); color:#ffcc00; display:flex; }
 .wave-source-badge.loading { border:1px solid rgba(113,247,255,.25); color:#71f7ff; display:flex; }
- 
+
 .wind-time-box { position:absolute; top:168px; right:15px; z-index:1250; display:none; flex-direction:column; gap:4px; width:190px; background:rgba(8,15,35,.92); backdrop-filter:blur(12px); border:1px solid rgba(113,247,255,.25); border-radius:8px; padding:7px 10px; font-size:.65rem; font-weight:700; color:#71f7ff; }
 .wind-time-box input[type=range] { width:100%; accent-color:#71f7ff; }
 .wind-time-box .src { font-weight:400; color:rgba(255,255,255,.55); font-size:.58rem; }
- 
+
 .wave-info-badge { position:absolute; top:170px; left:50%; transform:translateX(-50%); z-index:1150; background:rgba(8,15,35,.92); backdrop-filter:blur(16px); border:1px solid rgba(113,247,255,.25); border-radius:12px; padding:10px 18px; color:#71f7ff; font-size:.78rem; font-weight:600; text-align:center; max-width:420px; width:calc(100% - 30px); display:none; flex-direction:column; align-items:center; line-height:1.5; box-sizing:border-box; }
 .wave-info-badge span { color:rgba(255,255,255,.7); font-weight:400; }
- 
+
 .forecast { position:absolute; bottom:15px; left:15px; z-index:1100; width:430px; background:rgba(8,15,30,.92); backdrop-filter:blur(22px); border-radius:20px; border:1px solid rgba(255,255,255,.1); padding:18px; color:#fff; box-sizing:border-box; transition:all .4s cubic-bezier(.4,0,.2,1); }
 .forecast-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none; }
 .forecast-title-block { display:flex; align-items:center; gap:12px; }
@@ -45,7 +45,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .collapsible-content { max-height:min(70dvh, 780px); overflow-y:auto; transition:max-height .4s ease-in-out, opacity .3s ease-in-out, margin-top .3s ease; opacity:1; margin-top:15px; }
 .forecast.collapsed .collapsible-content { max-height:0; opacity:0; margin-top:0; pointer-events:none; }
 .chart-container { position:relative; width:100%; height:170px; }
- 
+
 .gas-wave-info { display:none; margin-bottom:10px; border-radius:10px; padding:10px 14px; flex-direction:column; gap:0; }
 .gas-wave-info.active { display:flex; }
 .gas-wave-info.mjo-style { background:rgba(0,212,255,.05); border:1px solid rgba(0,212,255,.2); }
@@ -60,7 +60,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .gas-wave-value.rossby-color { color:#cc66ff; }
 .gas-wave-value.warn { color:#ff9944; }
 .gas-wave-value.safe { color:#44ddaa; }
- 
+
 .wave-data-panel { display:none; margin-top:12px; background:rgba(113,247,255,.05); border:1px solid rgba(113,247,255,.15); border-radius:12px; padding:12px; gap:10px; }
 .wave-data-panel.active { display:flex; flex-direction:column; }
 .wave-stat-row { display:flex; justify-content:space-between; align-items:center; }
@@ -68,18 +68,18 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .wave-stat-value { font-size:.82rem; font-weight:700; color:#71f7ff; text-align:right; }
 .wave-phase-bar { width:100%; height:6px; background:rgba(255,255,255,.1); border-radius:999px; margin-top:8px; overflow:hidden; }
 .wave-phase-fill { height:100%; border-radius:999px; transition:width .8s ease; }
- 
+
 .legend { width:100%; box-sizing:border-box; margin-top:10px; }
 .gradient { width:100%; height:8px; border-radius:999px; transition:background .4s ease; }
 .scale { display:flex; justify-content:space-between; margin-top:8px; font-size:.62rem; opacity:.8; font-weight:500; }
 .location-info { font-size:.68rem; color:rgba(255,255,255,.45); margin-top:8px; text-align:right; letter-spacing:.3px; }
- 
+
 .wave-loading { text-align:center; color:rgba(113,247,255,.6); font-size:.75rem; padding:8px 0; display:none; }
 .wave-loading.active { display:block; }
 @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 .pulse { animation:pulse 1.5s infinite; }
 
-/* Komponen Tambahan Filter Gelombang Python */
+/* Komponen filter gelombang Python */
 .wlsw { display:flex; gap:12px; justify-content:center; margin-top:6px; font-size:.68rem; color:#fff; }
 .wlsw label { display:flex; align-items:center; gap:4px; cursor:pointer; }
 .wlsw input { accent-color:#00ff88; }
@@ -88,7 +88,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 .hov-box { position:absolute; top:0; bottom:0; border:1px dashed rgba(0,255,136,.85); border-width:0 1px; pointer-events:none; }
 .hov-d { position:absolute; left:4px; font-size:.58rem; line-height:1; color:rgba(255,255,255,.75); }
 .hov-ax { display:flex; justify-content:space-between; font-size:.58rem; color:rgba(255,255,255,.5); margin-top:3px; }
- 
+
 @media(max-width:768px) {
     .radar-modes { top:10px; left:10px; right:10px; gap:5px; }
     .mode-btn { padding:8px 10px; font-size:.72rem; flex:1 1 calc(33% - 10px); }
@@ -107,24 +107,24 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 </style>
 </head>
 <body>
- 
+
 <div class="radar-modes">
     <button class="mode-btn active" onclick="switchRadarLayer('gabungan', this)"><span>🛰️</span> Cuaca</button>
     <button class="mode-btn" onclick="switchRadarLayer('mjo', this)"><span>🌀</span> Radar MJO</button>
     <button class="mode-btn" onclick="switchRadarLayer('kelvin', this)"><span>〰️</span> Kelvin Wave</button>
     <button class="mode-btn" onclick="switchRadarLayer('rossby', this)"><span>🌊</span> Rossby Wave</button>
 </div>
- 
+
 <div id="geoBanner"><span class="pulse">📡</span> Mendeteksi lokasi otomatis...</div>
- 
+
 <div class="wave-source-badge" id="waveSourceBadge"><span class="pulse">⏳</span> Memuat data...</div>
- 
+
 <div class="wind-time-box" id="windTimeBox">
     <div id="windTimeLabel">Sekarang</div>
     <input type="range" id="windTimeSlider" min="0" max="24" step="1" value="0" aria-label="Jam prakiraan angin">
     <div class="src">ECMWF IFS 9 km · Open-Meteo</div>
 </div>
- 
+
 <div class="wave-info-badge" id="waveInfoBadge">
     <div id="waveInfoText">Memuat data gelombang...</div>
     <div id="wavePhaseChip" style="margin-top:6px;"></div>
@@ -133,9 +133,9 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
         <label><input type="checkbox" id="wtVec" checked> Angin 850 hPa</label>
     </div>
 </div>
- 
+
 <div id="map"></div>
- 
+
 <div class="forecast collapsed" id="forecastPanel">
     <div class="forecast-header" onclick="toggleForecast()">
         <div class="forecast-title-block">
@@ -144,23 +144,24 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
         </div>
         <div class="radar-status-badge" id="radarBadge">GABUNGAN</div>
     </div>
- 
+
     <div class="collapsible-content">
         <div class="gas-wave-info" id="gasWavePanel">
             <div class="gas-wave-row"><span class="gas-wave-label">📡 Sumber Data</span><span class="gas-wave-value" id="gwSource">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">📅 Tanggal Data</span><span class="gas-wave-value" id="gwTanggal">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label" id="gwMetricLabel">🌀 Status & Label</span><span class="gas-wave-value" id="gwMetric">—</span></div>
+            <div class="gas-wave-row" id="gwRomiRow" style="display:none"><span class="gas-wave-label">🧭 Fase MJO (ROMI)</span><span class="gas-wave-value" id="gwRomi">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label" id="gwDetailLabel">📊 OLR Tersaring</span><span class="gas-wave-value" id="gwDetail">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">📉 Minimum 7 Hari</span><span class="gas-wave-value" id="gwPeak">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">↗️ Arah Propagasi</span><span class="gas-wave-value" id="gwArah">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">⚠️ Dampak Prakiraan</span><span class="gas-wave-value" id="gwImpact">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">🎯 Keandalan Tepi</span><span class="gas-wave-value" id="gwRel">—</span></div>
         </div>
- 
+
         <div id="standardChartSection">
             <div class="chart-container"><canvas id="forecastChart"></canvas></div>
         </div>
- 
+
         <div class="wave-loading pulse" id="waveLoadingIndicator">⏳ Mengambil data atmosfer satelit...</div>
         <div class="wave-data-panel" id="waveDataPanel">
             <div class="wave-stat-row"><span class="wave-stat-label">Status Fase / Aktif</span><span class="wave-stat-value" id="wdPhase">—</span></div>
@@ -168,7 +169,13 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
             <div class="wave-stat-row"><span class="wave-stat-label">Data Pendukung</span><span class="wave-stat-value" id="wdOLR">—</span></div>
             <div class="wave-phase-bar"><div class="wave-phase-fill" id="wdPhaseFill"></div></div>
             <div style="margin-top:10px;"><div class="chart-container" style="height:120px;"><canvas id="waveChart"></canvas></div></div>
-            
+
+            <div id="romiBlock" style="margin-top:10px; display:none;">
+                <div id="romiTitle" style="font-size:.62rem;color:rgba(255,255,255,.55);margin-bottom:4px"></div>
+                <canvas id="romiCanvas" style="display:block;margin:0 auto"></canvas>
+                <div id="romiNote" style="margin-top:4px;font-size:.6rem;line-height:1.4;color:rgba(255,255,255,.45)"></div>
+            </div>
+
             <div id="hovBlock" style="margin-top:10px; display:none;">
                 <div style="font-size:.62rem;color:rgba(255,255,255,.55);margin-bottom:4px">Hovmöller 90 hari — OLR tersaring (biru = konvektif, merah = kering)</div>
                 <div class="hov-wrap">
@@ -178,13 +185,10 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
                     <span class="hov-d" id="hovT1" style="bottom:3px"></span>
                 </div>
                 <div class="hov-ax"><span id="hovLon0"></span><span>garis putus: Indonesia 95–141°BT</span><span id="hovLon1"></span></div>
-                             <div class="hov-ax"><span id="hovLon0"></span><span>garis putus: Indonesia 95–141°BT</span><span id="hovLon1"></span></div>
             </div>
             <div id="waveNote" style="margin-top:8px;font-size:.6rem;line-height:1.4;color:rgba(255,255,255,.45)"></div>
         </div>
-            </div>
-        </div>
- 
+
         <div class="legend">
             <div class="gradient" id="legendGradient"></div>
             <div class="scale" id="legendScale"></div>
@@ -192,7 +196,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
         <div class="location-info" id="locationInfo">📍 Mendeteksi lokasi...</div>
     </div>
 </div>
- 
+
 <script>
 /* ================================================================
    KONFIGURASI
@@ -203,7 +207,7 @@ const WAVES_BASE = './data/waves/';
 const urlParams = new URLSearchParams(window.location.search);
 let markerLat = parseFloat(urlParams.get('lat')) || -5.1477;
 let markerLon = parseFloat(urlParams.get('lon')) || 119.4327;
- 
+
 // OWM API
 const owmApiKey = 'a6da7e4d60b79f9bc5e5a35f7ccc5885';
 let activeLayerName = 'gabungan';
@@ -213,7 +217,7 @@ let markerObj = null;
 let map = null;
 let forecastChart = null;
 
-// Wave Python Layers
+// Layer gelombang (hasil Python)
 const WAVES = ['mjo', 'kelvin', 'rossby'];
 const VMAX = { mjo: 30, kelvin: 15, rossby: 15 };
 const WAVE_COLORS = { mjo: '#00d4ff', kelvin: '#00ccff', rossby: '#cc66ff' };
@@ -225,7 +229,7 @@ let waveVecLayer = null;
 let waveChartInstance = null;
 let waveStore = {};
 
-/* Helper Numbers */
+/* Helper angka */
 const n = (x, d = 1) => (typeof x === 'number' && isFinite(x)) ? x.toFixed(d) : '—';
 const sg = (x, d = 1) => n(x, d) === '—' ? '—' : (x >= 0 ? '+' : '') + Number(x).toFixed(d);
 const esc = s => String(s ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -247,14 +251,14 @@ function initMap(lat, lon) {
     map = L.map('map', { zoomControl: false }).setView([lat, lon], 9);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     map.on('moveend', onWindMove);
-    
+
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16
     }).addTo(map);
-    
+
     markerObj = L.marker([lat, lon]).addTo(map).bindPopup('📍 Lokasi Sawah Terpantau');
 
-    // GeoJSON Batas Provinsi
+    // GeoJSON batas provinsi
     fetch('provinces.json')
         .then(res => res.json())
         .then(data => {
@@ -273,19 +277,19 @@ function initMap(lat, lon) {
         `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${owmApiKey}`,
         { opacity: 0.98, zIndex: 4, className: 'layer-hujan' }
     );
-    
+
     applyWeatherLayers();
     updateLegendUI('gabungan');
     initForecastChart();
     loadForecastMetrics();
 }
- 
+
 /* ================================================================
    LAPISAN GABUNGAN (awan + hujan + angin)
 ================================================================ */
 function windActive() { return activeLayerName === 'gabungan' && wx.angin; }
 function removeWeatherLayers() { ['awan', 'hujan'].forEach(k => owmTileLayers[k]?.remove()); }
- 
+
 function applyWeatherLayers() {
     if (!map || activeLayerName !== 'gabungan') return;
     ['awan', 'hujan'].forEach(k => {
@@ -300,16 +304,16 @@ function applyWeatherLayers() {
     }
     updateLegendUI('gabungan');
 }
- 
+
 /* ================================================================
-   ANIMASI ANGIN OWM (ECMWF)
+   ANIMASI ANGIN (ECMWF via Open-Meteo)
 ================================================================ */
 const WIND_DETAIL_MIN_ZOOM = 8;
 const WIND_REFRESH_MS = 10 * 60 * 1000;
 let windPacks = {}, windTier = null, windOffsetH = 0;
 let windTimer = null, windRetry = null, windFail = {};
 let weatherVelocityLayer = null;
- 
+
 async function loadWindPack(tier) {
     const c = windPacks[tier];
     if (c && Date.now() - c.fetched < WIND_REFRESH_MS) return c;
@@ -331,7 +335,7 @@ async function loadWindPack(tier) {
     windPacks[tier] = pack;
     return pack;
 }
- 
+
 function buildVelocityData(pack, tMs) {
     const T = pack.timesMs, n = T.length;
     let i = 0, w = 0;
@@ -353,19 +357,19 @@ function buildVelocityData(pack, tMs) {
         { header: { ...h, parameterNumber: 3 }, data: mix(pack.v[i], pack.v[j]) }
     ];
 }
- 
+
 function pickWindTier(detailPack) {
     const h = detailPack.header, c = map.getCenter();
     const inside = c.lat <= h.la1 && c.lat >= h.la2 && c.lng >= h.lo1 && c.lng <= h.lo2;
     return (map.getZoom() >= WIND_DETAIL_MIN_ZOOM && inside) ? 'detail' : 'regional';
 }
- 
+
 function fmtWITA(ms, withDay) {
     return new Date(ms).toLocaleString('id-ID', Object.assign(
         { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit', hour12: false },
         withDay ? { weekday: 'short', day: '2-digit', month: 'short' } : {})) + ' WITA';
 }
- 
+
 async function loadWindyAnimation(forceReload) {
     const badge = document.getElementById('waveSourceBadge');
     const box = document.getElementById('windTimeBox');
@@ -377,13 +381,13 @@ async function loadWindyAnimation(forceReload) {
     try {
         if (forceReload) windPacks = {};
         const [detail, regional] = await Promise.all([loadWindPack('detail'), loadWindPack('regional')]);
-        if (!windActive()) return; 
- 
+        if (!windActive()) return;
+
         const tier = pickWindTier(detail);
         const pack = tier === 'detail' ? detail : regional;
         const tMs = Date.now() + windOffsetH * 3600000;
         const data = buildVelocityData(pack, tMs);
- 
+
         if (!weatherVelocityLayer || windTier !== tier) {
             if (weatherVelocityLayer) weatherVelocityLayer.remove();
             weatherVelocityLayer = L.velocityLayer({
@@ -401,12 +405,12 @@ async function loadWindyAnimation(forceReload) {
         } else {
             weatherVelocityLayer.setData(data);
         }
- 
+
         badge.className = 'wave-source-badge gas';
         badge.innerHTML = `✅ ECMWF 9 km · grid ${tier === 'detail' ? 'detail 0,125°' : 'regional 0,75°'} · ${fmtWITA(tMs, false)}`;
         document.getElementById('windTimeLabel').textContent = windOffsetH === 0 ? 'Sekarang · ' + fmtWITA(tMs, false) : `+${windOffsetH} jam · ${fmtWITA(tMs, true)}`;
         box.style.display = 'flex';
- 
+
         clearInterval(windTimer);
         windTimer = setInterval(() => { if (windActive()) loadWindyAnimation(); }, WIND_REFRESH_MS);
     } catch (err) {
@@ -416,24 +420,24 @@ async function loadWindyAnimation(forceReload) {
         windRetry = setTimeout(() => { if (windActive()) loadWindyAnimation(); }, 60000);
     }
 }
- 
+
 async function onWindMove() {
     if (!windActive() || !windPacks.detail) return;
     if (pickWindTier(windPacks.detail) !== windTier) loadWindyAnimation();
 }
- 
+
 function stopWindAnimation() {
     clearInterval(windTimer); windTimer = null;
     if (weatherVelocityLayer) { weatherVelocityLayer.remove(); weatherVelocityLayer = null; }
     windTier = null;
     document.getElementById('windTimeBox').style.display = 'none';
 }
- 
+
 document.getElementById('windTimeSlider').addEventListener('input', (e) => {
     windOffsetH = parseInt(e.target.value, 10);
     if (windActive()) loadWindyAnimation();
 });
- 
+
 /* ================================================================
    GEOLOCATION & UI PANEL
 ================================================================ */
@@ -465,11 +469,11 @@ function detectLocation() {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
 }
- 
+
 function updateLocationInfo(lat, lon, isGPS) {
     document.getElementById('locationInfo').innerHTML = `${isGPS ? '📡 GPS' : '📍 Default'} &nbsp;${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
 }
- 
+
 function toggleForecast() {
     const panel = document.getElementById('forecastPanel');
     const btn = document.getElementById('toggleBtnText');
@@ -478,20 +482,20 @@ function toggleForecast() {
     btn.innerText = panel.classList.contains('collapsed') ? 'Tampilkan' : 'Sembunyikan';
     setTimeout(() => { forecastChart?.resize(); waveChartInstance?.resize(); }, 420);
 }
- 
+
 /* ================================================================
    LEGENDA
 ================================================================ */
 const RAIN_GRAD = 'linear-gradient(to right, #1d3ede, #4df33b 30%, #e9ee28 60%, #ef1c1c 85%, #900c3f)';
 const WIND_GRAD = 'linear-gradient(to right, #3288bd, #abdda4, #fee08b, #f46d43, #d53e4f)';
 const CLOUD_GRAD = 'linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.9))';
- 
+
 const legendConfig = {
     awan:   { gradient: CLOUD_GRAD, labels: ['Cerah', 'Berawan Tipis', 'Mendung Pekat'] },
     hujan:  { gradient: RAIN_GRAD,  labels: ['Gerimis', 'Ringan', 'Sedang', 'Lebat', 'Ekstrem'] },
     angin:  { gradient: WIND_GRAD,  labels: ['Tenang', 'Sedang', 'Kencang', 'Sangat Kencang', 'Badai'] }
 };
- 
+
 function updateLegendUI(mode) {
     const g = document.getElementById('legendGradient');
     const s = document.getElementById('legendScale');
@@ -514,9 +518,9 @@ function updateLegendUI(mode) {
         return;
     }
 }
- 
+
 /* ================================================================
-   GELOMBANG PYTHON — Fetch, Render Panel, Update Layers
+   GELOMBANG PYTHON — fetch, panel, layer
 ================================================================ */
 async function fetchWaveData(mode) {
     try {
@@ -536,11 +540,11 @@ async function updateWaveLayers(mode, m) {
     const showOlr = document.getElementById('wtOlr').checked;
     const isWindOk = windOk(m);
     const showVec = document.getElementById('wtVec').checked && isWindOk;
-    
-        document.getElementById('wtVec').disabled = !isWindOk;
+
+    document.getElementById('wtVec').disabled = !isWindOk;
     document.getElementById('wtVec').parentElement.style.display = isWindOk ? '' : 'none';
 
-    // Image Overlay (OLR)
+    // Overlay OLR
     if (showOlr && (!waveImgLayer || waveImgLayer._mode !== mode)) {
         if (waveImgLayer) waveImgLayer.remove();
         waveImgLayer = L.imageOverlay(`${WAVES_BASE}${mode}.png?v=${m.tanggal}`, m.bounds, { opacity: m.opasitas ?? 0.85, zIndex: 5, interactive: false }).addTo(map);
@@ -549,7 +553,7 @@ async function updateWaveLayers(mode, m) {
         waveImgLayer.remove(); waveImgLayer = null;
     }
 
-    // Vector Layer (Anomali Angin)
+    // Vektor anomali angin
     if (showVec && (!waveVecLayer || waveVecLayer._mode !== mode)) {
         if (waveVecLayer) waveVecLayer.remove();
         try {
@@ -562,7 +566,7 @@ async function updateWaveLayers(mode, m) {
                 colorScale: ['#ffffff', '#d6f0ff', '#fff2a8', '#ffd166', '#ff9f1c', '#ff5d5d']
             }).addTo(map);
             waveVecLayer._mode = mode;
-        } catch(e) { console.warn('Gagal memuat vektor gelombang:', e); }
+        } catch (e) { console.warn('Gagal memuat vektor gelombang:', e); }
     } else if (!showVec && waveVecLayer) {
         waveVecLayer.remove(); waveVecLayer = null;
     }
@@ -580,9 +584,9 @@ function renderWavePanel(mode, m) {
     const rel = m.keandalan, t7 = m.ringkas7hari || { nilai: [] };
     const z = m.zKalibrasi;
     const isAktif = m.aktif;
-    
-    // Dampak Logic
-        const lewat = t7.zMinimum != null && t7.zMinimum <= -1 && (t7.hariLalu ?? 0) >= 1;
+
+    // Logika dampak
+    const lewat = t7.zMinimum != null && t7.zMinimum <= -1 && (t7.hariLalu ?? 0) >= 1;
     const dampak = (m.fase === 'konvektif' && !isAktif)
         ? 'Sinyal konvektif belum terkonfirmasi (keandalan estimasi tepi rendah) — bukan dasar prakiraan hujan'
         : (!isAktif && lewat)
@@ -590,22 +594,26 @@ function renderWavePanel(mode, m) {
             : m.dampak;
     const age = (Date.now() - Date.parse(m.tanggal)) / 864e5;
 
-    // Badge Sumber
-    const sb = document.getElementById('waveSourceBadge'); 
+    // Baris & diagram ROMI disembunyikan dulu; renderRomi() menampilkannya (hanya MJO)
+    document.getElementById('gwRomiRow').style.display = 'none';
+    document.getElementById('romiBlock').style.display = 'none';
+
+    // Badge sumber
+    const sb = document.getElementById('waveSourceBadge');
     sb.style.display = 'flex';
     if (age > 6 || rel === 'rendah') {
         sb.className = 'wave-source-badge fallback';
         sb.innerHTML = age > 6 ? `⚠️ NOAA OLR · data ${Math.floor(age)} hari lalu` : '⚠️ NOAA OLR · keandalan tepi rendah';
     } else {
-        sb.className = 'wave-source-badge gas'; 
+        sb.className = 'wave-source-badge gas';
         sb.innerHTML = `✅ NOAA OLR · filter W-K · ${esc(m.tanggal)}`;
     }
 
-    // Info Text & Chip
+    // Teks info & chip
     document.getElementById('waveInfoText').innerHTML = `${WAVE_NAMES[mode]} — <b>${esc(m.label)}</b>: OLR tersaring <b>${sg(m.nilaiBox)} W/m²</b> (z ${sg(z, 2)}σ) <span style="color:#00ff88;font-size:.7em">[NOAA]</span>.<br><span>${esc(dampak)}</span>`;
-    document.getElementById('wavePhaseChip').innerHTML = `<span style="display:inline-block;text-align:center;background:${isAktif?col:'#888'}22;border:1px solid ${isAktif?col:'#888'}55;color:${isAktif?col:'#888'};padding:3px 12px;border-radius:6px;font-size:.72rem;font-weight:700">${WAVE_NAMES[mode]}: ${isAktif ? 'AKTIF' : 'TIDAK AKTIF'} · keandalan ${esc(rel)}</span>`;
+    document.getElementById('wavePhaseChip').innerHTML = `<span style="display:inline-block;text-align:center;background:${isAktif ? col : '#888'}22;border:1px solid ${isAktif ? col : '#888'}55;color:${isAktif ? col : '#888'};padding:3px 12px;border-radius:6px;font-size:.72rem;font-weight:700">${WAVE_NAMES[mode]}: ${isAktif ? 'AKTIF' : 'TIDAK AKTIF'} · keandalan ${esc(rel)}</span>`;
 
-    // Panel Tabel Atas
+    // Tabel atas
     const gp = document.getElementById('gasWavePanel');
     gp.className = `gas-wave-info active ${mode}-style`;
     const set = (id, t, cls) => { const e = document.getElementById(id); e.className = 'gas-wave-value ' + (cls || mode + '-color'); e.textContent = t; };
@@ -618,20 +626,20 @@ function renderWavePanel(mode, m) {
     set('gwArah', m.arah);
     set('gwImpact', dampak, isAktif ? 'warn' : 'safe');
 
-    // Panel Diagram Bawah
+    // Panel bawah
     const pc = m.fase === 'konvektif' ? col : m.fase === 'tertekan' ? '#ff9944' : '#888888';
-        const faseTxt = (m.fase === 'konvektif' && !isAktif)
+    const faseTxt = (m.fase === 'konvektif' && !isAktif)
         ? 'Konvektif (belum terkonfirmasi)'
         : `${isAktif ? 'Aktif' : 'Tidak aktif'} — ${m.fase.toUpperCase()}`;
     document.getElementById('wdPhase').innerText = faseTxt;
     document.getElementById('wdAmplitude').innerText = `${sg(z, 2)}σ (${sg(m.nilaiBox)} W/m²)`;
-        document.getElementById('wdOLR').innerText = windOk(m)
+    document.getElementById('wdOLR').innerText = windOk(m)
         ? `u850 ${sg(m.anomaliU850, 2)} · v850 ${sg(m.anomaliAngin, 2)} m/s · ζ ${sg(m.vortisitas, 2)}×10⁻⁵ s⁻¹`
         : `dominansi sinyal ${n(m.dominansi, 2)} · persentil ${m.dominansiPersentil ?? '—'} (vs 4 tahun)`;
     document.getElementById('wdPhaseFill').style.width = Math.min(Math.abs(z) / 2, 1) * 100 + '%';
     document.getElementById('wdPhaseFill').style.background = pc;
 
-    // Bar Chart
+    // Grafik batang 7 hari
     const vals = t7.nilai || [];
     const d0 = Date.parse(m.tanggal);
     const labels = vals.map((_, i) => new Date(d0 - (vals.length - 1 - i) * 864e5).toISOString().slice(5, 10).replace('-', '/'));
@@ -646,7 +654,7 @@ function renderWavePanel(mode, m) {
             scales: { x: { ticks: tick, grid }, y: { ticks: tick, grid } } }
     });
 
-    // Hovmoller Diagram
+    // Hovmöller
     const hb = document.getElementById('hovBlock');
     if (m.hov) {
         hb.style.display = 'block';
@@ -662,11 +670,84 @@ function renderWavePanel(mode, m) {
         hb.style.display = 'none';
     }
 
+    document.getElementById('waveNote').textContent = m.catatan || '';
     document.getElementById('waveLoadingIndicator').classList.remove('active');
     document.getElementById('waveDataPanel').classList.add('active');
-     document.getElementById('waveNote').textContent = m.catatan || '';
-    document.getElementById('waveLoadingIndicator').classList.remove('active');
-    document.getElementById('waveDataPanel').classList.add('active');
+}
+
+/* ================================================================
+   FASE MJO (ROMI, NOAA PSL) — dari data/waves/romi.json
+================================================================ */
+const ROMI_AREA = { 1: 'Belahan Barat–Afrika', 2: 'Samudra Hindia', 3: 'Samudra Hindia', 4: 'Benua Maritim',
+                    5: 'Benua Maritim', 6: 'Pasifik Barat', 7: 'Pasifik Barat', 8: 'Belahan Barat–Afrika' };
+let romiCache = null;
+
+async function loadRomi() {
+    try {
+        const r = await fetch(`${WAVES_BASE}romi.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        romiCache = await r.json();
+    } catch (e) { console.warn('ROMI:', e.message); }
+    return romiCache;
+}
+
+function drawRomi(r) {
+    const cv = document.getElementById('romiCanvas'), ctx = cv.getContext('2d');
+    const S = 240, dpr = window.devicePixelRatio || 1;
+    cv.width = S * dpr; cv.height = S * dpr; cv.style.width = cv.style.height = S + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, S, S);
+    const pts = r.jejak || [];
+    const maxA = Math.max(2.5, ...pts.map(p => Math.max(Math.abs(p.romi1), Math.abs(p.romi2))));
+    const R = Math.ceil(maxA * 2) / 2, c = S / 2, k = (S / 2 - 14) / R;
+    const X = v => c + v * k, Y = v => c - v * k, rad = d => d * Math.PI / 180;
+
+    if (r.aktif) {                                   // sorot sektor aktif
+        const a0 = 180 + 45 * (r.fase - 1);
+        ctx.beginPath(); ctx.moveTo(c, c);
+        ctx.arc(c, c, R * k, -rad(a0 + 45), -rad(a0)); ctx.closePath();
+        ctx.fillStyle = 'rgba(0,212,255,.14)'; ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {                    // garis sektor tiap 45°
+        ctx.beginPath(); ctx.moveTo(c, c);
+        ctx.lineTo(c + Math.cos(rad(i * 45)) * R * k, c - Math.sin(rad(i * 45)) * R * k); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.4)';        // lingkaran amplitudo = 1
+    ctx.beginPath(); ctx.arc(c, c, k, 0, 2 * Math.PI); ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '600 11px Segoe UI'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let p = 1; p <= 8; p++) {                   // nomor fase di tengah sektor
+        const a = rad((180 + 45 * (p - 1) + 22.5) % 360);
+        ctx.fillText(p, c + Math.cos(a) * (R * k - 2) * 0.88, c - Math.sin(a) * (R * k - 2) * 0.88);
+    }
+    ctx.beginPath();                                 // jejak 40 hari
+    pts.forEach((p, i) => i ? ctx.lineTo(X(p.romi1), Y(p.romi2)) : ctx.moveTo(X(p.romi1), Y(p.romi2)));
+    ctx.strokeStyle = 'rgba(113,247,255,.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+    pts.forEach((p, i) => {
+        ctx.beginPath(); ctx.arc(X(p.romi1), Y(p.romi2), i === pts.length - 1 ? 5 : 2, 0, 2 * Math.PI);
+        ctx.fillStyle = i === pts.length - 1 ? (r.aktif ? '#00d4ff' : '#ffcc00') : 'rgba(113,247,255,.6)'; ctx.fill();
+    });
+}
+
+function renderRomi(r) {
+    if (!r || activeLayerName !== 'mjo') return;
+    const stale = (Date.now() - Date.parse(r.tanggal)) / 864e5 > 6;
+    const txt = r.aktif ? `Fase ${r.fase} · ${ROMI_AREA[r.fase]} · amp ${n(r.amplitudo, 2)}`
+                        : `Tidak ada fase · amp ${n(r.amplitudo, 2)} (<1)`;
+    document.getElementById('gwRomiRow').style.display = '';
+    const e = document.getElementById('gwRomi');
+    e.className = 'gas-wave-value ' + (stale ? 'warn' : r.aktif ? 'mjo-color' : 'safe');
+    e.textContent = txt + (stale ? ' · data usang' : '');
+
+    document.getElementById('wavePhaseChip').insertAdjacentHTML('beforeend',
+        `<div style="margin-top:4px;font-size:.68rem;color:${r.aktif ? '#00d4ff' : '#aaa'}">ROMI ${esc(r.tanggal)}: ${esc(txt)}</div>`);
+
+    document.getElementById('romiBlock').style.display = 'block';
+    document.getElementById('romiTitle').textContent = `Diagram fase ROMI (NOAA PSL) · 40 hari terakhir · ${r.tanggal}`;
+    document.getElementById('romiNote').textContent = r.aktif ? (r.catatan || '')
+        : `Titik di dalam lingkaran (amplitudo < 1): sektor ${r.faseArah} hanya indikatif. ${r.catatan || ''}`;
+    drawRomi(r);
 }
 
 async function handleWaveData(mode) {
@@ -674,7 +755,7 @@ async function handleWaveData(mode) {
     ld.classList.add('active');
     document.getElementById('waveDataPanel').classList.remove('active');
     document.getElementById('gasWavePanel').classList.remove('active');
-    document.getElementById('waveInfoText').innerHTML = '<span class="pulse">⏳ Memuat data gelombang Python...</span>';
+    document.getElementById('waveInfoText').innerHTML = '<span class="pulse">⏳ Memuat data gelombang...</span>';
     document.getElementById('wavePhaseChip').innerHTML = '';
 
     try {
@@ -682,18 +763,19 @@ async function handleWaveData(mode) {
         if (activeLayerName !== mode) return;
         renderWavePanel(mode, m);
         updateWaveLayers(mode, m);
+        if (mode === 'mjo') loadRomi().then(renderRomi);
     } catch (e) {
         if (activeLayerName !== mode) return;
         ld.classList.remove('active');
-        const sb = document.getElementById('waveSourceBadge'); 
+        const sb = document.getElementById('waveSourceBadge');
         sb.className = 'wave-source-badge fallback'; sb.style.display = 'flex';
         sb.innerHTML = '⚠️ Data gelombang gagal dimuat';
         document.getElementById('waveInfoText').innerHTML = `<span style="color:#ffcc00">⚠️ Data ${WAVE_NAMES[mode]} tidak tersedia (${esc(e.message)}).</span>`;
     }
 }
- 
+
 /* ================================================================
-   SWITCH MODE TABS
+   GANTI MODE
 ================================================================ */
 const panelTitles = {
     gabungan: '🛰️ Gabungan · Curah Hujan 24 Jam',
@@ -701,27 +783,29 @@ const panelTitles = {
     kelvin:   '〰️ Kelvin Wave · OLR',
     rossby:   '🌊 Rossby (ER n=1) · OLR'
 };
- 
+
 function switchRadarLayer(mode, element) {
     if (!map) return;
     const isWave  = WAVES.includes(mode);
     const isCombo = (mode === 'gabungan');
- 
+
     removeWeatherLayers();
     if (!isCombo) stopWindAnimation();
     if (waveImgLayer) { waveImgLayer.remove(); waveImgLayer = null; }
     if (waveVecLayer) { waveVecLayer.remove(); waveVecLayer = null; }
- 
+
     activeLayerName = mode;
     document.body.classList.toggle('wave-mode', isWave);
- 
+
     document.getElementById('standardChartSection').style.display = isWave ? 'none' : 'block';
     document.getElementById('waveDataPanel').classList.remove('active');
     document.getElementById('waveLoadingIndicator').classList.remove('active');
     document.getElementById('waveInfoBadge').style.display = isWave ? 'flex' : 'none';
     document.getElementById('waveToggles').style.display = isWave ? 'flex' : 'none';
     document.getElementById('gasWavePanel').classList.remove('active');
- 
+    document.getElementById('gwRomiRow').style.display = 'none';
+    document.getElementById('romiBlock').style.display = 'none';
+
     const badge = document.getElementById('waveSourceBadge');
     if (isCombo) {
         badge.style.display = 'none';
@@ -732,16 +816,16 @@ function switchRadarLayer(mode, element) {
         badge.style.display = 'flex';
         handleWaveData(mode);
     }
- 
+
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     element.classList.add('active');
     document.getElementById('radarBadge').innerText = mode.toUpperCase();
     document.getElementById('panelChartTitle').innerText = panelTitles[mode] || '📈 Data Atmosfer';
     updateLegendUI(mode);
 }
- 
+
 /* ================================================================
-   FORECAST CHART (curah hujan 24 jam)
+   GRAFIK PRAKIRAAN (curah hujan 24 jam)
 ================================================================ */
 function initForecastChart() {
     forecastChart = new Chart(document.getElementById('forecastChart').getContext('2d'), {
@@ -770,7 +854,7 @@ function initForecastChart() {
         }
     });
 }
- 
+
 async function loadForecastMetrics() {
     if (!forecastChart) return;
     try {
@@ -783,7 +867,7 @@ async function loadForecastMetrics() {
         forecastChart.update();
     } catch (err) { console.error('Forecast error:', err); }
 }
- 
+
 /* ================================================================
    RESIZE + AUTO REFRESH
 ================================================================ */
@@ -791,7 +875,7 @@ window.addEventListener('resize', () => {
     forecastChart?.resize();
     waveChartInstance?.resize();
 });
- 
+
 detectLocation();
 setInterval(() => { if (forecastChart) loadForecastMetrics(); }, 300000);
 </script>
