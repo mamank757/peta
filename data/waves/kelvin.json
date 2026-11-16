@@ -1,6 +1,6 @@
 {
  "gelombang": "kelvin",
- "tanggal": "2026-11-12",
+ "tanggal": "2026-11-13",
  "sumber": "NOAA OLR CDR v2 (PSL) · filter Wheeler-Kiladis",
  "satuan": "W/m²",
  "vmax": 15,
@@ -14,31 +14,31 @@
    211.25
   ]
  ],
- "nilaiBox": -1.55,
+ "nilaiBox": 0.01,
  "sigma": 4.76,
- "z": -0.33,
- "zKalibrasi": -0.37,
+ "z": 0.0,
+ "zKalibrasi": 0.0,
  "galatZ": 0.52,
  "fase": "netral",
  "aktif": false,
  "koherensiHulu": 0.73,
  "korelasiPropagasi": 0.73,
- "dominansi": 0.23,
- "dominansiPersentil": 0,
+ "dominansi": 0.24,
+ "dominansiPersentil": 2,
  "opasitas": 0.75,
- "indeksKelvin": 0.37,
+ "indeksKelvin": 0.0,
  "hov": {
   "hari": 90,
   "lon0": 30.0,
   "lon1": 210.0,
-  "tanggal0": "2026-08-15",
-  "tanggal1": "2026-11-12"
+  "tanggal0": "2026-08-16",
+  "tanggal1": "2026-11-13"
  },
  "catatan": "3-5 hari terakhir kurang andal (efek tepi filter). Bukan pengganti produk resmi CPC.",
  "keandalanTepi": {
-  "korelasi": 0.81,
-  "kemiringan": 0.57,
-  "kalibrasi": 1.14,
+  "korelasi": 0.76,
+  "kemiringan": 0.63,
+  "kalibrasi": 0.91,
   "rmseSigma": 0.52,
   "n": 30,
   "metodeUjung": "ramp"
@@ -46,18 +46,18 @@
  "keandalan": "sedang",
  "ringkas7hari": {
   "nilai": [
-   1.6,
-   1.8,
-   4.8,
-   4.8,
+   0.9,
+   4.1,
+   4.2,
+   0.6,
    0.8,
-   -1.2,
-   -1.5
+   1.6,
+   0.0
   ],
-  "minimum": -1.5,
-  "zMinimum": -0.33,
+  "minimum": 0.0,
+  "zMinimum": 0.0,
   "hariLalu": 0,
-  "tanggalMinimum": "2026-11-12"
+  "tanggalMinimum": "2026-11-13"
  },
  "vektor": false,
  "anomaliU850": null,
