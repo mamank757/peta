@@ -24,8 +24,11 @@ jobs:
             sleep 120
           done
           exit 1
+      - name: Fase MJO (ROMI, NOAA PSL)
+        continue-on-error: true
+        run: python scripts/build_romi.py
       - name: Tambah riwayat gelombang (untuk model Apps Script)
-        continue-on-error: true      # kegagalan di sini tidak boleh menggagalkan peta harian
+        continue-on-error: true
         run: python scripts/build_riwayat.py
       - name: Commit hasil
         run: |
