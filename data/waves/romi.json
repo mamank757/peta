@@ -9,7 +9,9 @@
  "aktif": true,
  "fase": 2,
  "faseArah": 2,
- "label": "MJO aktif, fase 2",
+ "jarakBatas": 4.9,
+ "faseTetangga": 3,
+ "label": "MJO aktif, fase 2 (dekat batas fase 3)",
  "jejak": [
   {
    "tanggal": "2026-10-05",
@@ -263,6 +265,8 @@
   "sudut": 338.6,
   "aktif": true,
   "fase": 4,
-  "faseArah": 4
+  "faseArah": 4,
+  "jarakBatas": 21.4,
+  "faseTetangga": 5
  }
 }
