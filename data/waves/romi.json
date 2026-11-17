@@ -1,259 +1,268 @@
 {
- "indeks": "ROMI",
- "tanggal": "2026-11-12",
- "rmm1": 1.416,
- "rmm2": -0.555,
- "amplitudo": 1.521,
- "sudut": 338.6,
+ "indeks": "VPM",
+ "sumber": "NOAA PSL · CORe VPM (angin + kecepatan potensial, tipe RMM)",
+ "tanggal": "2026-11-13",
+ "rmm1": -0.161,
+ "rmm2": -1.881,
+ "amplitudo": 1.888,
+ "sudut": 265.1,
  "aktif": true,
- "fase": 4,
- "faseArah": 4,
- "sumber": "NOAA PSL · ROMI (OLR saja, bentuk RMM)",
- "label": "MJO aktif, fase 4",
+ "fase": 2,
+ "faseArah": 2,
+ "label": "MJO aktif, fase 2",
  "jejak": [
   {
-   "tanggal": "2026-10-04",
-   "rmm1": -0.78,
-   "rmm2": -0.76,
-   "amplitudo": 1.09
-  },
-  {
    "tanggal": "2026-10-05",
-   "rmm1": -0.79,
-   "rmm2": -0.72,
-   "amplitudo": 1.07
+   "rmm1": 1.96,
+   "rmm2": -0.09,
+   "amplitudo": 1.96
   },
   {
    "tanggal": "2026-10-06",
-   "rmm1": -0.72,
-   "rmm2": -0.72,
-   "amplitudo": 1.02
+   "rmm1": 1.84,
+   "rmm2": -0.21,
+   "amplitudo": 1.85
   },
   {
    "tanggal": "2026-10-07",
-   "rmm1": -0.58,
-   "rmm2": -0.8,
-   "amplitudo": 0.99
+   "rmm1": 1.9,
+   "rmm2": -0.15,
+   "amplitudo": 1.9
   },
   {
    "tanggal": "2026-10-08",
-   "rmm1": -0.51,
-   "rmm2": -0.84,
-   "amplitudo": 0.98
+   "rmm1": 1.84,
+   "rmm2": -0.24,
+   "amplitudo": 1.86
   },
   {
    "tanggal": "2026-10-09",
-   "rmm1": -0.44,
-   "rmm2": -0.91,
-   "amplitudo": 1.01
+   "rmm1": 1.62,
+   "rmm2": -0.4,
+   "amplitudo": 1.67
   },
   {
    "tanggal": "2026-10-10",
-   "rmm1": -0.37,
-   "rmm2": -1.06,
-   "amplitudo": 1.13
+   "rmm1": 1.92,
+   "rmm2": -0.94,
+   "amplitudo": 2.14
   },
   {
    "tanggal": "2026-10-11",
-   "rmm1": -0.32,
-   "rmm2": -1.21,
-   "amplitudo": 1.25
+   "rmm1": 1.95,
+   "rmm2": -1.03,
+   "amplitudo": 2.21
   },
   {
    "tanggal": "2026-10-12",
-   "rmm1": -0.24,
-   "rmm2": -1.31,
-   "amplitudo": 1.33
+   "rmm1": 1.78,
+   "rmm2": -1.2,
+   "amplitudo": 2.15
   },
   {
    "tanggal": "2026-10-13",
-   "rmm1": -0.15,
-   "rmm2": -1.27,
-   "amplitudo": 1.28
+   "rmm1": 1.55,
+   "rmm2": -1.29,
+   "amplitudo": 2.01
   },
   {
    "tanggal": "2026-10-14",
-   "rmm1": -0.02,
-   "rmm2": -1.19,
-   "amplitudo": 1.19
+   "rmm1": 1.44,
+   "rmm2": -1.35,
+   "amplitudo": 1.98
   },
   {
    "tanggal": "2026-10-15",
-   "rmm1": 0.05,
-   "rmm2": -1.14,
-   "amplitudo": 1.14
+   "rmm1": 1.23,
+   "rmm2": -1.28,
+   "amplitudo": 1.77
   },
   {
    "tanggal": "2026-10-16",
-   "rmm1": 0.07,
-   "rmm2": -1.07,
-   "amplitudo": 1.07
+   "rmm1": 1.13,
+   "rmm2": -1.36,
+   "amplitudo": 1.76
   },
   {
    "tanggal": "2026-10-17",
-   "rmm1": 0.14,
-   "rmm2": -0.98,
-   "amplitudo": 0.99
+   "rmm1": 1.16,
+   "rmm2": -1.16,
+   "amplitudo": 1.64
   },
   {
    "tanggal": "2026-10-18",
-   "rmm1": 0.18,
-   "rmm2": -0.89,
-   "amplitudo": 0.9
+   "rmm1": 0.82,
+   "rmm2": -0.99,
+   "amplitudo": 1.29
   },
   {
    "tanggal": "2026-10-19",
-   "rmm1": 0.34,
-   "rmm2": -0.77,
-   "amplitudo": 0.85
+   "rmm1": 0.97,
+   "rmm2": -0.95,
+   "amplitudo": 1.36
   },
   {
    "tanggal": "2026-10-20",
-   "rmm1": 0.59,
-   "rmm2": -0.69,
-   "amplitudo": 0.91
+   "rmm1": 1.13,
+   "rmm2": -0.96,
+   "amplitudo": 1.48
   },
   {
    "tanggal": "2026-10-21",
-   "rmm1": 0.87,
-   "rmm2": -0.59,
-   "amplitudo": 1.05
-  },
-  {
-   "tanggal": "2026-10-22",
    "rmm1": 1.05,
-   "rmm2": -0.54,
-   "amplitudo": 1.18
-  },
-  {
-   "tanggal": "2026-10-23",
-   "rmm1": 1.14,
-   "rmm2": -0.51,
-   "amplitudo": 1.25
-  },
-  {
-   "tanggal": "2026-10-24",
-   "rmm1": 1.24,
-   "rmm2": -0.4,
-   "amplitudo": 1.31
-  },
-  {
-   "tanggal": "2026-10-25",
-   "rmm1": 1.31,
-   "rmm2": -0.36,
-   "amplitudo": 1.36
-  },
-  {
-   "tanggal": "2026-10-26",
-   "rmm1": 1.33,
-   "rmm2": -0.33,
+   "rmm2": -0.88,
    "amplitudo": 1.37
   },
   {
+   "tanggal": "2026-10-22",
+   "rmm1": 1.09,
+   "rmm2": -0.89,
+   "amplitudo": 1.41
+  },
+  {
+   "tanggal": "2026-10-23",
+   "rmm1": 0.92,
+   "rmm2": -1.02,
+   "amplitudo": 1.37
+  },
+  {
+   "tanggal": "2026-10-24",
+   "rmm1": 0.55,
+   "rmm2": -1.44,
+   "amplitudo": 1.54
+  },
+  {
+   "tanggal": "2026-10-25",
+   "rmm1": 0.63,
+   "rmm2": -1.62,
+   "amplitudo": 1.74
+  },
+  {
+   "tanggal": "2026-10-26",
+   "rmm1": 0.77,
+   "rmm2": -1.68,
+   "amplitudo": 1.84
+  },
+  {
    "tanggal": "2026-10-27",
-   "rmm1": 1.37,
-   "rmm2": -0.26,
-   "amplitudo": 1.4
+   "rmm1": 0.48,
+   "rmm2": -1.92,
+   "amplitudo": 1.97
   },
   {
    "tanggal": "2026-10-28",
-   "rmm1": 1.21,
-   "rmm2": -0.24,
-   "amplitudo": 1.24
+   "rmm1": 0.59,
+   "rmm2": -1.75,
+   "amplitudo": 1.84
   },
   {
    "tanggal": "2026-10-29",
-   "rmm1": 1.01,
-   "rmm2": -0.21,
-   "amplitudo": 1.04
+   "rmm1": 0.65,
+   "rmm2": -1.21,
+   "amplitudo": 1.37
   },
   {
    "tanggal": "2026-10-30",
-   "rmm1": 0.77,
-   "rmm2": -0.23,
-   "amplitudo": 0.81
+   "rmm1": 0.63,
+   "rmm2": -0.75,
+   "amplitudo": 0.98
   },
   {
    "tanggal": "2026-10-31",
-   "rmm1": 0.61,
-   "rmm2": -0.27,
-   "amplitudo": 0.67
+   "rmm1": 0.34,
+   "rmm2": -1.3,
+   "amplitudo": 1.34
   },
   {
    "tanggal": "2026-11-01",
-   "rmm1": 0.46,
-   "rmm2": -0.28,
-   "amplitudo": 0.54
+   "rmm1": 0.78,
+   "rmm2": -1.64,
+   "amplitudo": 1.82
   },
   {
    "tanggal": "2026-11-02",
-   "rmm1": 0.35,
-   "rmm2": -0.34,
-   "amplitudo": 0.48
+   "rmm1": 0.67,
+   "rmm2": -1.36,
+   "amplitudo": 1.52
   },
   {
    "tanggal": "2026-11-03",
-   "rmm1": 0.28,
-   "rmm2": -0.3,
-   "amplitudo": 0.41
+   "rmm1": 0.62,
+   "rmm2": -1.83,
+   "amplitudo": 1.94
   },
   {
    "tanggal": "2026-11-04",
-   "rmm1": 0.3,
-   "rmm2": -0.34,
-   "amplitudo": 0.46
+   "rmm1": 0.8,
+   "rmm2": -2.16,
+   "amplitudo": 2.3
   },
   {
    "tanggal": "2026-11-05",
-   "rmm1": 0.35,
-   "rmm2": -0.42,
-   "amplitudo": 0.55
+   "rmm1": 0.88,
+   "rmm2": -2.18,
+   "amplitudo": 2.35
   },
   {
    "tanggal": "2026-11-06",
-   "rmm1": 0.54,
-   "rmm2": -0.47,
-   "amplitudo": 0.71
+   "rmm1": 1.06,
+   "rmm2": -2.34,
+   "amplitudo": 2.57
   },
   {
    "tanggal": "2026-11-07",
-   "rmm1": 0.72,
-   "rmm2": -0.47,
-   "amplitudo": 0.86
+   "rmm1": 0.94,
+   "rmm2": -2.45,
+   "amplitudo": 2.62
   },
   {
    "tanggal": "2026-11-08",
-   "rmm1": 0.93,
-   "rmm2": -0.37,
-   "amplitudo": 1.0
+   "rmm1": 0.6,
+   "rmm2": -2.91,
+   "amplitudo": 2.97
   },
   {
    "tanggal": "2026-11-09",
-   "rmm1": 1.04,
-   "rmm2": -0.34,
-   "amplitudo": 1.1
+   "rmm1": 0.3,
+   "rmm2": -3.24,
+   "amplitudo": 3.26
   },
   {
    "tanggal": "2026-11-10",
-   "rmm1": 1.19,
-   "rmm2": -0.33,
-   "amplitudo": 1.23
+   "rmm1": 0.12,
+   "rmm2": -3.28,
+   "amplitudo": 3.28
   },
   {
    "tanggal": "2026-11-11",
-   "rmm1": 1.29,
-   "rmm2": -0.41,
-   "amplitudo": 1.36
+   "rmm1": 0.03,
+   "rmm2": -2.87,
+   "amplitudo": 2.87
   },
   {
    "tanggal": "2026-11-12",
-   "rmm1": 1.42,
-   "rmm2": -0.55,
-   "amplitudo": 1.52
+   "rmm1": -0.12,
+   "rmm2": -2.31,
+   "amplitudo": 2.31
+  },
+  {
+   "tanggal": "2026-11-13",
+   "rmm1": -0.16,
+   "rmm2": -1.88,
+   "amplitudo": 1.89
   }
  ],
- "catatan": "BoM RMM tidak bisa diunduh; memakai ROMI (OLR saja), bisa berbeda satu-dua fase dari RMM resmi.",
- "galatSumber": {
-  "RMM": "data terakhir 2024-02-24 (997 hari lalu): usang"
+ "catatan": "Indeks multivariat NOAA PSL (CORe) yang disesuaikan dengan konvensi RMM; nilai hari terakhir dapat direvisi.",
+ "pembanding": {
+  "indeks": "ROMI",
+  "sumber": "NOAA PSL · ROMI (berbasis OLR saja)",
+  "tanggal": "2026-11-12",
+  "rmm1": 1.416,
+  "rmm2": -0.555,
+  "amplitudo": 1.521,
+  "sudut": 338.6,
+  "aktif": true,
+  "fase": 4,
+  "faseArah": 4
  }
 }
