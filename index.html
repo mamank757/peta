@@ -150,7 +150,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
             <div class="gas-wave-row"><span class="gas-wave-label">📡 Sumber Data</span><span class="gas-wave-value" id="gwSource">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">📅 Tanggal Data</span><span class="gas-wave-value" id="gwTanggal">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label" id="gwMetricLabel">🌀 Status & Label</span><span class="gas-wave-value" id="gwMetric">—</span></div>
-            <div class="gas-wave-row" id="gwRomiRow" style="display:none"><span class="gas-wave-label">🧭 Fase MJO (ROMI)</span><span class="gas-wave-value" id="gwRomi">—</span></div>
+            <div class="gas-wave-row" id="gwRomiRow" style="display:none"><span class="gas-wave-label" id="gwRomiLabel">🧭 Fase MJO</span><span class="gas-wave-value" id="gwRomi">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label" id="gwDetailLabel">📊 OLR Tersaring</span><span class="gas-wave-value" id="gwDetail">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">📉 Minimum 7 Hari</span><span class="gas-wave-value" id="gwPeak">—</span></div>
             <div class="gas-wave-row"><span class="gas-wave-label">↗️ Arah Propagasi</span><span class="gas-wave-value" id="gwArah">—</span></div>
@@ -735,18 +735,22 @@ function renderRomi(r) {
     const stale = (Date.now() - Date.parse(r.tanggal)) / 864e5 > 6;
     const txt = r.aktif ? `Fase ${r.fase} · ${ROMI_AREA[r.fase]} · amp ${n(r.amplitudo, 2)}`
                         : `Tidak ada fase · amp ${n(r.amplitudo, 2)} (<1)`;
+    const idx = r.indeks || 'ROMI';
     document.getElementById('gwRomiRow').style.display = '';
+    document.getElementById('gwRomiLabel').textContent = `🧭 Fase MJO (${idx})`;
     const e = document.getElementById('gwRomi');
     e.className = 'gas-wave-value ' + (stale ? 'warn' : r.aktif ? 'mjo-color' : 'safe');
     e.textContent = txt + (stale ? ' · data usang' : '');
 
     document.getElementById('wavePhaseChip').insertAdjacentHTML('beforeend',
-        `<div style="margin-top:4px;font-size:.68rem;color:${r.aktif ? '#00d4ff' : '#aaa'}">ROMI ${esc(r.tanggal)}: ${esc(txt)}</div>`);
+        `<div style="margin-top:4px;font-size:.68rem;color:${r.aktif ? '#00d4ff' : '#aaa'}">${esc(idx)} ${esc(r.tanggal)}: ${esc(txt)}</div>`);
 
     document.getElementById('romiBlock').style.display = 'block';
-    document.getElementById('romiTitle').textContent = `Diagram fase ROMI (NOAA PSL) · 40 hari terakhir · ${r.tanggal}`;
-    document.getElementById('romiNote').textContent = r.aktif ? (r.catatan || '')
-        : `Titik di dalam lingkaran (amplitudo < 1): sektor ${r.faseArah} hanya indikatif. ${r.catatan || ''}`;
+    document.getElementById('romiTitle').textContent = `Diagram fase ${idx} (${r.sumber || ''}) · 40 hari terakhir · ${r.tanggal}`;
+    const pb = r.pembanding;
+    const bandingTxt = pb ? ` Pembanding ${pb.indeks} ${pb.tanggal}: ${pb.aktif ? 'fase ' + pb.fase : 'tidak ada fase'} (amp ${n(pb.amplitudo, 2)}); indeks OLR-saja bisa berbeda satu–dua fase.` : '';
+    document.getElementById('romiNote').textContent = (r.aktif ? (r.catatan || '')
+        : `Titik di dalam lingkaran (amplitudo < 1): sektor ${r.faseArah} hanya indikatif. ${r.catatan || ''}`) + bandingTxt;
     drawRomi(r);
 }
 
