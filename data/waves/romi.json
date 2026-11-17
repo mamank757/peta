@@ -1,8 +1,6 @@
 {
- "sumber": "NOAA PSL · ROMI (Real-time OLR MJO Index)",
+ "indeks": "ROMI",
  "tanggal": "2026-11-12",
- "romi1": 0.555,
- "romi2": 1.416,
  "rmm1": 1.416,
  "rmm2": -0.555,
  "amplitudo": 1.521,
@@ -10,328 +8,252 @@
  "aktif": true,
  "fase": 4,
  "faseArah": 4,
+ "sumber": "NOAA PSL · ROMI (OLR saja, bentuk RMM)",
  "label": "MJO aktif, fase 4",
  "jejak": [
   {
    "tanggal": "2026-10-04",
-   "romi1": 0.76,
-   "romi2": -0.78,
    "rmm1": -0.78,
    "rmm2": -0.76,
    "amplitudo": 1.09
   },
   {
    "tanggal": "2026-10-05",
-   "romi1": 0.72,
-   "romi2": -0.79,
    "rmm1": -0.79,
    "rmm2": -0.72,
    "amplitudo": 1.07
   },
   {
    "tanggal": "2026-10-06",
-   "romi1": 0.72,
-   "romi2": -0.72,
    "rmm1": -0.72,
    "rmm2": -0.72,
    "amplitudo": 1.02
   },
   {
    "tanggal": "2026-10-07",
-   "romi1": 0.8,
-   "romi2": -0.58,
    "rmm1": -0.58,
    "rmm2": -0.8,
    "amplitudo": 0.99
   },
   {
    "tanggal": "2026-10-08",
-   "romi1": 0.84,
-   "romi2": -0.51,
    "rmm1": -0.51,
    "rmm2": -0.84,
    "amplitudo": 0.98
   },
   {
    "tanggal": "2026-10-09",
-   "romi1": 0.91,
-   "romi2": -0.44,
    "rmm1": -0.44,
    "rmm2": -0.91,
    "amplitudo": 1.01
   },
   {
    "tanggal": "2026-10-10",
-   "romi1": 1.06,
-   "romi2": -0.37,
    "rmm1": -0.37,
    "rmm2": -1.06,
    "amplitudo": 1.13
   },
   {
    "tanggal": "2026-10-11",
-   "romi1": 1.21,
-   "romi2": -0.32,
    "rmm1": -0.32,
    "rmm2": -1.21,
    "amplitudo": 1.25
   },
   {
    "tanggal": "2026-10-12",
-   "romi1": 1.31,
-   "romi2": -0.24,
    "rmm1": -0.24,
    "rmm2": -1.31,
    "amplitudo": 1.33
   },
   {
    "tanggal": "2026-10-13",
-   "romi1": 1.27,
-   "romi2": -0.15,
    "rmm1": -0.15,
    "rmm2": -1.27,
    "amplitudo": 1.28
   },
   {
    "tanggal": "2026-10-14",
-   "romi1": 1.19,
-   "romi2": -0.02,
    "rmm1": -0.02,
    "rmm2": -1.19,
    "amplitudo": 1.19
   },
   {
    "tanggal": "2026-10-15",
-   "romi1": 1.14,
-   "romi2": 0.05,
    "rmm1": 0.05,
    "rmm2": -1.14,
    "amplitudo": 1.14
   },
   {
    "tanggal": "2026-10-16",
-   "romi1": 1.07,
-   "romi2": 0.07,
    "rmm1": 0.07,
    "rmm2": -1.07,
    "amplitudo": 1.07
   },
   {
    "tanggal": "2026-10-17",
-   "romi1": 0.98,
-   "romi2": 0.14,
    "rmm1": 0.14,
    "rmm2": -0.98,
    "amplitudo": 0.99
   },
   {
    "tanggal": "2026-10-18",
-   "romi1": 0.89,
-   "romi2": 0.18,
    "rmm1": 0.18,
    "rmm2": -0.89,
    "amplitudo": 0.9
   },
   {
    "tanggal": "2026-10-19",
-   "romi1": 0.77,
-   "romi2": 0.34,
    "rmm1": 0.34,
    "rmm2": -0.77,
    "amplitudo": 0.85
   },
   {
    "tanggal": "2026-10-20",
-   "romi1": 0.69,
-   "romi2": 0.59,
    "rmm1": 0.59,
    "rmm2": -0.69,
    "amplitudo": 0.91
   },
   {
    "tanggal": "2026-10-21",
-   "romi1": 0.59,
-   "romi2": 0.87,
    "rmm1": 0.87,
    "rmm2": -0.59,
    "amplitudo": 1.05
   },
   {
    "tanggal": "2026-10-22",
-   "romi1": 0.54,
-   "romi2": 1.05,
    "rmm1": 1.05,
    "rmm2": -0.54,
    "amplitudo": 1.18
   },
   {
    "tanggal": "2026-10-23",
-   "romi1": 0.51,
-   "romi2": 1.14,
    "rmm1": 1.14,
    "rmm2": -0.51,
    "amplitudo": 1.25
   },
   {
    "tanggal": "2026-10-24",
-   "romi1": 0.4,
-   "romi2": 1.24,
    "rmm1": 1.24,
    "rmm2": -0.4,
    "amplitudo": 1.31
   },
   {
    "tanggal": "2026-10-25",
-   "romi1": 0.36,
-   "romi2": 1.31,
    "rmm1": 1.31,
    "rmm2": -0.36,
    "amplitudo": 1.36
   },
   {
    "tanggal": "2026-10-26",
-   "romi1": 0.33,
-   "romi2": 1.33,
    "rmm1": 1.33,
    "rmm2": -0.33,
    "amplitudo": 1.37
   },
   {
    "tanggal": "2026-10-27",
-   "romi1": 0.26,
-   "romi2": 1.37,
    "rmm1": 1.37,
    "rmm2": -0.26,
    "amplitudo": 1.4
   },
   {
    "tanggal": "2026-10-28",
-   "romi1": 0.24,
-   "romi2": 1.21,
    "rmm1": 1.21,
    "rmm2": -0.24,
    "amplitudo": 1.24
   },
   {
    "tanggal": "2026-10-29",
-   "romi1": 0.21,
-   "romi2": 1.01,
    "rmm1": 1.01,
    "rmm2": -0.21,
    "amplitudo": 1.04
   },
   {
    "tanggal": "2026-10-30",
-   "romi1": 0.23,
-   "romi2": 0.77,
    "rmm1": 0.77,
    "rmm2": -0.23,
    "amplitudo": 0.81
   },
   {
    "tanggal": "2026-10-31",
-   "romi1": 0.27,
-   "romi2": 0.61,
    "rmm1": 0.61,
    "rmm2": -0.27,
    "amplitudo": 0.67
   },
   {
    "tanggal": "2026-11-01",
-   "romi1": 0.28,
-   "romi2": 0.46,
    "rmm1": 0.46,
    "rmm2": -0.28,
    "amplitudo": 0.54
   },
   {
    "tanggal": "2026-11-02",
-   "romi1": 0.34,
-   "romi2": 0.35,
    "rmm1": 0.35,
    "rmm2": -0.34,
    "amplitudo": 0.48
   },
   {
    "tanggal": "2026-11-03",
-   "romi1": 0.3,
-   "romi2": 0.28,
    "rmm1": 0.28,
    "rmm2": -0.3,
    "amplitudo": 0.41
   },
   {
    "tanggal": "2026-11-04",
-   "romi1": 0.34,
-   "romi2": 0.3,
    "rmm1": 0.3,
    "rmm2": -0.34,
    "amplitudo": 0.46
   },
   {
    "tanggal": "2026-11-05",
-   "romi1": 0.42,
-   "romi2": 0.35,
    "rmm1": 0.35,
    "rmm2": -0.42,
    "amplitudo": 0.55
   },
   {
    "tanggal": "2026-11-06",
-   "romi1": 0.47,
-   "romi2": 0.54,
    "rmm1": 0.54,
    "rmm2": -0.47,
    "amplitudo": 0.71
   },
   {
    "tanggal": "2026-11-07",
-   "romi1": 0.47,
-   "romi2": 0.72,
    "rmm1": 0.72,
    "rmm2": -0.47,
    "amplitudo": 0.86
   },
   {
    "tanggal": "2026-11-08",
-   "romi1": 0.37,
-   "romi2": 0.93,
    "rmm1": 0.93,
    "rmm2": -0.37,
    "amplitudo": 1.0
   },
   {
    "tanggal": "2026-11-09",
-   "romi1": 0.34,
-   "romi2": 1.04,
    "rmm1": 1.04,
    "rmm2": -0.34,
    "amplitudo": 1.1
   },
   {
    "tanggal": "2026-11-10",
-   "romi1": 0.33,
-   "romi2": 1.19,
    "rmm1": 1.19,
    "rmm2": -0.33,
    "amplitudo": 1.23
   },
   {
    "tanggal": "2026-11-11",
-   "romi1": 0.41,
-   "romi2": 1.29,
    "rmm1": 1.29,
    "rmm2": -0.41,
    "amplitudo": 1.36
   },
   {
    "tanggal": "2026-11-12",
-   "romi1": 0.55,
-   "romi2": 1.42,
    "rmm1": 1.42,
    "rmm2": -0.55,
    "amplitudo": 1.52
   }
  ],
- "catatan": "ROMI berbasis OLR saja; mirip RMM tetapi bukan RMM resmi BoM."
+ "catatan": "BoM RMM tidak bisa diunduh; memakai ROMI (OLR saja), bisa berbeda satu-dua fase dari RMM resmi.",
+ "galatSumber": {
+  "RMM": "data terakhir 2024-02-24 (997 hari lalu): usang"
+ }
 }
