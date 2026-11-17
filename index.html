@@ -176,6 +176,14 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
                 <div id="romiNote" style="margin-top:4px;font-size:.6rem;line-height:1.4;color:rgba(255,255,255,.45)"></div>
             </div>
 
+            <div id="cpcBlock" style="margin-top:10px; display:none;">
+                <div style="font-size:.62rem;color:rgba(255,255,255,.55);margin-bottom:4px">Diagram fase MJO NOAA CPC (tipe Wheeler–Hendon)</div>
+                <a href="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/statphase_full.gif" target="_blank" rel="noopener">
+                    <img id="cpcImg" alt="Diagram fase MJO NOAA CPC" style="width:100%;display:block;border-radius:8px;background:#fff">
+                </a>
+                <div style="margin-top:4px;font-size:.6rem;line-height:1.4;color:rgba(255,255,255,.45)">Gambar dimuat langsung dari server NOAA CPC; tanggalnya mengikuti pembaruan CPC, bukan data di atas.</div>
+            </div>
+
             <div id="hovBlock" style="margin-top:10px; display:none;">
                 <div style="font-size:.62rem;color:rgba(255,255,255,.55);margin-bottom:4px">Hovmöller 90 hari — OLR tersaring (biru = konvektif, merah = kering)</div>
                 <div class="hov-wrap">
@@ -597,6 +605,7 @@ function renderWavePanel(mode, m) {
     // Baris & diagram ROMI disembunyikan dulu; renderRomi() menampilkannya (hanya MJO)
     document.getElementById('gwRomiRow').style.display = 'none';
     document.getElementById('romiBlock').style.display = 'none';
+    document.getElementById('cpcBlock').style.display = 'none';
 
     // Badge sumber
     const sb = document.getElementById('waveSourceBadge');
@@ -733,8 +742,10 @@ function drawRomi(r) {
 function renderRomi(r) {
     if (!r || activeLayerName !== 'mjo') return;
     const stale = (Date.now() - Date.parse(r.tanggal)) / 864e5 > 6;
-    const txt = r.aktif ? `Fase ${r.fase} · ${ROMI_AREA[r.fase]} · amp ${n(r.amplitudo, 2)}`
-                        : `Tidak ada fase · amp ${n(r.amplitudo, 2)} (<1)`;
+    const ampTxt = (typeof r.amplitudo === 'number') ? ` · amp ${n(r.amplitudo, 2)}` : '';
+    const dekat = (r.aktif && typeof r.jarakBatas === 'number' && r.jarakBatas < 10 && r.faseTetangga) ? ` · dekat batas fase ${r.faseTetangga}` : '';
+    const txt = r.aktif ? `Fase ${r.fase} · ${ROMI_AREA[r.fase]}${ampTxt}${dekat}`
+                        : `Tidak ada fase${ampTxt} (<1)`;
     const idx = r.indeks || 'ROMI';
     document.getElementById('gwRomiRow').style.display = '';
     document.getElementById('gwRomiLabel').textContent = `🧭 Fase MJO (${idx})`;
@@ -754,6 +765,15 @@ function renderRomi(r) {
     drawRomi(r);
 }
 
+const CPC_IMG = 'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/statphase_full.gif';
+function showCpc() {
+    if (activeLayerName !== 'mjo') return;
+    const blk = document.getElementById('cpcBlock'), img = document.getElementById('cpcImg');
+    img.onerror = () => { blk.style.display = 'none'; };
+    img.src = CPC_IMG + '?t=' + Math.floor(Date.now() / 36e5);   // cache-bust per jam
+    blk.style.display = 'block';
+}
+
 async function handleWaveData(mode) {
     const ld = document.getElementById('waveLoadingIndicator');
     ld.classList.add('active');
@@ -767,7 +787,7 @@ async function handleWaveData(mode) {
         if (activeLayerName !== mode) return;
         renderWavePanel(mode, m);
         updateWaveLayers(mode, m);
-        if (mode === 'mjo') loadRomi().then(renderRomi);
+        if (mode === 'mjo') { loadRomi().then(renderRomi); showCpc(); }
     } catch (e) {
         if (activeLayerName !== mode) return;
         ld.classList.remove('active');
@@ -809,6 +829,7 @@ function switchRadarLayer(mode, element) {
     document.getElementById('gasWavePanel').classList.remove('active');
     document.getElementById('gwRomiRow').style.display = 'none';
     document.getElementById('romiBlock').style.display = 'none';
+    document.getElementById('cpcBlock').style.display = 'none';
 
     const badge = document.getElementById('waveSourceBadge');
     if (isCombo) {
