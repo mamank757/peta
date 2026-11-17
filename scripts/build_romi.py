@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""Fase MJO (1-8) dari NOAA PSL -> data/waves/romi.json
+"""Fase MJO (1-8) -> data/waves/romi.json
 
-Sumber utama : CORe VPM (NOAA PSL), indeks multivariat tipe RMM (kecepatan potensial 200 hPa +
-               angin 200/850 hPa). Tanda PC sudah disesuaikan NOAA agar cocok dengan RMM.
-Cadangan     : ROMI (NOAA PSL, OLR saja), dikonversi ke konvensi RMM
-               (RMM1 = ROMI PC2, RMM2 = -ROMI PC1 sesuai keterangan NOAA PSL).
-Indeks NOAA lain dapat ditambahkan di daftar SUMBER (nama, url, parser, keterangan).
-
-Simpan sebagai scripts/build_romi.py. Nama keluaran 'romi.json' sengaja tidak
-berawalan mjo/kelvin/rossby, supaya tidak terhapus oleh glob di build_waves.py.
+Urutan sumber (yang pertama segar dipakai; sumber berikutnya yang segar menjadi pembanding):
+  1. RMM  — salinan harian BoM di repositori dasarian (sama dengan yang dipakai dashboard dasarian/Apps Script)
+  2. RMM  — langsung dari BoM (clim_data/IDCKGEM000; alamat lama /climate/mjo/graphics/ berhenti 2024-02-24)
+  3. VPM  — NOAA PSL CORe VPM (tipe RMM)
+  4. ROMI — NOAA PSL (OLR saja)
+Simpan sebagai scripts/build_romi.py. Nama keluaran 'romi.json' sengaja tidak berawalan
+mjo/kelvin/rossby, supaya tidak terhapus oleh glob di build_waves.py.
 """
 import json
 import sys
@@ -18,6 +17,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+RMM_SALINAN = "https://mamank757.github.io/dasarian/data/waves/rmm.txt"
+RMM_BOM = "https://www.bom.gov.au/clim_data/IDCKGEM000/rmm.74toRealtime.txt"
 VPM_URL = "https://psl.noaa.gov/mjo/mjoindex/vpm.1x.CORe.txt"
 ROMI_URL = "https://psl.noaa.gov/mjo/mjoindex/romi.cpcolr.1x.txt"
 OUT = Path("data/waves/romi.json")
@@ -45,8 +46,26 @@ def fase_dari(rmm1, rmm2):
     return (int(ang // 45) + 4) % 8 + 1, ang
 
 
-def parse_romi(teks):
-    """Kolom PSL: tahun bulan hari jam PC1 PC2 amplitudo. ROMI(PC2)=RMM1, -ROMI(PC1)=RMM2."""
+def parse_rmm(teks):
+    """BoM: tahun bulan hari RMM1 RMM2 fase amplitudo [asal]; nilai hilang 1.E36 / 999.
+    Dua baris header dilewati otomatis (kolom pertama bukan bilangan bulat)."""
+    rows = []
+    for ln in teks.splitlines():
+        p = ln.split()
+        if len(p) < 5:
+            continue
+        try:
+            y, m, d = int(p[0]), int(p[1]), int(p[2])
+            r1, r2 = float(p[3]), float(p[4])
+        except ValueError:
+            continue
+        if not (1900 < y < 2200) or abs(r1) > 50 or abs(r2) > 50:
+            continue
+        rows.append((y, m, d, r1, r2))
+    return rows
+
+
+def _psl(teks, ubah):
     rows = []
     for ln in teks.splitlines():
         p = ln.split()
@@ -59,35 +78,30 @@ def parse_romi(teks):
             continue
         if not (1900 < y < 2200) or abs(pc1) > 50 or abs(pc2) > 50:
             continue
-        rows.append((y, m, d, pc2, -pc1))
+        rows.append((y, m, d) + ubah(pc1, pc2))
     return rows
 
 
 def parse_vpm(teks):
-    """Kolom PSL: tahun bulan hari jam PC1 PC2 amplitudo. Tanda PC sudah sesuai RMM: RMM1=PC1, RMM2=PC2."""
-    rows = []
-    for ln in teks.splitlines():
-        p = ln.split()
-        if len(p) < 7:
-            continue
-        try:
-            y, m, d = int(p[0]), int(p[1]), int(p[2])
-            pc1, pc2 = float(p[4]), float(p[5])
-        except ValueError:
-            continue
-        if not (1900 < y < 2200) or abs(pc1) > 50 or abs(pc2) > 50:
-            continue
-        rows.append((y, m, d, pc1, pc2))
-    return rows
+    """VPM: tanda PC sudah disesuaikan NOAA dengan RMM -> RMM1=PC1, RMM2=PC2."""
+    return _psl(teks, lambda pc1, pc2: (pc1, pc2))
 
 
-# (nama indeks, url, parser, keterangan sumber, catatan) — yang pertama segar jadi utama,
-# sumber lain yang segar ikut disimpan sebagai pembanding
+def parse_romi(teks):
+    """ROMI: ROMI(PC2)=RMM1, -ROMI(PC1)=RMM2 (keterangan NOAA PSL)."""
+    return _psl(teks, lambda pc1, pc2: (pc2, -pc1))
+
+
+# (indeks, url, parser, keterangan, catatan)
 SUMBER = [
+    ("RMM", RMM_SALINAN, parse_rmm, "BoM RMM · salinan harian repositori dasarian",
+     "RMM resmi BoM (sumber yang sama dengan dashboard dasarian dan rilis BMKG); nilai hari terakhir dapat direvisi."),
+    ("RMM", RMM_BOM, parse_rmm, "BoM RMM · unduhan langsung",
+     "RMM resmi BoM (unduhan langsung); nilai hari terakhir dapat direvisi."),
     ("VPM", VPM_URL, parse_vpm, "NOAA PSL · CORe VPM (angin + kecepatan potensial, tipe RMM)",
-     "Indeks multivariat NOAA PSL (CORe) yang disesuaikan dengan konvensi RMM; nilai hari terakhir dapat direvisi."),
+     "Indeks multivariat NOAA PSL (CORe) yang disesuaikan dengan konvensi RMM."),
     ("ROMI", ROMI_URL, parse_romi, "NOAA PSL · ROMI (berbasis OLR saja)",
-     "Indeks berbasis OLR saja (NOAA PSL); dapat berbeda satu-dua fase dari indeks RMM yang juga memakai angin."),
+     "Indeks berbasis OLR saja (NOAA PSL); dapat berbeda satu-dua fase dari RMM."),
 ]
 
 
@@ -132,11 +146,13 @@ def ringkas(nama, ket, df):
 def main():
     segar, galat = [], {}
     for nama, url, parser, ket, catatan in SUMBER:
+        if any(s[0] == nama for s in segar):        # satu entri per indeks (RMM salinan vs langsung)
+            continue
         try:
             df = muat(url, parser)
         except Exception as e:  # noqa: BLE001
-            galat[nama] = str(e)
-            print(f"[fase] {nama} tidak tersedia: {e}", file=sys.stderr)
+            galat[f"{nama} ({url.split('/')[2]})"] = str(e)
+            print(f"[fase] {nama} {url.split('/')[2]} tidak tersedia: {e}", file=sys.stderr)
             continue
         segar.append((nama, ket, catatan, df))
     if not segar:
@@ -160,7 +176,8 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     print(f"[fase] {meta['indeks']} {meta['tanggal']} RMM1={meta['rmm1']:.2f} RMM2={meta['rmm2']:.2f} "
-          f"sudut={meta['sudut']:.0f} amp={meta['amplitudo']:.2f} fase={meta['fase']} (batas fase {meta['faseTetangga']}: {meta['jarakBatas']:.0f}° lagi)")
+          f"sudut={meta['sudut']:.0f} amp={meta['amplitudo']:.2f} fase={meta['fase']} "
+          f"(batas fase {meta['faseTetangga']}: {meta['jarakBatas']:.0f}° lagi) · {meta['sumber']}")
     if "pembanding" in meta:
         pb = meta["pembanding"]
         print(f"[fase] pembanding {pb['indeks']} {pb['tanggal']} RMM1={pb['rmm1']:.2f} RMM2={pb['rmm2']:.2f} "
