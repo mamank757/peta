@@ -37,6 +37,7 @@ WND_LTM = PSL + "ncep.reanalysis.derived/pressure/{v}.day.ltm.1991-2020.nc"
 
 NDAYS = 1500                      # ~4 tahun: untuk filter + sigma referensi
 MAX_AGE_DAYS = 7                  # tolak data lebih tua dari ini
+RATE_WAIT = 20                    # detik jeda dasar saat THREDDS membalas 429 (20, 40, 60 ...)
 FETCH_PAUSE = 1.0                 # detik antar potongan unduhan (THREDDS membalas 429 bila terlalu cepat)
 LAT_T = np.arange(-30, 30.1, 2.5)
 LON_T = np.arange(0, 360, 2.5)
@@ -191,7 +192,11 @@ def _fetch(url, work, decode_times=True, tol=1e-4):
                 if best is None or bad < best[1]:
                     best = (res, bad, tot)
             except Exception as e:
-                print(f"  {eng} gagal ({k + 1}/3): {str(e)[:120]}", file=sys.stderr)
+                msg = str(e)
+                print(f"  {eng} gagal ({k + 1}/3): {msg[:120]}", file=sys.stderr)
+                if "429" in msg or "Access failure" in msg:     # server membatasi laju: tunggu lebih lama
+                    time.sleep(RATE_WAIT * (k + 1))
+                    continue
             time.sleep(3 * (k + 1))
     if best and best[1] / best[2] < tol:
         print(f"  diterima dengan {best[1]} sel rusak (akan di-NaN-kan)", file=sys.stderr)
