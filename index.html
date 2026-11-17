@@ -620,7 +620,7 @@ function renderWavePanel(mode, m) {
 
     // Teks info & chip
     document.getElementById('waveInfoText').innerHTML = `${WAVE_NAMES[mode]} — <b>${esc(m.label)}</b>: OLR tersaring <b>${sg(m.nilaiBox)} W/m²</b> (z ${sg(z, 2)}σ) <span style="color:#00ff88;font-size:.7em">[NOAA]</span>.<br><span>${esc(dampak)}</span>`;
-    document.getElementById('wavePhaseChip').innerHTML = `<span style="display:inline-block;text-align:center;background:${isAktif ? col : '#888'}22;border:1px solid ${isAktif ? col : '#888'}55;color:${isAktif ? col : '#888'};padding:3px 12px;border-radius:6px;font-size:.72rem;font-weight:700">${WAVE_NAMES[mode]}: ${isAktif ? 'AKTIF' : 'TIDAK AKTIF'} · keandalan ${esc(rel)}</span>`;
+    document.getElementById('wavePhaseChip').innerHTML = `<span style="display:inline-block;text-align:center;background:${isAktif ? col : '#888'}22;border:1px solid ${isAktif ? col : '#888'}55;color:${isAktif ? col : '#888'};padding:3px 12px;border-radius:6px;font-size:.72rem;font-weight:700">${mode === 'mjo' ? 'Sinyal OLR lokal (W-K)' : WAVE_NAMES[mode]}: ${isAktif ? 'AKTIF' : 'TIDAK AKTIF'} · keandalan ${esc(rel)}</span>`;
 
     // Tabel atas
     const gp = document.getElementById('gasWavePanel');
