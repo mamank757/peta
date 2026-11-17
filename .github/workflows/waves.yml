@@ -2,9 +2,13 @@ name: build-waves
 on:
   schedule:
     - cron: "30 3 * * *"        # harian 03:30 UTC (11:30 WITA)
+    - cron: "30 9 * * *"        # percobaan kedua bila THREDDS membatasi laju (429) pada run pertama
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: build-waves
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,6 +20,10 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install numpy scipy pandas xarray netCDF4 pydap pillow
+      # Fase MJO tidak memakai THREDDS, jadi dijalankan lebih dulu dan tidak ikut gagal bila peta OLR gagal.
+      - name: Fase MJO (RMM / VPM / ROMI)
+        continue-on-error: true
+        run: python scripts/build_romi.py
       - name: Bangun peta gelombang (maks 3 percobaan)
         run: |
           for i in 1 2 3; do
@@ -24,13 +32,11 @@ jobs:
             sleep 120
           done
           exit 1
-      - name: Fase MJO (ROMI, NOAA PSL)
-        continue-on-error: true
-        run: python scripts/build_romi.py
       - name: Tambah riwayat gelombang (untuk model Apps Script)
         continue-on-error: true
         run: python scripts/build_riwayat.py
       - name: Commit hasil
+        if: always()                 # tetap simpan romi.json walau peta OLR gagal
         run: |
           git config user.name "wave-bot"
           git config user.email "wave-bot@users.noreply.github.com"
