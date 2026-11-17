@@ -178,7 +178,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font
 
             <div id="cpcBlock" style="margin-top:10px; display:none;">
                 <div style="font-size:.62rem;color:rgba(255,255,255,.55);margin-bottom:4px">Diagram fase MJO NOAA CPC (tipe Wheeler–Hendon)</div>
-                <a href="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/statphase_full.gif" target="_blank" rel="noopener">
+                <a id="cpcLink" href="#" target="_blank" rel="noopener">
                     <img id="cpcImg" alt="Diagram fase MJO NOAA CPC" style="width:100%;display:block;border-radius:8px;background:#fff">
                 </a>
                 <div style="margin-top:4px;font-size:.6rem;line-height:1.4;color:rgba(255,255,255,.45)">Gambar dimuat langsung dari server NOAA CPC; tanggalnya mengikuti pembaruan CPC, bukan data di atas.</div>
@@ -765,10 +765,13 @@ function renderRomi(r) {
     drawRomi(r);
 }
 
-const CPC_IMG = 'https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/statphase_full.gif';
+// Alamat gambar diagram CPC yang SEGAR (mis. prakiraan GEFS). Kosong = blok disembunyikan.
+// statphase_full.gif sengaja dilepas: gambar itu menampilkan prakiraan lama (10-24 Okt 2026).
+const CPC_IMG = '';
 function showCpc() {
-    if (activeLayerName !== 'mjo') return;
+    if (activeLayerName !== 'mjo' || !CPC_IMG) return;
     const blk = document.getElementById('cpcBlock'), img = document.getElementById('cpcImg');
+    document.getElementById('cpcLink').href = CPC_IMG;
     img.onerror = () => { blk.style.display = 'none'; };
     img.src = CPC_IMG + '?t=' + Math.floor(Date.now() / 36e5);   // cache-bust per jam
     blk.style.display = 'block';
