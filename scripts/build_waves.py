@@ -37,6 +37,7 @@ WND_LTM = PSL + "ncep.reanalysis.derived/pressure/{v}.day.ltm.1991-2020.nc"
 
 NDAYS = 1500                      # ~4 tahun: untuk filter + sigma referensi
 MAX_AGE_DAYS = 7                  # tolak data lebih tua dari ini
+FETCH_PAUSE = 1.0                 # detik antar potongan unduhan (THREDDS membalas 429 bila terlalu cepat)
 LAT_T = np.arange(-30, 30.1, 2.5)
 LON_T = np.arange(0, 360, 2.5)
 LAT = (-30, 30)                   # domain filter
@@ -161,6 +162,22 @@ def fix_time(da):
     return da
 
 
+def norm_time(da):
+    """Seragamkan koordinat waktu ke datetime64.
+    Mesin pydap (cadangan saat netcdf4 kena 429) kadang mengembalikan waktu sebagai angka mentah
+    (mis. jam sejak 1800-01-01), sehingga xr.concat dengan potongan lain gagal (DTypePromotionError)."""
+    t = da["time"]
+    if np.issubdtype(t.dtype, np.datetime64):
+        return da
+    units = t.attrs.get("units")
+    if not units:
+        raise RuntimeError("koordinat waktu bukan datetime dan tanpa atribut units")
+    vals = xr.coding.times.decode_cf_datetime(t.values, units, t.attrs.get("calendar", "standard"))
+    da = da.copy()
+    da["time"] = pd.to_datetime(np.asarray(vals))
+    return da
+
+
 def _fetch(url, work, decode_times=True, tol=1e-4):
     """work(ds) -> (hasil, jumlah_rusak, total). Ulangi; cadangan engine; terima bila rusak < tol."""
     best = None
@@ -194,7 +211,9 @@ def fetch_series(url, lo, hi, step, last=None, var=None, sel=None, decode_times=
             v = out.values
             return out, int(np.nansum((v < lo) | (v > hi))), v.size
         parts.append(_fetch(url, work, decode_times))
-        time.sleep(0.3)
+        time.sleep(FETCH_PAUSE)
+    if decode_times:                                # klimatologi (decode_times=False) tidak perlu
+        parts = [norm_time(p) for p in parts]
     return xr.concat(parts, "time")
 
 
@@ -251,7 +270,7 @@ def load_wind(var, t0, t1):
     lev = lambda d: d.sel(level=850)
     parts = [fetch_series(WND_URL.format(v=var, y=y), -100, 100, 100, var=var, sel=lev)
              for y in range(pd.Timestamp(t0).year, pd.Timestamp(t1).year + 1)]
-    da = xr.concat(parts, "time")
+    da = xr.concat([norm_time(p) for p in parts], "time")
     da = fix_time(da.where(abs(da) < 100)).sel(time=slice(t0, None))
     try:
         ltm = fetch_series(WND_LTM.format(v=var), -100, 100, 100, var=var, sel=lev, decode_times=False)
