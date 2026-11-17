@@ -117,11 +117,15 @@ def ringkas(nama, ket, df):
     last = df.iloc[-1]
     fase, ang = fase_dari(last.rmm1, last.rmm2)
     aktif = bool(last.amp >= 1)
+    sektor, pos = int(ang // 45), ang % 45          # posisi di dalam sektor 45°
+    jarak = min(pos, 45 - pos)                      # derajat ke batas fase terdekat
+    tetangga = ((sektor + (1 if pos > 22.5 else -1)) % 8 + 4) % 8 + 1
     return dict(
         indeks=nama, sumber=ket, tanggal=str(last.t.date()),
         rmm1=round(float(last.rmm1), 3), rmm2=round(float(last.rmm2), 3),
         amplitudo=round(float(last.amp), 3), sudut=round(ang, 1),
         aktif=aktif, fase=fase if aktif else None, faseArah=fase,
+        jarakBatas=round(jarak, 1), faseTetangga=tetangga,
     )
 
 
@@ -142,6 +146,8 @@ def main():
     meta = ringkas(nama, ket, df)
     meta["label"] = (f"MJO aktif, fase {meta['fase']}" if meta["aktif"]
                      else "MJO lemah (amplitudo < 1), tidak ada fase")
+    if meta["aktif"] and meta["jarakBatas"] < 10:
+        meta["label"] += f" (dekat batas fase {meta['faseTetangga']})"
     meta["jejak"] = [dict(tanggal=str(r.t.date()), rmm1=round(r.rmm1, 2), rmm2=round(r.rmm2, 2),
                           amplitudo=round(r.amp, 2)) for r in df.tail(N_JEJAK).itertuples()]
     meta["catatan"] = catatan
@@ -154,7 +160,7 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     print(f"[fase] {meta['indeks']} {meta['tanggal']} RMM1={meta['rmm1']:.2f} RMM2={meta['rmm2']:.2f} "
-          f"sudut={meta['sudut']:.0f} amp={meta['amplitudo']:.2f} fase={meta['fase']} (faseArah={meta['faseArah']})")
+          f"sudut={meta['sudut']:.0f} amp={meta['amplitudo']:.2f} fase={meta['fase']} (batas fase {meta['faseTetangga']}: {meta['jarakBatas']:.0f}° lagi)")
     if "pembanding" in meta:
         pb = meta["pembanding"]
         print(f"[fase] pembanding {pb['indeks']} {pb['tanggal']} RMM1={pb['rmm1']:.2f} RMM2={pb['rmm2']:.2f} "
