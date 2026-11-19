@@ -1,24 +1,18 @@
 {
  "indeks": "RMM",
  "sumber": "BoM RMM · salinan harian repositori dasarian",
- "tanggal": "2026-11-16",
- "rmm1": 0.71,
- "rmm2": -1.678,
- "amplitudo": 1.822,
- "sudut": 292.9,
+ "tanggal": "2026-11-17",
+ "rmm1": 0.931,
+ "rmm2": -1.406,
+ "amplitudo": 1.686,
+ "sudut": 303.5,
  "aktif": true,
  "fase": 3,
  "faseArah": 3,
- "jarakBatas": 22.1,
+ "jarakBatas": 11.5,
  "faseTetangga": 4,
  "label": "MJO aktif, fase 3",
  "jejak": [
-  {
-   "tanggal": "2026-10-08",
-   "rmm1": -1.46,
-   "rmm2": 0.43,
-   "amplitudo": 1.53
-  },
   {
    "tanggal": "2026-10-09",
    "rmm1": -1.19,
@@ -252,21 +246,27 @@
    "rmm1": 0.71,
    "rmm2": -1.68,
    "amplitudo": 1.82
+  },
+  {
+   "tanggal": "2026-11-17",
+   "rmm1": 0.93,
+   "rmm2": -1.41,
+   "amplitudo": 1.69
   }
  ],
  "catatan": "RMM resmi BoM (sumber yang sama dengan dashboard dasarian dan rilis BMKG); nilai hari terakhir dapat direvisi.",
  "pembanding": {
   "indeks": "VPM",
   "sumber": "NOAA PSL · CORe VPM (angin + kecepatan potensial, tipe RMM)",
-  "tanggal": "2026-11-13",
-  "rmm1": -0.161,
-  "rmm2": -1.881,
-  "amplitudo": 1.888,
-  "sudut": 265.1,
+  "tanggal": "2026-11-15",
+  "rmm1": -0.051,
+  "rmm2": -1.47,
+  "amplitudo": 1.47,
+  "sudut": 268.0,
   "aktif": true,
   "fase": 2,
   "faseArah": 2,
-  "jarakBatas": 4.9,
+  "jarakBatas": 2.0,
   "faseTetangga": 3
  }
 }
