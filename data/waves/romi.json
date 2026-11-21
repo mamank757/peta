@@ -1,24 +1,18 @@
 {
  "indeks": "RMM",
  "sumber": "BoM RMM · salinan harian repositori dasarian",
- "tanggal": "2026-11-18",
- "rmm1": 0.811,
- "rmm2": -1.096,
- "amplitudo": 1.364,
- "sudut": 306.5,
+ "tanggal": "2026-11-19",
+ "rmm1": 0.884,
+ "rmm2": -0.896,
+ "amplitudo": 1.258,
+ "sudut": 314.6,
  "aktif": true,
  "fase": 3,
  "faseArah": 3,
- "jarakBatas": 8.5,
+ "jarakBatas": 0.4,
  "faseTetangga": 4,
  "label": "MJO aktif, fase 3 (dekat batas fase 4)",
  "jejak": [
-  {
-   "tanggal": "2026-10-10",
-   "rmm1": -1.28,
-   "rmm2": -0.36,
-   "amplitudo": 1.33
-  },
   {
    "tanggal": "2026-10-11",
    "rmm1": -1.38,
@@ -252,6 +246,12 @@
    "rmm1": 0.81,
    "rmm2": -1.1,
    "amplitudo": 1.36
+  },
+  {
+   "tanggal": "2026-11-19",
+   "rmm1": 0.88,
+   "rmm2": -0.9,
+   "amplitudo": 1.26
   }
  ],
  "catatan": "RMM resmi BoM (sumber yang sama dengan dashboard dasarian dan rilis BMKG); nilai hari terakhir dapat direvisi.",
