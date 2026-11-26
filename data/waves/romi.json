@@ -258,16 +258,16 @@
  "pembanding": {
   "indeks": "ROMI",
   "sumber": "NOAA PSL · ROMI (berbasis OLR saja)",
-  "tanggal": "2026-11-21",
-  "rmm1": 0.21,
-  "rmm2": 1.072,
-  "amplitudo": 1.092,
-  "sudut": 78.9,
+  "tanggal": "2026-11-22",
+  "rmm1": -0.137,
+  "rmm2": 1.306,
+  "amplitudo": 1.313,
+  "sudut": 96.0,
   "aktif": true,
-  "fase": 6,
-  "faseArah": 6,
-  "jarakBatas": 11.1,
-  "faseTetangga": 7
+  "fase": 7,
+  "faseArah": 7,
+  "jarakBatas": 6.0,
+  "faseTetangga": 6
  },
  "galatSumber": {
   "VPM (psl.noaa.gov)": "data valid terakhir 2026-11-16 (10 hari lalu): usang; 3 baris terakhir file mentah: ['2026 11 14  0    -0.02897    -1.52546     1.52574', '2026 11 15  0    -0.05137    -1.46943     1.47032', '2026 11 16  0    -0.34141    -1.33431     1.37730']"
