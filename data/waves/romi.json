@@ -1,24 +1,18 @@
 {
  "indeks": "RMM",
  "sumber": "BoM RMM · salinan harian repositori dasarian",
- "tanggal": "2026-11-25",
- "rmm1": 0.498,
- "rmm2": -1.13,
- "amplitudo": 1.234,
- "sudut": 293.8,
+ "tanggal": "2026-11-26",
+ "rmm1": 0.311,
+ "rmm2": -1.181,
+ "amplitudo": 1.221,
+ "sudut": 284.8,
  "aktif": true,
  "fase": 3,
  "faseArah": 3,
- "jarakBatas": 21.2,
- "faseTetangga": 4,
+ "jarakBatas": 14.8,
+ "faseTetangga": 2,
  "label": "MJO aktif, fase 3",
  "jejak": [
-  {
-   "tanggal": "2026-10-17",
-   "rmm1": -0.65,
-   "rmm2": -0.82,
-   "amplitudo": 1.05
-  },
   {
    "tanggal": "2026-10-18",
    "rmm1": -0.44,
@@ -252,6 +246,12 @@
    "rmm1": 0.5,
    "rmm2": -1.13,
    "amplitudo": 1.23
+  },
+  {
+   "tanggal": "2026-11-26",
+   "rmm1": 0.31,
+   "rmm2": -1.18,
+   "amplitudo": 1.22
   }
  ],
  "catatan": "RMM resmi BoM (sumber yang sama dengan dashboard dasarian dan rilis BMKG); nilai hari terakhir dapat direvisi.",
@@ -270,6 +270,6 @@
   "faseTetangga": 6
  },
  "galatSumber": {
-  "VPM (psl.noaa.gov)": "data valid terakhir 2026-11-16 (11 hari lalu): usang; 3 baris terakhir file mentah: ['2026 11 14  0    -0.02897    -1.52546     1.52574', '2026 11 15  0    -0.05137    -1.46943     1.47032', '2026 11 16  0    -0.34141    -1.33431     1.37730']"
+  "VPM (psl.noaa.gov)": "data valid terakhir 2026-11-16 (12 hari lalu): usang; 3 baris terakhir file mentah: ['2026 11 14  0    -0.02897    -1.52546     1.52574', '2026 11 15  0    -0.05137    -1.46943     1.47032', '2026 11 16  0    -0.34141    -1.33431     1.37730']"
  }
 }
